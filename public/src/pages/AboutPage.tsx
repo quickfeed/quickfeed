@@ -12,19 +12,23 @@ const AboutPage = () => {
     return (
         <div className="w-full">
             <div className="container mx-auto px-4 max-w-7xl pb-12">
-                <h2 className="text-4xl font-bold mt-12 mb-6 text-base-content">About QuickFeed</h2>
-                <div className="text-lg leading-loose mb-8 text-base-content/80 space-y-4">
-                    <p>
-                        QuickFeed is a tool for providing automated feedback to students on their lab assignments.
+                <section className="mt-12">
+                    <p className="text-sm font-semibold uppercase tracking-wider text-primary mb-3">
+                        About QuickFeed
                     </p>
-                    <p>
-                        QuickFeed builds upon version control systems and continuous integration.
-                        When students upload code to their repositories, QuickFeed automatically builds their code and provides feedback based on tests supplied by the teaching staff.
+                    <h2 className="text-4xl md:text-5xl font-bold text-base-content mb-6 max-w-3xl">
+                        Automated feedback on programming assignments
+                    </h2>
+                    <p className="text-xl leading-relaxed text-base-content/80 max-w-3xl">
+                        QuickFeed gives students fast feedback on their lab assignments,
+                        and gives the teaching staff the test results to grade from.
                     </p>
-                    <p>
-                        When grading assignments, teaching staff can access the results of test execution and have a valuable tool in the grading process.
+                    <p className="mt-4 text-lg leading-relaxed text-base-content/70 max-w-3xl">
+                        It builds on version control and continuous integration.
+                        When students push code to their repositories, QuickFeed builds it and reports
+                        the result against tests supplied by the teaching staff.
                     </p>
-                </div>
+                </section>
 
                 <div className="divider my-12" />
 
@@ -51,7 +55,12 @@ const AboutPage = () => {
                 <FeatureBlock
                     heading="QuickFeed"
                     subheading="Automated student feedback"
-                    content="QuickFeed aims to provide students with fast feedback on their lab assignments, and is designed to help students learn about state-of-the-art tools used in the industry. QuickFeed builds upon version control systems and continuous integration. When students upload code to their repositories, QuickFeed automatically builds their code and provides feedback based on tests supplied by the teaching staff. When grading assignments, teaching staff can access the results of test execution and have a valuable tool in the grading process."
+                    content="QuickFeed gives students fast feedback on their lab assignments, and teaches them the tools used in the industry along the way."
+                    points={[
+                        "Built on version control and continuous integration",
+                        "Feedback comes from tests supplied by the teaching staff",
+                        "The same test results are there for the staff when grading",
+                    ]}
                     media={
                         <PreviewFrame label="A QuickFeed build log listing the tests that ran on a student push and their results.">
                             <BuildLogPreview />
@@ -64,7 +73,12 @@ const AboutPage = () => {
                 <FeatureBlock
                     heading="GitHub Integration"
                     subheading="Managing courses and students"
-                    content="A course is an organization on GitHub. Students get access to their own private GitHub repository. Uploading their code for review or grading, students can learn to use git for version control."
+                    content="A course is an organization on GitHub, and QuickFeed creates and manages the repositories inside it."
+                    points={[
+                        "Every student gets a private repository of their own",
+                        "Assignments and course information are published from staff repositories",
+                        "Students learn to use git for version control while they submit",
+                    ]}
                     media={
                         <PreviewFrame label="The repositories QuickFeed creates in a course organization on GitHub: info, assignments, tests, one repository per student and one per group.">
                             <OrganizationPreview />
@@ -78,7 +92,12 @@ const AboutPage = () => {
                 <FeatureBlock
                     heading="Continuous Integration"
                     subheading="Builds and tests student code"
-                    content="As code gets pushed up to GitHub, an automatic build process defined by the teacher, generates feedback to students. When the build process is completed, student gets immediate access to this feedback on their personal course page. Tests defined by either teachers or students will be processed and tell students about their progress on the assignments."
+                    content="A push to GitHub starts a build process defined by the teacher, which generates the feedback students see."
+                    points={[
+                        "Feedback appears on the student's course page as soon as the build finishes",
+                        "Tests defined by either teachers or students are processed",
+                        "Every run shows how far the student has come on the assignment",
+                    ]}
                     media={
                         <PreviewFrame
                             label="A student's lab result: a progress bar at 92 percent, a table of lab information, and a table of test scores."
@@ -94,7 +113,12 @@ const AboutPage = () => {
                 <FeatureBlock
                     heading="Grading"
                     subheading="Easy and Fair"
-                    content="On the due date, teachers can access the test results and use this as a tool in the grading process. The teaching staff will immediately know which of their tests passed, and how much of the code is covered by the tests."
+                    content="On the due date, teachers grade from the recorded test results rather than from a fresh reading of every submission."
+                    points={[
+                        "See at a glance which tests passed for each student",
+                        "The build log behind every score is one click away",
+                        "The most recent version of the code is on GitHub, ready to inspect",
+                    ]}
                     media={
                         <PreviewFrame
                             label="A teacher's course results table, with each student's lab scores colored by approval status."
