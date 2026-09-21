@@ -3,6 +3,7 @@ import BackToTop from "../components/BackToTop"
 import FeatureBlock, { MiniFeatureBlock } from "../components/FeatureBlock"
 import BuildLogPreview from "../components/about/BuildLogPreview"
 import LabResultPreview from "../components/about/LabResultPreview"
+import OrganizationPreview from "../components/about/OrganizationPreview"
 import PreviewFrame from "../components/about/PreviewFrame"
 import ResultsPreview from "../components/about/ResultsPreview"
 
@@ -65,11 +66,9 @@ const AboutPage = () => {
                     subheading="Managing courses and students"
                     content="A course is an organization on GitHub. Students get access to their own private GitHub repository. Uploading their code for review or grading, students can learn to use git for version control."
                     media={
-                        <img
-                            src="/assets/img/intro3.png"
-                            alt="GitHub Integration"
-                            className="w-full h-auto rounded-lg border border-base-300 shadow-xl"
-                        />
+                        <PreviewFrame label="The repositories QuickFeed creates in a course organization on GitHub: info, assignments, tests, one repository per student and one per group.">
+                            <OrganizationPreview />
+                        </PreviewFrame>
                     }
                     reverse
                 />
