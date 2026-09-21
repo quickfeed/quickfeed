@@ -2,7 +2,7 @@ import { create, isMessage } from "@bufbuild/protobuf"
 import type { Timestamp } from "@bufbuild/protobuf/wkt"
 import { timestampDate } from "@bufbuild/protobuf/wkt"
 import type { Score } from "../proto/kit/score/score_pb"
-import { RunStatus } from "../proto/kit/score/score_pb"
+import { RunStatus, TestStatus } from "../proto/kit/score/score_pb"
 import type { CourseSubmissions } from "../proto/qf/requests_pb"
 import type { Assignment, Course, Enrollment, GradingBenchmark, Group, Review, Submission, Submissions, User } from "../proto/qf/types_pb"
 import { Enrollment_DisplayState, Enrollment_UserStatus, GradeSchema, Group_GroupStatus, GroupSchema, Submission_Status, SubmissionSchema, SubmissionsSchema } from "../proto/qf/types_pb"
@@ -93,21 +93,39 @@ export const EnrollmentStatusBadgeColor: Record<number, string> = {
     3: "badge-primary",
 }
 
-// TODO: Could be computed on the backend (https://github.com/quickfeed/quickfeed/issues/420)
+/** testPassed reports whether the run recorded this test as passing.
+ *  Submissions recorded before a run reported an outcome per test carry none,
+ *  so their score is compared with the maximum, as it was before. */
+export const testPassed = (score: Score): boolean =>
+    score.Status === TestStatus.NOT_RUN ? score.Score === score.MaxScore : score.Status === TestStatus.PASSED
+
+/** testFailed reports whether the run recorded this test as failing. A skipped
+ *  test neither passed nor failed. */
+export const testFailed = (score: Score): boolean =>
+    score.Status === TestStatus.NOT_RUN ? score.Score !== score.MaxScore : score.Status === TestStatus.FAILED
+
+/** testStatusText names the outcome the run recorded for a test. It answers a
+ *  different question than the score: a test may fail while holding partial
+ *  credit, and may pass while scoring below its maximum. */
+export const testStatusText = (score: Score): string => {
+    switch (score.Status) {
+        case TestStatus.PASSED:
+            return "Passed"
+        case TestStatus.FAILED:
+            return "Failed"
+        case TestStatus.SKIPPED:
+            return "Skipped"
+        default:
+            return testPassed(score) ? "Passed" : "Failed"
+    }
+}
+
 /** getPassedTestCount returns a string with the number of passed tests and the total number of tests */
 export const getPassedTestsCount = (score: Score[]): string => {
-    let totalTests = 0
-    let passedTests = 0
-    score.forEach(s => {
-        if (s.Score === s.MaxScore) {
-            passedTests++
-        }
-        totalTests++
-    })
-    if (totalTests === 0) {
+    if (score.length === 0) {
         return ""
     }
-    return `${passedTests}/${totalTests}`
+    return `${score.filter(testPassed).length}/${score.length}`
 }
 
 /** hasEnrollment returns true if any of the provided has been approved */
