@@ -1,0 +1,21 @@
+=== RUN   TestAlpha
+=== PAUSE TestAlpha
+=== RUN   TestBeta
+=== PAUSE TestBeta
+=== CONT  TestAlpha
+alpha raw 0
+=== CONT  TestBeta
+beta raw 0
+beta raw 1
+alpha raw 1
+alpha raw 2
+beta raw 2
+=== NAME  TestAlpha
+    queue_test.go:33: alpha broke
+=== ATTR  TestAlpha score {"Secret":"Ie7cJP1sYQvqO2Xk","TestName":"TestAlpha","Score":0,"MaxScore":1,"Weight":1}
+--- FAIL: TestAlpha (0.01s)
+=== ATTR  TestBeta score {"Secret":"Ie7cJP1sYQvqO2Xk","TestName":"TestBeta","Score":1,"MaxScore":1,"Weight":1}
+--- PASS: TestBeta (0.01s)
+FAIL
+FAIL	fixtures2	0.297s
+FAIL
