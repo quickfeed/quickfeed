@@ -6,6 +6,7 @@ import { useActions, useAppState } from '../overmind'
 import { CenteredMessage, KnownMessage } from './CenteredMessage'
 import LabResultTable from "./LabResultTable"
 import LogOutput from './LogOutput'
+import { hasTestRun } from './submissions/SubmissionScore'
 import ReviewResult from './ReviewResult'
 import AssignmentFeedbackForm from './feedback/form/AssignmentFeedbackForm'
 
@@ -84,7 +85,12 @@ const Lab = () => {
 
                     {isManuallyGraded(assignment.reviewers) && review.length > 0 ? <ReviewResult review={review[0]} /> : null}
 
-                    <LogOutput>{buildLog}</LogOutput>
+                    {/* The build log is the rest of the run: each test's own
+                        output is shown with that test. It opens by itself only
+                        when no test recorded anything, which is the case for a
+                        run that failed to build and for submissions recorded
+                        before the output was attributed per test. */}
+                    <LogOutput defaultOpen={!submission.Scores.some(hasTestRun)}>{buildLog}</LogOutput>
                 </div>
             )
         }
