@@ -9,7 +9,7 @@ import { previewOrganization, previewRepositories } from "./previewData"
 const OrganizationPreview = () => (
     <div className="card bg-base-200 shadow-xl rounded-2xl overflow-hidden">
         <div className="flex items-center gap-2 bg-base-300 px-4 py-3 border-b border-base-content/10">
-            <i className="fab fa-github" />
+            <i className="fa-brands fa-github" />
             <span className="font-semibold text-sm">github.com/{previewOrganization}</span>
             <span className="badge badge-sm badge-ghost ml-auto">Organization</span>
         </div>
