@@ -52,6 +52,28 @@ describe("AboutPage", () => {
         }
     })
 
+    test("renders the sample lab result through the real score table", () => {
+        render(<AboutPage />)
+
+        expect(screen.getByText("TestGitQuestions")).toBeDefined()
+        expect(screen.getByText("Total Score")).toBeDefined()
+    })
+
+    test("summarizes the workflow as a labelled pipeline", () => {
+        const { container } = render(<AboutPage />)
+
+        // The connectors between the steps are decorative; the labelled steps
+        // are what carries the workflow for a reader. The label is the last child
+        // of a step, after its marker and any number floating above it.
+        const labels = Array.from(container.querySelectorAll('ol > li:not([aria-hidden="true"]) > span:last-child'))
+        expect(labels.map(label => label.textContent)).toEqual([
+            "Student pushes code",
+            "QuickFeed builds and tests",
+            "Student sees feedback",
+            "Teacher grades",
+        ])
+    })
+
     // The About page used to show a 2022 screenshot of a push to a repository
     // named "labs" in the "autograde-test" organization. QuickFeed has named
     // neither that way for years, so the repository layout is now derived from
@@ -63,12 +85,5 @@ describe("AboutPage", () => {
         expect(screen.getByText(AssignmentsRepo)).toBeDefined()
         expect(screen.getByText(TestsRepo)).toBeDefined()
         expect(screen.getByText(studentRepoName("hfurubotten"))).toBeDefined()
-    })
-
-    test("renders the sample lab result through the real score table", () => {
-        render(<AboutPage />)
-
-        expect(screen.getByText("TestGitQuestions")).toBeDefined()
-        expect(screen.getByText("Total Score")).toBeDefined()
     })
 })

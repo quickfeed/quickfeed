@@ -6,6 +6,7 @@ import LabResultPreview from "../components/about/LabResultPreview"
 import OrganizationPreview from "../components/about/OrganizationPreview"
 import PreviewFrame from "../components/about/PreviewFrame"
 import ResultsPreview from "../components/about/ResultsPreview"
+import WorkflowPreview from "../components/about/WorkflowPreview"
 
 /* AboutPage displays information about QuickFeed. Mainly displayed to non-logged in users on the LoginPage.tsx. */
 const AboutPage = () => {
@@ -28,6 +29,7 @@ const AboutPage = () => {
                         When students push code to their repositories, QuickFeed builds it and reports
                         the result against tests supplied by the teaching staff.
                     </p>
+                    <WorkflowPreview />
                 </section>
 
                 <div className="divider my-12" />
