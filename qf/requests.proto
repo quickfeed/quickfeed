@@ -87,7 +87,7 @@ message NotesRequest {
 message CourseLogRequest {
     uint64 courseID                  = 1;
     google.protobuf.Timestamp from   = 2;  // default: 24 hours before to
-    google.protobuf.Timestamp to     = 3;  // default: now
+    google.protobuf.Timestamp to     = 3;  // unset tails live entries after the backlog; set closes the stream after it
     string repository                = 4;  // exact match; unset selects every repository
     CourseLogEntry.Level level       = 5;  // minimum level to include
     uint32 limit                     = 6;  // default 2000, server maximum 5000
@@ -110,6 +110,9 @@ message CourseLogEntry {
     bool truncated                 = 8;
 }
 
+// CourseLog is one message of a CourseLogStream. The first message holds the
+// backlog for the requested interval; each later message holds a single live
+// entry, and lists a repository only when that entry introduces a new one.
 message CourseLog {
     repeated CourseLogEntry entries = 1;  // chronological order
     repeated string repositories    = 2;  // repositories with entries in the selected interval

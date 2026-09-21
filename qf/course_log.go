@@ -1,6 +1,11 @@
 package qf
 
-import "time"
+import (
+	"time"
+
+	"google.golang.org/protobuf/proto"
+	"google.golang.org/protobuf/types/known/timestamppb"
+)
 
 const (
 	defaultCourseLogInterval = 24 * time.Hour
@@ -28,6 +33,13 @@ func (req *CourseLogRequest) Interval(minFrom, maxTo time.Time) (from, to time.T
 	return from, to
 }
 
+// WithTo returns a copy of req bounded above by to, leaving req untouched.
+func (req *CourseLogRequest) WithTo(to time.Time) *CourseLogRequest {
+	bounded := proto.CloneOf(req)
+	bounded.To = timestamppb.New(to)
+	return bounded
+}
+
 // EffectiveLimit returns req's requested entry limit, defaulting to 2000 and
 // capped at 5000.
 func (req *CourseLogRequest) EffectiveLimit() int {
@@ -50,9 +62,13 @@ func (e *CourseLogEntry) InInterval(from, to time.Time) bool {
 // Matches reports whether e falls within [from, to], is at or above level,
 // and, when repository is given, was recorded against it.
 func (e *CourseLogEntry) Matches(from, to time.Time, repository string, level CourseLogEntry_Level) bool {
-	if !e.InInterval(from, to) {
-		return false
-	}
+	return e.InInterval(from, to) && e.MatchesFilters(repository, level)
+}
+
+// MatchesFilters reports whether e is at or above level and, when repository
+// is given, was recorded against it. It leaves the interval out, for a live
+// tail where every entry is newer than the query's upper bound by definition.
+func (e *CourseLogEntry) MatchesFilters(repository string, level CourseLogEntry_Level) bool {
 	if e.GetLevel() < level {
 		return false
 	}
