@@ -153,7 +153,7 @@ func (r *RunData) RunTests(ctx context.Context, sc scm.SCM, runner Runner) (*sco
 		// The whole output, not just a cap of it: a failed run is what the
 		// teacher opens the course log to read.
 		logger.Error("test run failed", "run_status", status.String(), label.Error, err,
-			"output", redactOutput(out, randomSecret))
+			"output", score.Redact(out, randomSecret))
 		return failedRunResults(status, results), nil
 	}
 	if exitErr, ok := errors.AsType[*ContainerExitError](err); ok {
@@ -164,20 +164,9 @@ func (r *RunData) RunTests(ctx context.Context, sc scm.SCM, runner Runner) (*sco
 
 	testsSucceededCounter.WithLabelValues(r.JobOwner, r.Course.GetCode()).Inc()
 	logger.Debug("test results extracted", "score", results.Sum(), "tests", len(results.Scores),
-		"output", redactOutput(results.GetBuildInfo().GetBuildLog(), randomSecret))
+		"output", score.Redact(out, randomSecret))
 	// return the extracted score and filtered log output
 	return results, nil
-}
-
-// redactOutput replaces every occurrence of the given per-run secrets in the
-// captured command output, so that the output can be logged safely.
-func redactOutput(output string, secrets ...string) string {
-	for _, secret := range secrets {
-		if secret != "" {
-			output = strings.ReplaceAll(output, secret, "[REDACTED]")
-		}
-	}
-	return output
 }
 
 func (r *RunData) clone(ctx context.Context, sc scm.SCM, dstDir string) error {

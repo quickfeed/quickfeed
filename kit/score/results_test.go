@@ -1,6 +1,7 @@
 package score_test
 
 import (
+	"fmt"
 	"strings"
 	"testing"
 	"time"
@@ -8,6 +9,9 @@ import (
 	"github.com/quickfeed/quickfeed/kit/score"
 	"github.com/quickfeed/quickfeed/kit/score/testdata/server"
 )
+
+// secret is the session secret the run output below is scored with.
+const secret = "59fd5fe1c4f741604c1beeab875b9c789d2a7c73"
 
 func TestExtractResults(t *testing.T) {
 	out := `here is some output in the log.
@@ -377,5 +381,124 @@ func TestExtractResultsFromNonTestCaller(t *testing.T) {
 				t.Errorf("ExtractResults(%s) ParsedScores = %d, want 0", tc.out, res.ParsedScores)
 			}
 		})
+	}
+}
+
+// runOutput is what a course's run script produces for one assignment: the
+// script's own banners around the framing of go test -v.
+const runOutput = `*** Preparing Test Execution for lab1 ***
+
+*** Running Tests ***
+
+=== RUN   TestStack
+stack: pushing 3 elements
+=== ATTR  TestStack score {"Secret":"%[1]s","TestName":"TestStack","Score":5,"MaxScore":5,"Weight":1,"TestDetails":""}
+--- PASS: TestStack (0.02s)
+=== RUN   TestQueue
+queue: dequeue returned nothing
+    queue_test.go:44: Pop() = <nil>, want: x
+=== ATTR  TestQueue score {"Secret":"%[1]s","TestName":"TestQueue","Score":2,"MaxScore":5,"Weight":2,"TestDetails":""}
+--- FAIL: TestQueue (0.01s)
+FAIL
+FAIL	lab1	0.289s
+
+*** Finished Running Tests in 3 seconds ***
+`
+
+func extractRunOutput(t *testing.T) *score.Results {
+	t.Helper()
+	expectedTests := []*score.Score{
+		{TestName: "TestStack", MaxScore: 5, Weight: 1},
+		{TestName: "TestQueue", MaxScore: 5, Weight: 2},
+	}
+	res, err := score.ExtractResults(fmt.Sprintf(runOutput, secret), secret, 10, expectedTests)
+	if err != nil {
+		t.Fatal(err)
+	}
+	return res
+}
+
+func TestExtractResultsAttachesEachTestsOutput(t *testing.T) {
+	res := extractRunOutput(t)
+
+	byName := make(map[string]*score.Score)
+	for _, sc := range res.Scores {
+		byName[sc.GetTestName()] = sc
+	}
+	stack := byName["TestStack"]
+	if got, want := stack.GetTestOutput(), "stack: pushing 3 elements"; got != want {
+		t.Errorf("TestStack output = %q, want %q", got, want)
+	}
+	if got, want := stack.GetStatus(), score.TestStatus_PASSED; got != want {
+		t.Errorf("TestStack status = %v, want %v", got, want)
+	}
+	if got, want := stack.GetElapsed(), 0.02; got != want {
+		t.Errorf("TestStack elapsed = %v, want %v", got, want)
+	}
+
+	queue := byName["TestQueue"]
+	if got, want := queue.GetStatus(), score.TestStatus_FAILED; got != want {
+		t.Errorf("TestQueue status = %v, want %v", got, want)
+	}
+	if got, want := queue.GetTestOutput(), "queue: dequeue returned nothing"; got != want {
+		t.Errorf("TestQueue output = %q, want %q", got, want)
+	}
+	// A failing test's diagnostics explain the failure. With no details from
+	// the test itself, they are what the student has to go on.
+	if got, want := queue.GetTestDetails(), "queue_test.go:44: Pop() = <nil>, want: x"; got != want {
+		t.Errorf("TestQueue details = %q, want %q", got, want)
+	}
+}
+
+func TestExtractResultsKeepsOnlyUnattributedOutputInBuildLog(t *testing.T) {
+	res := extractRunOutput(t)
+
+	buildLog := res.GetBuildInfo().GetBuildLog()
+	for _, want := range []string{"*** Running Tests ***", "*** Finished Running Tests in 3 seconds ***", "FAIL\tlab1\t0.289s"} {
+		if !strings.Contains(buildLog, want) {
+			t.Errorf("build log = %q, want it to contain %q", buildLog, want)
+		}
+	}
+	// What a test printed is shown with that test, so repeating it here would
+	// only restore the wall of text this replaces.
+	for _, unwanted := range []string{"stack: pushing 3 elements", "queue: dequeue returned nothing", "Pop() = <nil>", "=== RUN", "--- FAIL:"} {
+		if strings.Contains(buildLog, unwanted) {
+			t.Errorf("build log = %q, want it to omit %q", buildLog, unwanted)
+		}
+	}
+}
+
+func TestExtractResultsKeepsTheSecretOutOfEverythingShown(t *testing.T) {
+	res := extractRunOutput(t)
+
+	if strings.Contains(res.GetBuildInfo().GetBuildLog(), secret) {
+		t.Error("build log leaks the session secret")
+	}
+	for _, sc := range res.Scores {
+		if strings.Contains(sc.GetTestOutput(), secret) {
+			t.Errorf("%s output leaks the session secret", sc.GetTestName())
+		}
+		if strings.Contains(sc.GetTestDetails(), secret) {
+			t.Errorf("%s details leak the session secret", sc.GetTestName())
+		}
+	}
+}
+
+func TestExtractResultsPrefersDetailsReportedByTheTest(t *testing.T) {
+	// A test that reports through the score object already says why it failed,
+	// in its own words and with its own positions; scraped diagnostics would
+	// only repeat it.
+	out := fmt.Sprintf(`=== RUN   TestQueue
+    queue_test.go:44: Pop() = <nil>, want: x
+=== ATTR  TestQueue score {"Secret":"%s","TestName":"TestQueue","Score":0,"MaxScore":5,"Weight":1,"TestDetails":"queue_test.go:44: Pop() = <nil>, want: \"x\"\n"}
+--- FAIL: TestQueue (0.01s)
+`, secret)
+	expectedTests := []*score.Score{{TestName: "TestQueue", MaxScore: 5, Weight: 1}}
+	res, err := score.ExtractResults(out, secret, 10, expectedTests)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if got, want := res.Scores[0].GetTestDetails(), "queue_test.go:44: Pop() = <nil>, want: \"x\"\n"; got != want {
+		t.Errorf("TestQueue details = %q, want %q", got, want)
 	}
 }
