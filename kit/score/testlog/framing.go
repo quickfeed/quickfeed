@@ -87,3 +87,25 @@ func lastKind(run *TestRun) entryKind {
 	}
 	return run.entries[len(run.entries)-1].kind
 }
+
+// CarriesScore reports whether line carries a score object, in any of the forms
+// a run can print one: on its own, as the "=== ATTR" line that testing.T.Attr
+// prints, or inside a go test -json event. The isScoreLine predicate recognizes
+// the score object itself, as it does for Scan.
+func CarriesScore(line string, isScoreLine func(string) bool) bool {
+	if isScoreLine(line) {
+		return true
+	}
+	if m := frameAttr.FindStringSubmatch(line); m != nil {
+		return isScoreLine(m[3])
+	}
+	if ev, ok := decodeEvent(line); ok {
+		switch ev.Action {
+		case "attr":
+			return isScoreLine(ev.Value)
+		case "output":
+			return isScoreLine(ev.Output)
+		}
+	}
+	return false
+}
