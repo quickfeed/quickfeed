@@ -319,11 +319,21 @@ export const userLink = (user: User): string => {
     return `https://github.com/${user.Login}`
 }
 
+// Default repository names QuickFeed creates in a course organization.
+// Keep in sync with the constants in qf/repo.go.
+export const InfoRepo = "info"
+export const AssignmentsRepo = "assignments"
+export const TestsRepo = "tests"
+export const StudentRepoSuffix = "-labs"
+
+/** studentRepoName returns the name of the given student's repository. */
+export const studentRepoName = (login: string): string => `${login}${StudentRepoSuffix}`
+
 export const userRepoLink = (user: User, course?: Course): string => {
     if (!course) {
         return userLink(user)
     }
-    return `https://github.com/${course.ScmOrganizationName}/${user.Login}-labs`
+    return `https://github.com/${course.ScmOrganizationName}/${studentRepoName(user.Login)}`
 }
 
 export const groupRepoLink = (group: Group, course?: Course): string => {
