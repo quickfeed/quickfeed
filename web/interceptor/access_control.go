@@ -202,7 +202,7 @@ var methodCheckers = map[string]accessChecker{
 	"GetAssignmentFeedback":    checkTeacher,
 	"IsEmptyRepo":              checkTeacher,
 	"GetSubmissionsByCourse":   checkTeacher,
-	"GetCourseLog":             checkTeacher,
+	"CourseLogStream":          checkTeacher,
 	"GetUsers":                 checkAdmin,
 }
 

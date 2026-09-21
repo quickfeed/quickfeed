@@ -44,8 +44,17 @@ type Store struct {
 	mu      sync.Mutex // guards courses; each course's own file is guarded by its courseFile
 	courses map[string]*courseFile
 
-	stop    chan struct{}
-	stopped chan struct{}
+	// subsMu guards subs and closed. It is the innermost of the store's locks:
+	// publish takes it while holding a courseFile's lock, so that subscribers
+	// see a course's records in the order they were written. Nothing takes mu
+	// or a courseFile lock while holding it.
+	subsMu sync.Mutex
+	subs   map[string][]*Subscription
+	closed bool
+
+	closeOnce sync.Once
+	stop      chan struct{}
+	stopped   chan struct{}
 }
 
 // courseFile holds the currently open file for one course and the UTC date
@@ -69,6 +78,7 @@ func NewStore(dir string, operator *slog.Logger) (*Store, error) {
 		operator: operator,
 		now:      time.Now,
 		courses:  make(map[string]*courseFile),
+		subs:     make(map[string][]*Subscription),
 		stop:     make(chan struct{}),
 		stopped:  make(chan struct{}),
 	}
@@ -91,24 +101,29 @@ func (s *Store) cleanupLoop() {
 	}
 }
 
-// Close stops the retention loop and closes every open course file.
+// Close stops the retention loop, ends every open subscription, and closes
+// every open course file. Calling it more than once is a no-op, so a store
+// handed to both a server's cleanup and a test's is safe to close twice.
 func (s *Store) Close() error {
-	close(s.stop)
-	<-s.stopped
-
-	s.mu.Lock()
-	defer s.mu.Unlock()
 	var errs []error
-	for _, cf := range s.courses {
-		cf.mu.Lock()
-		if cf.file != nil {
-			if err := cf.file.Close(); err != nil {
-				errs = append(errs, err)
+	s.closeOnce.Do(func() {
+		close(s.stop)
+		<-s.stopped
+		s.closeSubscriptions()
+
+		s.mu.Lock()
+		defer s.mu.Unlock()
+		for _, cf := range s.courses {
+			cf.mu.Lock()
+			if cf.file != nil {
+				if err := cf.file.Close(); err != nil {
+					errs = append(errs, err)
+				}
+				cf.file = nil
 			}
-			cf.file = nil
+			cf.mu.Unlock()
 		}
-		cf.mu.Unlock()
-	}
+	})
 	return errors.Join(errs...)
 }
 
@@ -149,8 +164,12 @@ func (s *Store) write(org string, p []byte) (int, error) {
 	n, err := cf.file.Write(p)
 	if err != nil {
 		s.reportError(org, "writing course log record", err)
+		return n, err
 	}
-	return n, err
+	// Still holding cf.mu, so subscribers see this course's records in the
+	// same order the file has them.
+	s.publish(org, p)
+	return n, nil
 }
 
 // courseFileFor returns org's file state, registering the course on its

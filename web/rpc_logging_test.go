@@ -7,6 +7,7 @@ import (
 	"strconv"
 	"strings"
 	"testing"
+	"time"
 
 	"connectrpc.com/connect"
 	"github.com/quickfeed/quickfeed/internal/qlog/label"
@@ -115,8 +116,16 @@ func TestRPCLoggingNoDuplicateScope(t *testing.T) {
 		{"IsEmptyRepo", func() {
 			_, _ = client.IsEmptyRepo(ctx, &qf.RepositoryRequest{CourseID: course.GetID(), GroupID: 1234})
 		}},
-		{"GetCourseLog", func() {
-			_, _ = client.GetCourseLog(ctx, &qf.CourseLogRequest{CourseID: course.GetID(), Limit: 1})
+		{"CourseLogStream", func() {
+			// Bounded, so the stream closes rather than tailing; the handler's
+			// records are written either way.
+			stream, err := client.CourseLogStream(ctx, (&qf.CourseLogRequest{CourseID: course.GetID(), Limit: 1}).WithTo(time.Now()))
+			if err != nil {
+				return
+			}
+			for stream.Receive() { //revive:disable-line:empty-block
+			}
+			_ = stream.Close()
 		}},
 	}
 	// Every attribute that some enclosing scope may already carry.

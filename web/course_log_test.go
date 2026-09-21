@@ -19,9 +19,14 @@ import (
 	"google.golang.org/protobuf/types/known/timestamppb"
 )
 
+// courseLogger returns a logger whose records the sink routes to course's log,
+// the same public path production code takes.
+func courseLogger(store *courselog.Store, course *qf.Course) *slog.Logger {
+	return slog.New(courselog.NewHandler(store)).With(qlog.CourseAttrs(course)...)
+}
+
 // seedCourseLog writes n records for course to a fresh store, alternating
-// between two repositories and INFO/ERROR levels, through the same public
-// path production code uses (a *slog.Logger scoped by qlog.CourseAttrs).
+// between two repositories and INFO/ERROR levels.
 func seedCourseLog(t *testing.T, dir string, course *qf.Course, n int) *courselog.Store {
 	t.Helper()
 	store, err := courselog.NewStore(dir, qtest.Logger(t))
@@ -33,7 +38,7 @@ func seedCourseLog(t *testing.T, dir string, course *qf.Course, n int) *courselo
 			t.Errorf("Close() error = %v", err)
 		}
 	})
-	logger := slog.New(courselog.NewHandler(store)).With(qlog.CourseAttrs(course)...)
+	logger := courseLogger(store, course)
 	for i := range n {
 		repo, level := "student-a", slog.LevelInfo
 		if i%2 == 1 {
@@ -44,7 +49,34 @@ func seedCourseLog(t *testing.T, dir string, course *qf.Course, n int) *courselo
 	return store
 }
 
-func TestGetCourseLog(t *testing.T) {
+// bounded returns req with To set to now, which makes CourseLogStream answer
+// with the backlog alone and close, rather than staying open to tail.
+func bounded(req *qf.CourseLogRequest) *qf.CourseLogRequest {
+	return req.WithTo(time.Now())
+}
+
+// backlog opens the stream for req and returns its first message, which holds
+// the stored entries matching req.
+func backlog(t *testing.T, client *web.MockClient, ctx context.Context, req *qf.CourseLogRequest) (*qf.CourseLog, error) {
+	t.Helper()
+	stream, err := client.CourseLogStream(ctx, req)
+	if err != nil {
+		return nil, err
+	}
+	t.Cleanup(func() { _ = stream.Close() })
+	return next(stream)
+}
+
+// next returns the stream's next message, or the error that ended it. A
+// streaming call reports rejection when the client reads, not when it opens.
+func next(stream *connect.ServerStreamForClient[qf.CourseLog]) (*qf.CourseLog, error) {
+	if !stream.Receive() {
+		return nil, stream.Err()
+	}
+	return stream.Msg(), nil
+}
+
+func TestCourseLogStream(t *testing.T) {
 	db, cleanup := qtest.TestDB(t)
 	defer cleanup()
 
@@ -63,7 +95,7 @@ func TestGetCourseLog(t *testing.T) {
 	client := web.NewMockClient(t, db, scm.WithMockOrgs(), web.WithInterceptors(), web.WithCourseLogStore(store))
 
 	t.Run("teacher success", func(t *testing.T) {
-		got, err := client.GetCourseLog(client.Context(t, teacher), &qf.CourseLogRequest{CourseID: course.GetID(), Limit: 100})
+		got, err := backlog(t, client, client.Context(t, teacher), bounded(&qf.CourseLogRequest{CourseID: course.GetID(), Limit: 100}))
 		if err != nil {
 			t.Fatal(err)
 		}
@@ -80,15 +112,32 @@ func TestGetCourseLog(t *testing.T) {
 		}
 	})
 
+	t.Run("bounded request ends the stream", func(t *testing.T) {
+		stream, err := client.CourseLogStream(client.Context(t, teacher), bounded(&qf.CourseLogRequest{CourseID: course.GetID(), Limit: 100}))
+		if err != nil {
+			t.Fatal(err)
+		}
+		defer func() { _ = stream.Close() }()
+		if _, err := next(stream); err != nil {
+			t.Fatal(err)
+		}
+		if stream.Receive() {
+			t.Error("stream sent a second message, want it closed after the backlog when To is set")
+		}
+		if err := stream.Err(); err != nil {
+			t.Errorf("Err() = %v, want nil: a bounded stream ends cleanly", err)
+		}
+	})
+
 	t.Run("student denied", func(t *testing.T) {
-		_, err := client.GetCourseLog(client.Context(t, student), &qf.CourseLogRequest{CourseID: course.GetID()})
+		_, err := backlog(t, client, client.Context(t, student), &qf.CourseLogRequest{CourseID: course.GetID()})
 		if connect.CodeOf(err) != connect.CodePermissionDenied {
 			t.Errorf("code = %v, want PermissionDenied", connect.CodeOf(err))
 		}
 	})
 
 	t.Run("non-enrolled admin denied", func(t *testing.T) {
-		_, err := client.GetCourseLog(client.Context(t, admin), &qf.CourseLogRequest{CourseID: course.GetID()})
+		_, err := backlog(t, client, client.Context(t, admin), &qf.CourseLogRequest{CourseID: course.GetID()})
 		if connect.CodeOf(err) != connect.CodePermissionDenied {
 			t.Errorf("code = %v, want PermissionDenied: a site admin who is not a teacher of the course", connect.CodeOf(err))
 		}
@@ -96,7 +145,7 @@ func TestGetCourseLog(t *testing.T) {
 
 	t.Run("inverted interval rejected", func(t *testing.T) {
 		now := time.Now()
-		_, err := client.GetCourseLog(client.Context(t, teacher), &qf.CourseLogRequest{
+		_, err := backlog(t, client, client.Context(t, teacher), &qf.CourseLogRequest{
 			CourseID: course.GetID(),
 			From:     timestamppb.New(now),
 			To:       timestamppb.New(now.Add(-time.Hour)),
@@ -107,9 +156,9 @@ func TestGetCourseLog(t *testing.T) {
 	})
 
 	t.Run("repository filter", func(t *testing.T) {
-		got, err := client.GetCourseLog(client.Context(t, teacher), &qf.CourseLogRequest{
+		got, err := backlog(t, client, client.Context(t, teacher), bounded(&qf.CourseLogRequest{
 			CourseID: course.GetID(), Repository: "student-a", Limit: 100,
-		})
+		}))
 		if err != nil {
 			t.Fatal(err)
 		}
@@ -128,9 +177,9 @@ func TestGetCourseLog(t *testing.T) {
 	})
 
 	t.Run("level filter", func(t *testing.T) {
-		got, err := client.GetCourseLog(client.Context(t, teacher), &qf.CourseLogRequest{
+		got, err := backlog(t, client, client.Context(t, teacher), bounded(&qf.CourseLogRequest{
 			CourseID: course.GetID(), Level: qf.CourseLogEntry_ERROR, Limit: 100,
-		})
+		}))
 		if err != nil {
 			t.Fatal(err)
 		}
@@ -145,7 +194,7 @@ func TestGetCourseLog(t *testing.T) {
 	})
 
 	t.Run("truncation flag", func(t *testing.T) {
-		got, err := client.GetCourseLog(client.Context(t, teacher), &qf.CourseLogRequest{CourseID: course.GetID(), Limit: 2})
+		got, err := backlog(t, client, client.Context(t, teacher), bounded(&qf.CourseLogRequest{CourseID: course.GetID(), Limit: 2}))
 		if err != nil {
 			t.Fatal(err)
 		}
@@ -158,22 +207,116 @@ func TestGetCourseLog(t *testing.T) {
 	})
 
 	t.Run("empty log", func(t *testing.T) {
-		got, err := client.GetCourseLog(client.Context(t, teacher), &qf.CourseLogRequest{CourseID: otherCourse.GetID(), Limit: 100})
+		got, err := backlog(t, client, client.Context(t, teacher), bounded(&qf.CourseLogRequest{CourseID: otherCourse.GetID(), Limit: 100}))
 		if err != nil {
 			t.Fatal(err)
 		}
 		if len(got.GetEntries()) != 0 || len(got.GetRepositories()) != 0 || got.GetTruncated() {
-			t.Errorf("GetCourseLog() = %+v, want an empty result for a course with no log activity", got)
+			t.Errorf("CourseLogStream() = %+v, want an empty result for a course with no log activity", got)
 		}
 	})
 }
 
-// TestGetCourseLogHandlerErrors exercises GetCourseLog's own error paths
+// TestCourseLogStreamTail covers the live half: a request without To keeps the
+// stream open and delivers entries as they are logged, which is the whole
+// point of streaming the log rather than polling it.
+func TestCourseLogStreamTail(t *testing.T) {
+	db, cleanup := qtest.TestDB(t)
+	defer cleanup()
+
+	course := qtest.MockCourses[0]
+	teacher := qtest.CreateFakeUser(t, db)
+	qtest.CreateCourse(t, db, teacher, course)
+
+	store := seedCourseLog(t, t.TempDir(), course, 2)
+	client := web.NewMockClient(t, db, scm.WithMockOrgs(), web.WithInterceptors(), web.WithCourseLogStore(store))
+	logger := courseLogger(store, course)
+
+	stream, err := client.CourseLogStream(client.Context(t, teacher), &qf.CourseLogRequest{CourseID: course.GetID(), Limit: 100})
+	if err != nil {
+		t.Fatal(err)
+	}
+	defer func() { _ = stream.Close() }()
+
+	first, err := next(stream)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if len(first.GetEntries()) != 2 {
+		t.Fatalf("len(Entries) = %d, want the 2 seeded entries in the backlog", len(first.GetEntries()))
+	}
+
+	logger.Warn("pushed while watching", label.Repository, "student-c")
+	live, err := next(stream)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if len(live.GetEntries()) != 1 {
+		t.Fatalf("len(Entries) = %d, want 1 entry per live message", len(live.GetEntries()))
+	}
+	if got := live.GetEntries()[0].GetMessage(); got != "pushed while watching" {
+		t.Errorf("Message = %q, want %q", got, "pushed while watching")
+	}
+	// A repository first seen live must be offered as a filter option.
+	if repos := live.GetRepositories(); len(repos) != 1 || repos[0] != "student-c" {
+		t.Errorf("Repositories = %v, want [student-c]: a newly seen repository is named once", repos)
+	}
+	// ...and only once.
+	logger.Warn("second push", label.Repository, "student-c")
+	again, err := next(stream)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if repos := again.GetRepositories(); len(repos) != 0 {
+		t.Errorf("Repositories = %v, want none: the client already has student-c", repos)
+	}
+}
+
+// TestCourseLogStreamTailFilters checks that the live half applies the same
+// repository and level filters as the backlog, so a filtered view does not
+// fill up with entries the teacher asked to hide.
+func TestCourseLogStreamTailFilters(t *testing.T) {
+	db, cleanup := qtest.TestDB(t)
+	defer cleanup()
+
+	course := qtest.MockCourses[0]
+	teacher := qtest.CreateFakeUser(t, db)
+	qtest.CreateCourse(t, db, teacher, course)
+
+	store := seedCourseLog(t, t.TempDir(), course, 0)
+	client := web.NewMockClient(t, db, scm.WithMockOrgs(), web.WithInterceptors(), web.WithCourseLogStore(store))
+	logger := courseLogger(store, course)
+
+	stream, err := client.CourseLogStream(client.Context(t, teacher), &qf.CourseLogRequest{
+		CourseID: course.GetID(), Repository: "student-a", Level: qf.CourseLogEntry_WARN, Limit: 100,
+	})
+	if err != nil {
+		t.Fatal(err)
+	}
+	defer func() { _ = stream.Close() }()
+	if _, err := next(stream); err != nil {
+		t.Fatal(err)
+	}
+
+	logger.Info("below the level filter", label.Repository, "student-a")
+	logger.Warn("wrong repository", label.Repository, "student-b")
+	logger.Warn("kept", label.Repository, "student-a")
+
+	live, err := next(stream)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if got := live.GetEntries()[0].GetMessage(); got != "kept" {
+		t.Errorf("Message = %q, want %q: the filtered-out entries must not be sent", got, "kept")
+	}
+}
+
+// TestCourseLogStreamHandlerErrors exercises the handler's own error paths
 // directly, without the access-control interceptor: an unknown course ID
 // would never reach checkTeacher's course anyway, since access is granted or
 // denied from the caller's actual enrollments, not from whether the
 // requested course exists.
-func TestGetCourseLogHandlerErrors(t *testing.T) {
+func TestCourseLogStreamHandlerErrors(t *testing.T) {
 	db, cleanup := qtest.TestDB(t)
 	defer cleanup()
 
@@ -186,7 +329,7 @@ func TestGetCourseLogHandlerErrors(t *testing.T) {
 	client := web.NewMockClient(t, db, scm.WithMockOrgs(), web.WithCourseLogStore(store))
 
 	t.Run("unknown course", func(t *testing.T) {
-		_, err := client.GetCourseLog(t.Context(), &qf.CourseLogRequest{CourseID: 1337, Limit: 10})
+		_, err := backlog(t, client, t.Context(), &qf.CourseLogRequest{CourseID: 1337, Limit: 10})
 		if connect.CodeOf(err) != connect.CodeNotFound {
 			t.Errorf("code = %v, want NotFound", connect.CodeOf(err))
 		}
@@ -203,7 +346,7 @@ func TestGetCourseLogHandlerErrors(t *testing.T) {
 			t.Fatal(err)
 		}
 
-		_, err := client.GetCourseLog(t.Context(), &qf.CourseLogRequest{CourseID: course.GetID(), Limit: 10})
+		_, err := backlog(t, client, t.Context(), &qf.CourseLogRequest{CourseID: course.GetID(), Limit: 10})
 		if connect.CodeOf(err) != connect.CodeInternal {
 			t.Errorf("code = %v, want Internal for a malformed non-final line", connect.CodeOf(err))
 		}
