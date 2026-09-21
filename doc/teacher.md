@@ -118,6 +118,8 @@ The free-text box and the Columns row instead act on what is already on screen; 
 Entries read oldest first, with new ones arriving at the bottom; the order button reverses that.
 While you are scrolled to the newest end, the view follows along, and it stops following as soon as you scroll away to read something.
 
+A test run's output is too long for a table cell, so the cell shows its first line and a "Show" button that opens the whole thing.
+
 ## Teaching Assistants
 
 ### To Give Your Teaching Assistants Access To Your Course You Have To

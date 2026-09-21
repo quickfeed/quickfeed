@@ -2,12 +2,18 @@ import { useLayoutEffect, useMemo, useRef, useState, type ReactNode } from "reac
 import type { CourseLogEntry } from "../../../proto/qf/requests_pb"
 import { CourseLogEntry_Level } from "../../../proto/qf/requests_pb"
 import LogCard from "../LogCard"
+import LogViewerModal from "../LogViewerModal"
 import { entryTime, LEVEL_NAMES } from "./courseLogFormatting"
 
 interface Column {
     id: string
     label: string
-    render: (entry: CourseLogEntry) => ReactNode
+    /** The cell's value as plain text, for a column holding free text. */
+    text?: (entry: CourseLogEntry) => string
+    /** Renders the cell. A column with `text` is handed its value ready to
+     *  show: the whole of it, or its first line and a Show button when it is
+     *  long. A column without one is free to render the entry as it likes. */
+    render: (entry: CourseLogEntry, value: ReactNode) => ReactNode
 }
 
 const LEVEL_BADGE_COLOR: Record<CourseLogEntry_Level, string> = {
@@ -26,18 +32,42 @@ const columns: Column[] = [
             </span>
         ),
     },
-    { id: "repository", label: "Repository", render: entry => entry.repository },
-    { id: "repositoryType", label: "Repository type", render: entry => entry.repositoryType },
+    { id: "repository", label: "Repository", text: entry => entry.repository, render: (_, value) => value },
+    { id: "repositoryType", label: "Repository type", text: entry => entry.repositoryType, render: (_, value) => value },
     {
-        id: "message", label: "Message", render: entry => (
+        // The store cuts a record's message at 64 KiB, so a message is as
+        // free-form as any field and collapses on the same rule.
+        id: "message", label: "Message", text: entry => entry.message,
+        render: (entry, value) => (
             <span className="flex flex-wrap items-center gap-2">
-                <span>{entry.message}</span>
+                <span className="min-w-0">{value}</span>
                 {entry.truncated && <span className="badge badge-xs badge-warning">truncated</span>}
             </span>
         ),
     },
-    { id: "source", label: "Source", render: entry => entry.source },
+    { id: "source", label: "Source", text: entry => entry.source, render: (_, value) => value },
 ]
+
+// COLLAPSE_AT is the width, in characters, beyond which a value is shown as
+// its first line plus a Show button. A test run's output is thousands of
+// characters over several lines, and left whole it stretches its column until
+// the rest of the table is unreadable.
+const COLLAPSE_AT = 160
+
+const isLong = (value: string): boolean => value.includes("\n") || value.length > COLLAPSE_AT
+
+interface CollapsedValueProps {
+    value: string
+    onShow: () => void
+}
+
+/** CollapsedValue shows a long value's first line, and offers the rest. */
+const CollapsedValue = ({ value, onShow }: CollapsedValueProps) => (
+    <span className="flex items-center gap-2 max-w-[28rem]">
+        <span className="truncate opacity-70">{value.split("\n", 1)[0]}</span>
+        <button type="button" className="btn btn-xs shrink-0" onClick={onShow}>Show</button>
+    </span>
+)
 
 // FOLLOW_SLACK is how close to the newest end of the log the view must be for
 // it to keep following: a teacher who has scrolled away to read something is
@@ -54,6 +84,7 @@ interface CourseLogTableProps {
 const CourseLogTable = ({ entries, rows, controls, onLoadOlder }: CourseLogTableProps) => {
     const [hidden, setHidden] = useState<Set<string>>(new Set())
     const [newestFirst, setNewestFirst] = useState(false)
+    const [shown, setShown] = useState<{ title: string, text: string } | null>(null)
     const scroller = useRef<HTMLDivElement>(null)
     // Whether the view sits at the newest end of the log. Recorded as the
     // teacher scrolls rather than when new rows land, since by then the new
@@ -85,7 +116,8 @@ const CourseLogTable = ({ entries, rows, controls, onLoadOlder }: CourseLogTable
             .map((key): Column => ({
                 id: `field:${key}`,
                 label: columns.some(column => column.id === key) ? `${key} (field)` : key,
-                render: entry => entry.fields[key] ?? "",
+                text: entry => entry.fields[key] ?? "",
+                render: (_, value) => value,
             })),
     ], [entries])
     const visible = available.filter(column => !hidden.has(column.id))
@@ -171,16 +203,32 @@ const CourseLogTable = ({ entries, rows, controls, onLoadOlder }: CourseLogTable
                         {ordered.map((entry, idx) => (
                             // eslint-disable-next-line react/no-array-index-key
                             <tr key={idx}>
-                                {visible.map(column => (
-                                    <td key={column.id} className="align-top whitespace-pre-wrap break-words">
-                                        {column.render(entry)}
-                                    </td>
-                                ))}
+                                {visible.map(column => {
+                                    const text = column.text?.(entry) ?? ""
+                                    const value = isLong(text)
+                                        ? <CollapsedValue value={text} onShow={() => setShown({ title: column.label, text })} />
+                                        : text
+                                    return (
+                                        <td key={column.id} className="align-top whitespace-pre-wrap break-words">
+                                            {column.render(entry, value)}
+                                        </td>
+                                    )
+                                })}
                             </tr>
                         ))}
                     </tbody>
                 </table>
             </div>
+            {shown && (
+                <LogViewerModal
+                    title={shown.title}
+                    text={shown.text}
+                    // A column label may hold spaces and parentheses, which make an
+                    // awkward file name; keep it to what reads well in a shell.
+                    filename={`course-log-${shown.title.replace(/[^\w.-]+/g, "-")}`}
+                    onClose={() => setShown(null)}
+                />
+            )}
         </LogCard>
     )
 }

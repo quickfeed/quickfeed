@@ -212,14 +212,88 @@ describe("CourseLogs", () => {
         }))
         renderCourseLogs(api)
 
-        // The CI output a teacher needs lives in fields; it must be on screen,
-        // not only in the copied and downloaded text.
-        expect(await screen.findByText(/--- FAIL: TestFoo/)).toBeTruthy()
         // Fields render as their own column, headed by the key, with only the
         // value in each row.
-        expect(screen.getByRole("columnheader", { name: "assignment" })).toBeTruthy()
+        expect(await screen.findByRole("columnheader", { name: "assignment" })).toBeTruthy()
         expect(screen.getByText("lab1")).toBeTruthy()
         expect(screen.getByText("ci/run_tests.go:120")).toBeTruthy()
+    })
+
+    test("collapses a multi-line field and shows it in full on request", async () => {
+        const output = "--- FAIL: TestFoo\n    foo_test.go:12: want 1, got 2"
+        const { api } = backlog(log({
+            entries: [entry({ message: "test run failed", level: CourseLogEntry_Level.ERROR, fields: { output } })],
+            repositories: ["student-a"],
+        }))
+        renderCourseLogs(api)
+        await screen.findByText("test run failed")
+
+        // Left whole, a test run's output stretches its column until the rest
+        // of the table is unreadable; the cell keeps only its first line.
+        expect(screen.getByText("--- FAIL: TestFoo")).toBeTruthy()
+        expect(screen.queryByText(/want 1, got 2/)).toBeFalsy()
+
+        fireEvent.click(screen.getByRole("button", { name: "Show" }))
+        const dialog = screen.getByRole("dialog")
+        expect(dialog.textContent).toContain("want 1, got 2")
+        // The overlay is headed by the field it came from.
+        expect(dialog.textContent).toContain("output")
+
+        fireEvent.keyDown(window, { key: "Escape" })
+        await waitFor(() => expect(screen.queryByRole("dialog")).toBeFalsy())
+        expect(screen.queryByText(/want 1, got 2/)).toBeFalsy()
+    })
+
+    test("collapses a long message, keeping the truncated badge beside it", async () => {
+        // The store cuts a record's message at 64 KiB and marks the record, so
+        // a message is as free-form as a field and must collapse the same way.
+        const message = `cloning failed\n${"x".repeat(400)}`
+        const { api } = backlog(log({
+            entries: [entry({ message, level: CourseLogEntry_Level.ERROR, truncated: true })],
+            repositories: ["student-a"],
+        }))
+        renderCourseLogs(api)
+        await screen.findByText("cloning failed")
+
+        expect(screen.queryByText(new RegExp("x".repeat(80)))).toBeFalsy()
+        // The badge says the record was cut, which the overlay cannot show.
+        expect(screen.getByText("truncated")).toBeTruthy()
+
+        fireEvent.click(screen.getByRole("button", { name: "Show" }))
+        const dialog = screen.getByRole("dialog")
+        expect(dialog.textContent).toContain("x".repeat(400))
+        // The overlay names itself for a screen reader, which otherwise
+        // announces it as an unnamed dialog.
+        expect(dialog.getAttribute("aria-label")).toBe("Message")
+    })
+
+    test("says so when Load older fails, without disturbing the live view", async () => {
+        // The first stream is the live tail; the second is the bounded request
+        // Load older makes, which here is refused.
+        const { api } = mockStream(call => call === 0
+            ? log({ entries: [entry({ message: "already loaded" })], repositories: ["student-a"] })
+            : new ConnectError("reading course log", Code.Internal))
+        renderCourseLogs(api)
+        await screen.findByText("already loaded")
+
+        fireEvent.click(screen.getByRole("button", { name: "Load older" }))
+        await screen.findByText(/Could not load older entries/)
+        // The live stream is still running and what it loaded still stands, so
+        // the page must not be replaced by an error.
+        expect(screen.getByText("already loaded")).toBeTruthy()
+        expect(screen.queryByText(/Failed to load course logs/)).toBeFalsy()
+    })
+
+    test("leaves a short field value in the cell", async () => {
+        const { api } = backlog(log({
+            entries: [entry({ fields: { commit: "abc123" } })],
+            repositories: ["student-a"],
+        }))
+        renderCourseLogs(api)
+        await screen.findByText("resolved push repository")
+
+        expect(screen.getByText("abc123")).toBeTruthy()
+        expect(screen.queryByRole("button", { name: "Show" })).toBeFalsy()
     })
 
     test("gives repositoryType its own column, and a colliding field key its own", async () => {
