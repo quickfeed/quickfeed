@@ -7,6 +7,7 @@ import (
 	"strings"
 	"time"
 
+	"github.com/quickfeed/quickfeed/kit/score/testlog"
 	"google.golang.org/protobuf/types/known/timestamppb"
 )
 
@@ -127,8 +128,13 @@ func (pe parseErrors) Error() string {
 // ExtractResults returns the results from a test execution extracted from the given out string.
 // The provided zeroScoreTests must contain a zero score value for all tests that are expected
 // to be present in the results.
+//
+// The output is attributed to the tests that produced it, so that each score
+// carries what its own test printed, the outcome the test framework reported
+// for it, and how long it took. The build log keeps what belonged to no test:
+// the run script's own output, the compilation phase, and anything printed
+// after the tests finished.
 func ExtractResults(out, secret string, execTime time.Duration, zeroScoreTests []*Score) (*Results, error) {
-	var filteredLog []string
 	errs := make(parseErrors, 0)
 	results := newResults()
 	parsedScores := 0
@@ -138,41 +144,91 @@ func ExtractResults(out, secret string, execTime time.Duration, zeroScoreTests [
 		results.addScore(expectedTest)
 	}
 
-	// parse the output and update scores with actual results
-	for line := range strings.SplitSeq(out, "\n") {
-		// check if line has expected JSON score string
-		if HasPrefix(line) {
-			sc, err := parse(line, secret)
-			if err != nil {
-				errs = append(errs, fmt.Errorf("parsing line '%s': %w", line, err))
-				continue
-			}
-			// only add the score if it's in the expected tests
-			if slices.ContainsFunc(zeroScoreTests, func(expected *Score) bool {
-				return expected.GetTestName() == sc.GetTestName()
-			}) {
-				parsedScores++
-				results.addScore(sc)
-			}
-		} else if line != "" { // include only non-empty lines
-			// the filtered log without JSON score strings
-			filteredLog = append(filteredLog, line)
+	log := testlog.Scan(out, HasPrefix)
+	// A test's name in the score object need not be the name of the Go test
+	// that emitted it, so the emitting test is recorded as the score's source.
+	source := make(map[string]*testlog.TestRun)
+	addScore := func(line string, run *testlog.TestRun) {
+		sc, err := parse(line, secret)
+		if err != nil {
+			errs = append(errs, fmt.Errorf("parsing line '%s': %w", line, err))
+			return
+		}
+		// only add the score if it's in the expected tests
+		if !slices.ContainsFunc(zeroScoreTests, func(expected *Score) bool {
+			return expected.GetTestName() == sc.GetTestName()
+		}) {
+			return
+		}
+		parsedScores++
+		results.addScore(sc)
+		if run != nil {
+			source[sc.GetTestName()] = run
 		}
 	}
+	for _, line := range log.Scores {
+		addScore(line, nil)
+	}
+	for _, run := range log.Tests {
+		for _, line := range run.Scores {
+			addScore(line, run)
+		}
+	}
+
+	scores := results.toScoreSlice()
+	for _, sc := range scores {
+		run, ok := source[sc.GetTestName()]
+		if !ok {
+			// The score line was not attributed to a test, either because it
+			// was printed outside one or because no score line was parsed for
+			// this expected test at all. Fall back to the test of that name.
+			run = log.Test(sc.GetTestName())
+		}
+		sc.attach(run, secret)
+	}
+
 	res := &Results{
 		BuildInfo: &BuildInfo{
 			BuildDate:      timestamppb.Now(),
 			SubmissionDate: timestamppb.Now(),
-			BuildLog:       strings.Join(filteredLog, "\n"),
+			BuildLog:       Redact(strings.Join(log.Unattributed, "\n"), secret),
 			ExecTime:       execTime.Milliseconds(),
 		},
-		Scores:       results.toScoreSlice(),
+		Scores:       scores,
 		ParsedScores: parsedScores,
 	}
 	if len(errs) > 0 {
 		return res, errs
 	}
 	return res, nil
+}
+
+// attach records on the score what the run of its test produced. A test that
+// reported its own details keeps them: they are the teacher's own words, and
+// the diagnostics scraped from the output would only repeat them.
+func (s *Score) attach(run *testlog.TestRun, secret string) {
+	if run == nil {
+		return
+	}
+	s.Status = statusOf(run.Status)
+	s.Elapsed = run.Elapsed
+	s.TestOutput = Redact(strings.Join(run.Output, "\n"), secret)
+	if s.GetTestDetails() == "" {
+		s.TestDetails = Redact(strings.Join(run.Failures, "\n"), secret)
+	}
+}
+
+func statusOf(status testlog.Status) TestStatus {
+	switch status {
+	case testlog.StatusPassed:
+		return TestStatus_PASSED
+	case testlog.StatusFailed:
+		return TestStatus_FAILED
+	case testlog.StatusSkipped:
+		return TestStatus_SKIPPED
+	default:
+		return TestStatus_NOT_RUN
+	}
 }
 
 // GetBuildInfo returns the build info for the results object after nil check.

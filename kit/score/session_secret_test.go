@@ -14,3 +14,14 @@ func TestSessionSecret(t *testing.T) {
 		t.Fatalf("Unexpected access to %s=%s", secretEnvName, sessionSecret)
 	}
 }
+
+func TestRedact(t *testing.T) {
+	const secret = "quickfeed-session-secret"
+	got := Redact("failure: "+secret+" repeated "+secret, secret)
+	if want := "failure: [REDACTED] repeated [REDACTED]"; got != want {
+		t.Errorf("Redact() = %q, want %q", got, want)
+	}
+	if got := Redact("nothing to redact", ""); got != "nothing to redact" {
+		t.Errorf("Redact() with an empty secret = %q, want the output unchanged", got)
+	}
+}

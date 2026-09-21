@@ -5,6 +5,8 @@ import (
 	"errors"
 	"fmt"
 	"strings"
+
+	"github.com/quickfeed/quickfeed/kit/score/testlog"
 )
 
 var (
@@ -80,4 +82,11 @@ func HasPrefix(s string) bool {
 		}
 	}
 	return false
+}
+
+// HasScore reports whether s carries a score object, in any of the forms a test
+// run can print one. Use it to decide whether a line must be kept; use parse to
+// read the score itself, which Scan has already separated from the output.
+func HasScore(s string) bool {
+	return testlog.CarriesScore(s, HasPrefix)
 }
