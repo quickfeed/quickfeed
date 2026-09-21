@@ -35,14 +35,11 @@ func WithCourse(ctx context.Context, course Course, attrs ...any) (context.Conte
 	return WithLogger(ctx, append(CourseAttrs(course), attrs...)...)
 }
 
-// WithCourseLog is WithCourse without CourseID, for the handful of RPC call
-// paths where the logging interceptors already attached CourseID to the
-// request logger from the caller's claims; see enrichRequestLogger. It still
-// attaches CourseCode, which is not part of that RPC scope, and the course
-// log marker.
+// WithCourseLog adds the course log marker where the RPC logging interceptors
+// already attached CourseID and, if its lookup succeeded, CourseCode. As with
+// WithCourse, course must come from the database, never from request data.
 func WithCourseLog(ctx context.Context, course Course, attrs ...any) (context.Context, *slog.Logger) {
 	scoped := append([]any{
-		label.CourseCode, course.GetCode(),
 		label.CourseLog, course.GetScmOrganizationName(),
 	}, attrs...)
 	return WithLogger(ctx, scoped...)

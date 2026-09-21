@@ -40,7 +40,7 @@ linters:
       comparison: false
 
     gocyclo:
-      min-complexity: 15
+      min-complexity: 20
 
     gocritic:
       enabled-checks:

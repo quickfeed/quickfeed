@@ -6,6 +6,7 @@ import (
 	"time"
 
 	"connectrpc.com/connect"
+	"github.com/quickfeed/quickfeed/database"
 	"github.com/quickfeed/quickfeed/internal/qlog"
 	"github.com/quickfeed/quickfeed/internal/qlog/label"
 	"github.com/quickfeed/quickfeed/qf"
@@ -88,25 +89,48 @@ func (*RPCLoggingInterceptor) WrapStreamingClient(next connect.StreamingClientFu
 
 // ContextLoggingInterceptor enriches the request logger after authentication
 // and access control have accepted the request.
-type ContextLoggingInterceptor struct{}
+type ContextLoggingInterceptor struct {
+	users   logNames
+	courses logNames
+}
 
-func NewContextLoggingInterceptor() *ContextLoggingInterceptor {
-	return &ContextLoggingInterceptor{}
+func NewContextLoggingInterceptor(db database.Database) *ContextLoggingInterceptor {
+	return &ContextLoggingInterceptor{
+		users: logNames{lookup: func(id uint64) (string, error) {
+			user, err := db.GetUser(id)
+			return user.GetLogin(), err
+		}},
+		courses: logNames{lookup: func(id uint64) (string, error) {
+			course, err := db.GetCourse(id)
+			return course.GetCode(), err
+		}},
+	}
 }
 
 // requestLogger returns an enriched logger with the calling user's ID and
-// the request's course ID, if the caller's JWT claims indicate that the
-// caller is a trusted member of the course. It returns false if the request
-// carries no claims, leaving the logger unchanged.
-func requestLogger(ctx context.Context, request any) (*slog.Logger, bool) {
+// login, and the request's course ID and code, if the caller's JWT claims
+// indicate that the caller is a trusted member of the course. A name that
+// cannot be looked up is left out, keeping the IDs. It returns false if the
+// request carries no claims, leaving the logger unchanged.
+func (i *ContextLoggingInterceptor) requestLogger(ctx context.Context, request any) (*slog.Logger, bool) {
 	claims, ok := auth.ClaimsFromContext(ctx)
 	if !ok {
 		return nil, false
 	}
 	logger := qlog.FromContext(ctx).With(label.UserID, claims.UserID)
+	if name, err := i.users.get(claims.UserID); err != nil {
+		logger.Debug("looking up user for logging", label.Error, err)
+	} else if name != "" {
+		logger = logger.With(label.User, name)
+	}
 	courseID := getCourseID(request)
 	if status, trusted := claims.Courses[courseID]; courseID > 0 && trusted && status != qf.Enrollment_NONE {
 		logger = logger.With(label.CourseID, courseID)
+		if code, err := i.courses.get(courseID); err != nil {
+			logger.Debug("looking up course for logging", label.Error, err)
+		} else if code != "" {
+			logger = logger.With(label.CourseCode, code)
+		}
 	}
 	return logger, true
 }
@@ -121,8 +145,8 @@ func setCompletionLogger(ctx context.Context, logger *slog.Logger) {
 // enrichRequestLogger adds the calling user, and the requested course when the
 // caller is a trusted member of it, to the request logger. Handlers obtain the
 // enriched logger with qlog.FromContext and must not repeat these attributes.
-func enrichRequestLogger(ctx context.Context, request any) context.Context {
-	logger, ok := requestLogger(ctx, request)
+func (i *ContextLoggingInterceptor) enrichRequestLogger(ctx context.Context, request any) context.Context {
+	logger, ok := i.requestLogger(ctx, request)
 	if !ok {
 		return ctx
 	}
@@ -130,9 +154,9 @@ func enrichRequestLogger(ctx context.Context, request any) context.Context {
 	return qlog.NewContext(ctx, logger)
 }
 
-func (*ContextLoggingInterceptor) WrapUnary(next connect.UnaryFunc) connect.UnaryFunc {
+func (i *ContextLoggingInterceptor) WrapUnary(next connect.UnaryFunc) connect.UnaryFunc {
 	return func(ctx context.Context, request connect.AnyRequest) (connect.AnyResponse, error) {
-		return next(enrichRequestLogger(ctx, request.Any()), request)
+		return next(i.enrichRequestLogger(ctx, request.Any()), request)
 	}
 }
 
@@ -142,12 +166,12 @@ func (*ContextLoggingInterceptor) WrapUnary(next connect.UnaryFunc) connect.Unar
 // completion record only, and a handler that needs a course scope derives its
 // own with qlog.WithCourse. Both loggers derive from the unenriched ctx, so
 // neither repeats the other's attributes.
-func (*ContextLoggingInterceptor) WrapStreamingHandler(next connect.StreamingHandlerFunc) connect.StreamingHandlerFunc {
+func (i *ContextLoggingInterceptor) WrapStreamingHandler(next connect.StreamingHandlerFunc) connect.StreamingHandlerFunc {
 	return func(ctx context.Context, conn connect.StreamingHandlerConn) error {
-		return next(enrichRequestLogger(ctx, nil), &checkedConn{
+		return next(i.enrichRequestLogger(ctx, nil), &checkedConn{
 			StreamingHandlerConn: conn,
 			check: func(req any) error {
-				if logger, ok := requestLogger(ctx, req); ok {
+				if logger, ok := i.requestLogger(ctx, req); ok {
 					setCompletionLogger(ctx, logger)
 				}
 				return nil

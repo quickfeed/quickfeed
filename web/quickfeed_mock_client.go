@@ -152,8 +152,8 @@ func AccessControlInterceptorFunc(_ *slog.Logger, _ *auth.TokenManager, db datab
 	return interceptor.NewAccessControlInterceptor(db)
 }
 
-func ContextLoggingInterceptorFunc(_ *slog.Logger, _ *auth.TokenManager, _ database.Database) connect.Interceptor {
-	return interceptor.NewContextLoggingInterceptor()
+func ContextLoggingInterceptorFunc(_ *slog.Logger, _ *auth.TokenManager, db database.Database) connect.Interceptor {
+	return interceptor.NewContextLoggingInterceptor(db)
 }
 
 func TokenInterceptorFunc(_ *slog.Logger, tm *auth.TokenManager, _ database.Database) connect.Interceptor {
