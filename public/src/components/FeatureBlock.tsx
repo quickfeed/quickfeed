@@ -5,22 +5,21 @@ interface FeatureBlockProps {
     heading: string
     subheading: string
     content: string
-    imageSrc: string
+    media: ReactNode
     reverse?: boolean
 }
 
 /**
-* FeatureBlock is a component that displays a feature with an image and text.
+* FeatureBlock is a component that displays a feature with an illustration and text.
 * @param heading The main heading of the feature block.
 * @param subheading The subheading of the feature block.
 * @param content The content of the feature block.
-* @param imageSrc The source URL of the image to be displayed. The image is
-* marked with the `about-screenshot` class, which tailwind.css uses to adapt
-* the light-theme UI screenshots to the dark themes.
-* @param reverse A boolean indicating whether to reverse the order of the image and text.
+* @param media The illustration to display beside the text, typically a
+* PreviewFrame wrapping a preview of the QuickFeed interface.
+* @param reverse A boolean indicating whether to reverse the order of the media and text.
 */
 
-const FeatureBlock: React.FC<FeatureBlockProps> = ({ heading, subheading, content, imageSrc, reverse = false }) => {
+const FeatureBlock: React.FC<FeatureBlockProps> = ({ heading, subheading, content, media, reverse = false }) => {
     return (
         <div className={`flex flex-col ${reverse ? 'md:flex-row-reverse' : 'md:flex-row'} items-center gap-12 my-12`}>
             <div className="flex-1 space-y-4">
@@ -34,12 +33,8 @@ const FeatureBlock: React.FC<FeatureBlockProps> = ({ heading, subheading, conten
                     {content}
                 </p>
             </div>
-            <div className="flex-1">
-                <img
-                    src={imageSrc}
-                    alt={heading}
-                    className="about-screenshot w-full h-auto rounded-lg border border-base-300 shadow-xl"
-                />
+            <div className="flex-1 min-w-0">
+                {media}
             </div>
         </div>
     )
