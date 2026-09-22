@@ -65,9 +65,7 @@ func (*MetricsInterceptor) WrapStreamingHandler(next connect.StreamingHandlerFun
 }
 
 func (*MetricsInterceptor) WrapStreamingClient(next connect.StreamingClientFunc) connect.StreamingClientFunc {
-	return connect.StreamingClientFunc(func(ctx context.Context, spec connect.Spec) connect.StreamingClientConn {
-		return next(ctx, spec)
-	})
+	return next
 }
 
 func (*MetricsInterceptor) WrapUnary(next connect.UnaryFunc) connect.UnaryFunc {
@@ -91,8 +89,10 @@ func (*MetricsInterceptor) WrapUnary(next connect.UnaryFunc) connect.UnaryFunc {
 }
 
 func metricsTimer(method string) func() {
-	responseTimer := prometheus.NewTimer(prometheus.ObserverFunc(
-		responseTimeGauge.WithLabelValues(method).Set),
+	responseTimer := prometheus.NewTimer(
+		prometheus.ObserverFunc(
+			responseTimeGauge.WithLabelValues(method).Set,
+		),
 	)
 	return func() { responseTimer.ObserveDuration() }
 }
