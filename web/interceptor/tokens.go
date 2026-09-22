@@ -52,15 +52,11 @@ func NewTokenInterceptor(tm *auth.TokenManager) *TokenInterceptor {
 }
 
 func (*TokenInterceptor) WrapStreamingHandler(next connect.StreamingHandlerFunc) connect.StreamingHandlerFunc {
-	return connect.StreamingHandlerFunc(func(ctx context.Context, conn connect.StreamingHandlerConn) error {
-		return next(ctx, conn)
-	})
+	return next
 }
 
 func (*TokenInterceptor) WrapStreamingClient(next connect.StreamingClientFunc) connect.StreamingClientFunc {
-	return connect.StreamingClientFunc(func(ctx context.Context, spec connect.Spec) connect.StreamingClientConn {
-		return next(ctx, spec)
-	})
+	return next
 }
 
 // WrapUnary updates list of users who need a new JWT next time they send a request to the server.
