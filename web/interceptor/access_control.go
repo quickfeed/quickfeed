@@ -229,9 +229,7 @@ func (a *AccessControlInterceptor) WrapStreamingHandler(next connect.StreamingHa
 }
 
 func (*AccessControlInterceptor) WrapStreamingClient(next connect.StreamingClientFunc) connect.StreamingClientFunc {
-	return connect.StreamingClientFunc(func(ctx context.Context, spec connect.Spec) connect.StreamingClientConn {
-		return next(ctx, spec)
-	})
+	return next
 }
 
 // WrapUnary checks user information stored in the JWT claims against the access checker for the method.
