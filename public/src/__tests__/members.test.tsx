@@ -20,7 +20,7 @@ const staleEnrollment = () => create(EnrollmentSchema, {
     user: create(UserSchema, { ID: BigInt(6), Name: "Ola Nordmann", Login: "olan" }),
 })
 
-const renderMembers = (overrides: Partial<State> = {}) => {
+const renderMembers = async (overrides: Partial<State> = {}) => {
     const api = new ApiClient()
     api.client = {
         ...api.client,
@@ -34,32 +34,34 @@ const renderMembers = (overrides: Partial<State> = {}) => {
         groups: { "1": MockData.mockedGroups().groups },
         ...overrides,
     }, api)
-    render(
-        <Provider value={mockedOvermind}>
-            <MemoryRouter initialEntries={["/course/1/members"]}>
-                <Routes>
-                    <Route path="/course/:id/members" element={<Members />} />
-                </Routes>
-            </MemoryRouter>
-        </Provider>
-    )
+    await act(async () => {
+        render(
+            <Provider value={mockedOvermind}>
+                <MemoryRouter initialEntries={["/course/1/members"]}>
+                    <Routes>
+                        <Route path="/course/:id/members" element={<Members />} />
+                    </Routes>
+                </MemoryRouter>
+            </Provider>
+        )
+    })
     return mockedOvermind
 }
 
 describe("Members group column", () => {
-    test("prefers the loaded group list over the nested enrollment group", () => {
-        renderMembers()
+    test("prefers the loaded group list over the nested enrollment group", async () => {
+        await renderMembers()
         expect(screen.getByText("Group 2")).toBeDefined()
         expect(screen.queryByText("Old group")).toBeNull()
     })
 
-    test("falls back to the nested group while the group list is unloaded", () => {
-        renderMembers({ groups: {} })
+    test("falls back to the nested group while the group list is unloaded", async () => {
+        await renderMembers({ groups: {} })
         expect(screen.getByText("Old group")).toBeDefined()
     })
 
     test("updates the displayed group after a rename", async () => {
-        const overmind = renderMembers()
+        const overmind = await renderMembers()
         expect(screen.getByText("Group 2")).toBeDefined()
         const group = clone(GroupSchema, overmind.state.groups["1"][1])
         group.name = "Renamed group"
@@ -98,14 +100,14 @@ const memberOrder = () => Array.from(document.querySelectorAll("tbody tr"))
     .map(row => row.querySelector("th")?.textContent?.trim())
 
 describe("Members group column sorting", () => {
-    test("sorts on the loaded group names, not the nested ones", () => {
-        renderMembers({ courseEnrollments: { "1": staleSortEnrollments() } })
+    test("sorts on the loaded group names, not the nested ones", async () => {
+        await renderMembers({ courseEnrollments: { "1": staleSortEnrollments() } })
         fireEvent.click(screen.getByText("Group"))
         expect(memberOrder()).toEqual(["Alice", "Bob"])
     })
 
     test("re-sorts after a rename", async () => {
-        const overmind = renderMembers({ courseEnrollments: { "1": staleSortEnrollments() } })
+        const overmind = await renderMembers({ courseEnrollments: { "1": staleSortEnrollments() } })
         fireEvent.click(screen.getByText("Group"))
         expect(memberOrder()).toEqual(["Alice", "Bob"])
         const group = clone(GroupSchema, overmind.state.groups["1"][0])

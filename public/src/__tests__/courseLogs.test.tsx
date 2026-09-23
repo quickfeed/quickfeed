@@ -354,7 +354,7 @@ describe("CourseLogs", () => {
 
         fireEvent.change(screen.getByLabelText("From"), { target: { value: "2026-03-09T12:00" } })
         fireEvent.change(screen.getByLabelText("To"), { target: { value: "2026-03-10T12:00" } })
-        screen.getByRole("button", { name: "Refresh" }).click()
+        fireEvent.click(screen.getByRole("button", { name: "Refresh" }))
 
         await waitFor(() => expect(requests).toHaveLength(2))
         expect(requests[1].to).toBeDefined()
@@ -373,7 +373,7 @@ describe("CourseLogs", () => {
 
         // jsdom leaves navigator.clipboard undefined, as a browser does outside
         // a secure context; the failure must reach the teacher, not the console.
-        screen.getByRole("button", { name: "Copy" }).click()
+        fireEvent.click(screen.getByRole("button", { name: "Copy" }))
 
         expect(await screen.findByText(/Could not copy the log/)).toBeTruthy()
     })
@@ -397,7 +397,7 @@ describe("CourseLogs", () => {
         await screen.findByText("resolved push repository")
 
         fireEvent.change(screen.getByLabelText("Repository"), { target: { value: "student-b" } })
-        screen.getByRole("button", { name: "Refresh" }).click()
+        fireEvent.click(screen.getByRole("button", { name: "Refresh" }))
         await waitFor(() => expect(requests).toHaveLength(2))
         expect(requests[1].repository).toBe("student-b")
 
@@ -438,7 +438,7 @@ describe("CourseLogs", () => {
 
         fireEvent.change(screen.getByLabelText("From"), { target: { value: "2999-01-01T12:00" } })
         expect(screen.getByText(/From is after To/)).toBeTruthy()
-        screen.getByRole("button", { name: "Course 2" }).click()
+        fireEvent.click(screen.getByRole("button", { name: "Course 2" }))
 
         // A repository belongs to one course; it must not filter another's log.
         await waitFor(() => expect(requests).toHaveLength(2))
@@ -511,7 +511,7 @@ describe("CourseLogs", () => {
         expect(requests).toHaveLength(1)
         expect(requests[0].courseID).toBe(BigInt(1))
 
-        screen.getByRole("button", { name: "Course 2" }).click()
+        fireEvent.click(screen.getByRole("button", { name: "Course 2" }))
 
         await waitFor(() => expect(requests).toHaveLength(2))
         expect(requests[1].courseID).toBe(BigInt(2))
@@ -539,7 +539,7 @@ describe("CourseLogs tile", () => {
             </Provider>
         )
 
-        screen.getByText("Logs").click()
+        fireEvent.click(screen.getByText("Logs"))
 
         expect(await screen.findByText("resolved push repository")).toBeTruthy()
     })
