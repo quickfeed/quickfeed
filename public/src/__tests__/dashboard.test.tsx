@@ -136,12 +136,16 @@ describe("Dashboard", () => {
         expect(screen.getByText("See all your courses")).toBeDefined()
     })
 
-    it("does not show pending enrollments on the dashboard", () => {
+    // The backend creates enrollment requests as pending and visible.
+    it.each([
+        ["visible", Enrollment_DisplayState.VISIBLE],
+        ["hidden", Enrollment_DisplayState.HIDDEN],
+    ])("does not show %s pending enrollments on the dashboard", (_, state) => {
         const courses = [course(1, "DAT100"), course(2, "DAT200"), course(3, "DAT300")]
         const enrollments = [
             enrollment(1, 1, Enrollment_UserStatus.TEACHER, Enrollment_DisplayState.VISIBLE),
             enrollment(2, 2, Enrollment_UserStatus.STUDENT, Enrollment_DisplayState.VISIBLE),
-            enrollment(3, 3, Enrollment_UserStatus.PENDING, Enrollment_DisplayState.HIDDEN),
+            enrollment(3, 3, Enrollment_UserStatus.PENDING, state),
         ]
         renderDashboard(courses, enrollments)
         expect(screen.getByText("DAT100")).toBeDefined()
