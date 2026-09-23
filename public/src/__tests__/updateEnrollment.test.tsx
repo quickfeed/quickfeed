@@ -1,7 +1,7 @@
 import { create } from "@bufbuild/protobuf"
 import { timestampFromDate } from "@bufbuild/protobuf/wkt"
 import { ConnectError } from "@connectrpc/connect"
-import { render, screen } from "@testing-library/react"
+import { fireEvent, render, screen } from "@testing-library/react"
 import { createOvermindMock } from "overmind"
 import { Provider } from "overmind-react"
 import { act } from "react"
@@ -85,7 +85,7 @@ describe("UpdateEnrollment in webpage", () => {
         }),
     }
 
-    it("If status is teacher, button should display demote", () => {
+    it("If status is teacher, button should display demote", async () => {
         const user = create(UserSchema, { ID: BigInt(1), Name: "Test User", StudentID: "6583969706", Email: "test@gmail.com" })
         const enrollment = create(EnrollmentSchema, {
             ID: BigInt(2),
@@ -103,27 +103,27 @@ describe("UpdateEnrollment in webpage", () => {
             state.courseEnrollments = { "1": [enrollment] }
         })
 
-        render(
-            <Provider value={mockedOvermind}>
-                <MemoryRouter initialEntries={["/course/1/members"]}>
-                    <Routes>
-                        <Route path="/course/:id/members" element={<Members />} />
-                    </Routes>
-                </MemoryRouter>
-            </Provider>
-        )
+        await act(async () => {
+            render(
+                <Provider value={mockedOvermind}>
+                    <MemoryRouter initialEntries={["/course/1/members"]}>
+                        <Routes>
+                            <Route path="/course/:id/members" element={<Members />} />
+                        </Routes>
+                    </MemoryRouter>
+                </Provider>
+            )
+        })
 
         const editButton = screen.getByText("Edit")
         expect(editButton).toBeTruthy()
-        act(() => {
-            editButton.click()
-        })
+        fireEvent.click(editButton)
 
         expect(screen.getByText("Demote")).toBeTruthy()
         expect(screen.queryByText("Promote")).toBeFalsy()
     })
 
-    it("If status is student, button should display promote", () => {
+    it("If status is student, button should display promote", async () => {
         const user = create(UserSchema, {
             ID: BigInt(1),
             Name: "Test User",
@@ -145,20 +145,20 @@ describe("UpdateEnrollment in webpage", () => {
             state.courseEnrollments = { "1": [enrollment] }
         })
 
-        render(
-            <Provider value={mockedOvermind}>
-                <MemoryRouter initialEntries={["/course/1/members"]}>
-                    <Routes>
-                        <Route path="/course/:id/members" element={<Members />} />
-                    </Routes>
-                </MemoryRouter>
-            </Provider>
-        )
+        await act(async () => {
+            render(
+                <Provider value={mockedOvermind}>
+                    <MemoryRouter initialEntries={["/course/1/members"]}>
+                        <Routes>
+                            <Route path="/course/:id/members" element={<Members />} />
+                        </Routes>
+                    </MemoryRouter>
+                </Provider>
+            )
+        })
 
         const editButton = screen.getByText("Edit")
-        act(() => {
-            editButton.click()
-        })
+        fireEvent.click(editButton)
 
         expect(screen.getByText("Promote")).toBeTruthy()
         expect(screen.queryByText("Demote")).toBeFalsy()

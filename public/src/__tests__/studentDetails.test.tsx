@@ -20,7 +20,7 @@ const staleEnrollment = () => create(EnrollmentSchema, {
     user: create(UserSchema, { ID: BigInt(6), Name: "Ola Nordmann", Login: "olan" }),
 })
 
-const renderDetails = (overrides: Partial<State> = {}) => {
+const renderDetails = async (overrides: Partial<State> = {}) => {
     const api = new ApiClient()
     api.client = {
         ...api.client,
@@ -36,15 +36,17 @@ const renderDetails = (overrides: Partial<State> = {}) => {
         loadedCourse: { "1": true },
         ...overrides,
     }, api)
-    render(
-        <Provider value={mockedOvermind}>
-            <MemoryRouter initialEntries={["/course/1/members/7"]}>
-                <Routes>
-                    <Route path="/course/:id/members/:enrollmentID" element={<StudentDetails />} />
-                </Routes>
-            </MemoryRouter>
-        </Provider>
-    )
+    await act(async () => {
+        render(
+            <Provider value={mockedOvermind}>
+                <MemoryRouter initialEntries={["/course/1/members/7"]}>
+                    <Routes>
+                        <Route path="/course/:id/members/:enrollmentID" element={<StudentDetails />} />
+                    </Routes>
+                </MemoryRouter>
+            </Provider>
+        )
+    })
     return mockedOvermind
 }
 
@@ -53,19 +55,19 @@ const renderDetails = (overrides: Partial<State> = {}) => {
 const groupLine = (name: string) => screen.queryByText(`Group: ${name}`, { selector: "span" })
 
 describe("StudentDetails group line", () => {
-    test("prefers the loaded group list over the nested enrollment group", () => {
-        renderDetails()
+    test("prefers the loaded group list over the nested enrollment group", async () => {
+        await renderDetails()
         expect(groupLine("Group 2")).not.toBeNull()
         expect(groupLine("Old group")).toBeNull()
     })
 
-    test("falls back to the nested group while the group list is unloaded", () => {
-        renderDetails({ groups: {} })
+    test("falls back to the nested group while the group list is unloaded", async () => {
+        await renderDetails({ groups: {} })
         expect(groupLine("Old group")).not.toBeNull()
     })
 
     test("updates the displayed group after a rename", async () => {
-        const overmind = renderDetails()
+        const overmind = await renderDetails()
         expect(groupLine("Group 2")).not.toBeNull()
         const group = clone(GroupSchema, overmind.state.groups["1"][1])
         group.name = "Renamed group"
@@ -79,14 +81,14 @@ describe("StudentDetails group line", () => {
 const targetOption = (name: string) => screen.queryByText(`Group: ${name}`, { selector: "option" })
 
 describe("StudentDetails note target", () => {
-    test("labels the group target with the loaded group name", () => {
-        renderDetails()
+    test("labels the group target with the loaded group name", async () => {
+        await renderDetails()
         expect(targetOption("Group 2")).not.toBeNull()
         expect(targetOption("Old group")).toBeNull()
     })
 
     test("relabels the group target after a rename", async () => {
-        const overmind = renderDetails()
+        const overmind = await renderDetails()
         expect(targetOption("Group 2")).not.toBeNull()
         const group = clone(GroupSchema, overmind.state.groups["1"][1])
         group.name = "Renamed group"
