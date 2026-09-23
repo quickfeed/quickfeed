@@ -1,9 +1,7 @@
 package ci
 
 import (
-	"bytes"
 	"fmt"
-	"io"
 	"strings"
 	"testing"
 	"unicode/utf8"
@@ -16,7 +14,9 @@ func TestLogTruncate(t *testing.T) {
 		logLines  = "want \n only this \n part of the \n output \n but not this part \n because it is \n too long \n but the last part \n we do want"
 		scoreLine = `{"Secret":"For Your Eyes Only","TestName":"JamesBond","Score":100,"MaxScore":100,"Weight":1}`
 	)
+	withScoreLine := logLines[0:77] + scoreLine + "\n" + logLines[77:]
 	tests := []struct {
+		name     string
 		truncate int
 		last     int
 		max      int
@@ -24,48 +24,68 @@ func TestLogTruncate(t *testing.T) {
 		want     string
 	}{
 		{
+			name:     "output that fits is left alone",
+			truncate: 100, last: 19, max: 1000,
+			in:   logLines,
+			want: logLines,
+		},
+		{
+			name:     "sides without a line boundary are cut mid-line",
 			truncate: 4, last: 5, max: 1000,
 			in:   logLines,
-			want: truncateMsg + " we do want",
+			want: "want" + truncateMsg + " want",
 		},
 		{
+			name:     "head keeps its whole lines",
 			truncate: 6, last: 5, max: 1000,
 			in:   logLines,
-			want: "want \n" + truncateMsg + " we do want",
+			want: "want \n" + truncateMsg + " want",
 		},
 		{
-			truncate: 43, last: 5, max: 1000,
-			in:   logLines,
-			want: "want \n only this \n part of the \n output \n" + truncateMsg + " we do want",
-		},
-		{
+			name:     "head is cut back to its last line boundary",
 			truncate: 45, last: 5, max: 1000,
 			in:   logLines,
+			want: "want \n only this \n part of the \n output \n" + truncateMsg + " want",
+		},
+		{
+			name:     "tail is cut forward to its first line boundary",
+			truncate: 45, last: 21, max: 1000,
+			in:   logLines,
 			want: "want \n only this \n part of the \n output \n" + truncateMsg + " we do want",
 		},
 		{
-			truncate: 45, last: 15, max: 1000,
+			name:     "tail keeps its whole lines",
+			truncate: 45, last: 32, max: 1000,
 			in:   logLines,
 			want: "want \n only this \n part of the \n output \n" + truncateMsg + " but the last part \n we do want",
 		},
 		{
-			truncate: 45, last: 15, max: 1000,
-			in:   logLines[0:77] + scoreLine + "\n" + logLines[77:],
+			name:     "score lines left out are kept",
+			truncate: 45, last: 32, max: 1000,
+			in:   withScoreLine,
 			want: "want \n only this \n part of the \n output \n" + scoreLine + truncateMsg + " but the last part \n we do want",
+		},
+		{
+			name:     "too much left out to scan for score lines",
+			truncate: 45, last: 32, max: 10,
+			in:   withScoreLine,
+			want: "want \n only this \n part of the \n output \n" + "too much output data to scan (skipping; fix your code)" + truncateMsg + " but the last part \n we do want",
+		},
+		{
+			// Output with no line boundary at all used to be kept whole.
+			name:     "a single long line is still truncated",
+			truncate: 10, last: 10, max: 1000,
+			in:   strings.Repeat("x", 100),
+			want: strings.Repeat("x", 10) + truncateMsg + strings.Repeat("x", 10),
 		},
 	}
 	for _, test := range tests {
-		logReader := strings.NewReader(test.in)
-		var stdout bytes.Buffer
-		_, err := io.Copy(&stdout, logReader)
-		if err != nil {
-			t.Fatal(err)
-		}
-		got := truncateLog(&stdout, test.truncate, test.last, test.max)
-		if diff := cmp.Diff(test.want, got); diff != "" {
-			fmt.Println(got)
-			t.Errorf("truncateLog() mismatch (-want +got):\n%s", diff)
-		}
+		t.Run(test.name, func(t *testing.T) {
+			got := truncateLog(test.in, test.truncate, test.last, test.max)
+			if diff := cmp.Diff(test.want, got); diff != "" {
+				t.Errorf("truncateLog() mismatch (-want +got):\n%s", diff)
+			}
+		})
 	}
 }
 
@@ -131,6 +151,22 @@ func TestCapOutput(t *testing.T) {
 							return fmt.Errorf("capOutput() kept a partial line %q of %d bytes, want whole lines", l, len(l))
 						}
 					}
+				}
+				return nil
+			},
+		},
+		{
+			// The newline that ends the output is not a line boundary for the
+			// tail to begin at, or a long last line would leave no tail at all.
+			name: "a long last line ending in a newline keeps a tail",
+			out:  "FIRST LINE\n" + strings.Repeat("z", 5000) + "\n",
+			want: func(got string) error {
+				_, tail, ok := strings.Cut(got, truncateMsg)
+				if !ok {
+					return fmt.Errorf("capOutput() = %q, want it to mark what was left out", got[:40])
+				}
+				if want := strings.Repeat("z", logOutputTail-1) + "\n"; tail != want {
+					return fmt.Errorf("capOutput() kept a tail of %d bytes, want %d", len(tail), len(want))
 				}
 				return nil
 			},
