@@ -74,13 +74,14 @@ const Courses = (overview: overview) => {
         const enrol = state.enrollmentsByCourseID[course.ID.toString()]
         if (enrol) {
             const courseCard = <CourseCard key={course.ID.toString()} course={course} enrollment={enrol} />
-            if (isVisible(enrol)) {
+            // Check the status first: new enrollment requests are pending but visible,
+            // and a pending course must not be listed among the favorites.
+            if (enrol.status === Enrollment_UserStatus.PENDING) {
+                pending.push(courseCard)
+            } else if (isVisible(enrol)) {
                 favorite.push(courseCard)
             } else {
                 switch (enrol.status) {
-                    case Enrollment_UserStatus.PENDING:
-                        pending.push(courseCard)
-                        break
                     case Enrollment_UserStatus.STUDENT:
                         student.push(courseCard)
                         break
