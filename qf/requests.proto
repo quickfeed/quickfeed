@@ -84,13 +84,17 @@ message NotesRequest {
     uint64 enrollmentID = 4;
 }
 
+// CourseLogRequest selects a range of a course's log. When more entries match
+// than the limit allows, newest says which end of the range is sent: the
+// newest entries, or the oldest.
 message CourseLogRequest {
-    uint64 courseID                  = 1;
-    google.protobuf.Timestamp from   = 2;  // default: 24 hours before to
-    google.protobuf.Timestamp to     = 3;  // default: now
-    string repository                = 4;  // exact match; unset selects every repository
-    CourseLogEntry.Level level       = 5;  // minimum level to include
-    uint32 limit                     = 6;  // default 2000, server maximum 5000
+    uint64 courseID            = 1;
+    LogPosition from           = 2;  // default: 1 hour before to if it is a time, else before now
+    LogPosition to             = 3;  // unset: up to now, and the stream keeps sending new entries
+    bool newest                = 4;  // over the limit, send the newest entries rather than the oldest
+    uint32 limit               = 5;  // default 2000, server maximum 5000
+    string repository          = 6;  // exact match; unset selects every repository
+    CourseLogEntry.Level level = 7;  // minimum level to include
 }
 
 message CourseLogEntry {
@@ -108,12 +112,36 @@ message CourseLogEntry {
     string repositoryType          = 6;
     map<string, string> fields     = 7;  // remaining structured attributes
     bool truncated                 = 8;
+    LogCursor cursor               = 9;  // position just past this entry; unset for the stream's own gap reports
 }
 
+// LogPosition is one end of a log range: a time, or an entry's cursor. A time
+// includes entries stamped at it; a cursor leaves out the entry it came from,
+// so a range can continue from an entry already shown without repeating it.
+message LogPosition {
+    oneof position {
+        google.protobuf.Timestamp time = 1;
+        LogCursor cursor               = 2;
+    }
+}
+
+// LogCursor is a position in a log, just past one entry: the day of the date
+// file holding the entry, and the byte offset just past its newline in that
+// file. Unlike a timestamp, it follows the order entries were written, and no
+// two entries share one. Clients should not construct a cursor, only send
+// back one the server handed out.
+message LogCursor {
+    google.protobuf.Timestamp date = 1;  // UTC midnight of the date file's day
+    uint64 offset                  = 2;  // bytes into that file, just past the entry's newline
+}
+
+// CourseLog is one message of a CourseLogStream. The first message holds the
+// backlog for the requested interval; each later message holds a single live
+// entry, and lists a repository only when that entry introduces a new one.
 message CourseLog {
-    repeated CourseLogEntry entries = 1;  // chronological order
+    repeated CourseLogEntry entries = 1;  // in the order written, which may differ slightly from timestamp order
     repeated string repositories    = 2;  // repositories with entries in the selected interval
-    bool truncated                  = 3;  // set when entries were cut off by the limit
+    bool truncated                  = 3;  // entries were left out by the limit, at the end newest did not ask for
 }
 
 // RepositoryIssues reports the number of content problems found in a repository.

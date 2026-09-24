@@ -92,18 +92,25 @@ func (req *RebuildRequest) IsValid() bool {
 	return aid > 0 && cid > 0
 }
 
-// IsValid ensures that CourseID is set, and that From is not after To when both are given.
-// The handler clamps the interval and limit to their server-enforced maximums, rather than
-// rejecting a request for exceeding them.
+// IsValid ensures that CourseID is set, that From and To are valid positions
+// when given, and that From is not after To when both are times or both are
+// cursors. The handler clamps the interval and limit to their server-enforced
+// maximums, rather than rejecting a request for exceeding them.
 func (req *CourseLogRequest) IsValid() bool {
 	if req.GetCourseID() == 0 {
 		return false
 	}
 	from, to := req.GetFrom(), req.GetTo()
-	if from == nil || to == nil {
-		return true
+	if (from != nil && !from.IsValid()) || (to != nil && !to.IsValid()) {
+		return false
 	}
-	return !from.AsTime().After(to.AsTime())
+	if f, t := from.GetTime(), to.GetTime(); f != nil && t != nil {
+		return !f.AsTime().After(t.AsTime())
+	}
+	if f, t := from.GetCursor(), to.GetCursor(); f != nil && t != nil {
+		return !f.Beyond(t)
+	}
+	return true
 }
 
 // IsValid ensures that an SCM organization name is set.
