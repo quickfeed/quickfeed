@@ -126,9 +126,9 @@ const (
 	// QuickFeedServiceGetAssignmentFeedbackProcedure is the fully-qualified name of the
 	// QuickFeedService's GetAssignmentFeedback RPC.
 	QuickFeedServiceGetAssignmentFeedbackProcedure = "/qf.QuickFeedService/GetAssignmentFeedback"
-	// QuickFeedServiceGetCourseLogProcedure is the fully-qualified name of the QuickFeedService's
-	// GetCourseLog RPC.
-	QuickFeedServiceGetCourseLogProcedure = "/qf.QuickFeedService/GetCourseLog"
+	// QuickFeedServiceCourseLogStreamProcedure is the fully-qualified name of the QuickFeedService's
+	// CourseLogStream RPC.
+	QuickFeedServiceCourseLogStreamProcedure = "/qf.QuickFeedService/CourseLogStream"
 	// QuickFeedServiceGetRepositoriesProcedure is the fully-qualified name of the QuickFeedService's
 	// GetRepositories RPC.
 	QuickFeedServiceGetRepositoriesProcedure = "/qf.QuickFeedService/GetRepositories"
@@ -179,7 +179,7 @@ type QuickFeedServiceClient interface {
 	GetCourseNotes(context.Context, *qf.CourseRequest) (*qf.Notes, error)
 	CreateAssignmentFeedback(context.Context, *qf.AssignmentFeedback) (*qf.Void, error)
 	GetAssignmentFeedback(context.Context, *qf.CourseRequest) (*qf.AssignmentFeedbacks, error)
-	GetCourseLog(context.Context, *qf.CourseLogRequest) (*qf.CourseLog, error)
+	CourseLogStream(context.Context, *qf.CourseLogRequest) (*connect.ServerStreamForClient[qf.CourseLog], error)
 	GetRepositories(context.Context, *qf.CourseRequest) (*qf.Repositories, error)
 	IsEmptyRepo(context.Context, *qf.RepositoryRequest) (*qf.Void, error)
 	SubmissionStream(context.Context, *qf.Void) (*connect.ServerStreamForClient[qf.Submission], error)
@@ -382,10 +382,10 @@ func NewQuickFeedServiceClient(httpClient connect.HTTPClient, baseURL string, op
 			connect.WithSchema(quickFeedServiceMethods.ByName("GetAssignmentFeedback")),
 			connect.WithClientOptions(opts...),
 		),
-		getCourseLog: connect.NewClient[qf.CourseLogRequest, qf.CourseLog](
+		courseLogStream: connect.NewClient[qf.CourseLogRequest, qf.CourseLog](
 			httpClient,
-			baseURL+QuickFeedServiceGetCourseLogProcedure,
-			connect.WithSchema(quickFeedServiceMethods.ByName("GetCourseLog")),
+			baseURL+QuickFeedServiceCourseLogStreamProcedure,
+			connect.WithSchema(quickFeedServiceMethods.ByName("CourseLogStream")),
 			connect.WithClientOptions(opts...),
 		),
 		getRepositories: connect.NewClient[qf.CourseRequest, qf.Repositories](
@@ -442,7 +442,7 @@ type quickFeedServiceClient struct {
 	getCourseNotes           *connect.Client[qf.CourseRequest, qf.Notes]
 	createAssignmentFeedback *connect.Client[qf.AssignmentFeedback, qf.Void]
 	getAssignmentFeedback    *connect.Client[qf.CourseRequest, qf.AssignmentFeedbacks]
-	getCourseLog             *connect.Client[qf.CourseLogRequest, qf.CourseLog]
+	courseLogStream          *connect.Client[qf.CourseLogRequest, qf.CourseLog]
 	getRepositories          *connect.Client[qf.CourseRequest, qf.Repositories]
 	isEmptyRepo              *connect.Client[qf.RepositoryRequest, qf.Void]
 	submissionStream         *connect.Client[qf.Void, qf.Submission]
@@ -727,13 +727,9 @@ func (c *quickFeedServiceClient) GetAssignmentFeedback(ctx context.Context, req 
 	return nil, err
 }
 
-// GetCourseLog calls qf.QuickFeedService.GetCourseLog.
-func (c *quickFeedServiceClient) GetCourseLog(ctx context.Context, req *qf.CourseLogRequest) (*qf.CourseLog, error) {
-	response, err := c.getCourseLog.CallUnary(ctx, connect.NewRequest(req))
-	if response != nil {
-		return response.Msg, err
-	}
-	return nil, err
+// CourseLogStream calls qf.QuickFeedService.CourseLogStream.
+func (c *quickFeedServiceClient) CourseLogStream(ctx context.Context, req *qf.CourseLogRequest) (*connect.ServerStreamForClient[qf.CourseLog], error) {
+	return c.courseLogStream.CallServerStream(ctx, connect.NewRequest(req))
 }
 
 // GetRepositories calls qf.QuickFeedService.GetRepositories.
@@ -798,7 +794,7 @@ type QuickFeedServiceHandler interface {
 	GetCourseNotes(context.Context, *qf.CourseRequest) (*qf.Notes, error)
 	CreateAssignmentFeedback(context.Context, *qf.AssignmentFeedback) (*qf.Void, error)
 	GetAssignmentFeedback(context.Context, *qf.CourseRequest) (*qf.AssignmentFeedbacks, error)
-	GetCourseLog(context.Context, *qf.CourseLogRequest) (*qf.CourseLog, error)
+	CourseLogStream(context.Context, *qf.CourseLogRequest, *connect.ServerStream[qf.CourseLog]) error
 	GetRepositories(context.Context, *qf.CourseRequest) (*qf.Repositories, error)
 	IsEmptyRepo(context.Context, *qf.RepositoryRequest) (*qf.Void, error)
 	SubmissionStream(context.Context, *qf.Void, *connect.ServerStream[qf.Submission]) error
@@ -997,10 +993,10 @@ func NewQuickFeedServiceHandler(svc QuickFeedServiceHandler, opts ...connect.Han
 		connect.WithSchema(quickFeedServiceMethods.ByName("GetAssignmentFeedback")),
 		connect.WithHandlerOptions(opts...),
 	)
-	quickFeedServiceGetCourseLogHandler := connect.NewUnaryHandlerSimple(
-		QuickFeedServiceGetCourseLogProcedure,
-		svc.GetCourseLog,
-		connect.WithSchema(quickFeedServiceMethods.ByName("GetCourseLog")),
+	quickFeedServiceCourseLogStreamHandler := connect.NewServerStreamHandlerSimple(
+		QuickFeedServiceCourseLogStreamProcedure,
+		svc.CourseLogStream,
+		connect.WithSchema(quickFeedServiceMethods.ByName("CourseLogStream")),
 		connect.WithHandlerOptions(opts...),
 	)
 	quickFeedServiceGetRepositoriesHandler := connect.NewUnaryHandlerSimple(
@@ -1085,8 +1081,8 @@ func NewQuickFeedServiceHandler(svc QuickFeedServiceHandler, opts ...connect.Han
 			quickFeedServiceCreateAssignmentFeedbackHandler.ServeHTTP(w, r)
 		case QuickFeedServiceGetAssignmentFeedbackProcedure:
 			quickFeedServiceGetAssignmentFeedbackHandler.ServeHTTP(w, r)
-		case QuickFeedServiceGetCourseLogProcedure:
-			quickFeedServiceGetCourseLogHandler.ServeHTTP(w, r)
+		case QuickFeedServiceCourseLogStreamProcedure:
+			quickFeedServiceCourseLogStreamHandler.ServeHTTP(w, r)
 		case QuickFeedServiceGetRepositoriesProcedure:
 			quickFeedServiceGetRepositoriesHandler.ServeHTTP(w, r)
 		case QuickFeedServiceIsEmptyRepoProcedure:
@@ -1226,8 +1222,8 @@ func (UnimplementedQuickFeedServiceHandler) GetAssignmentFeedback(context.Contex
 	return nil, connect.NewError(connect.CodeUnimplemented, errors.New("qf.QuickFeedService.GetAssignmentFeedback is not implemented"))
 }
 
-func (UnimplementedQuickFeedServiceHandler) GetCourseLog(context.Context, *qf.CourseLogRequest) (*qf.CourseLog, error) {
-	return nil, connect.NewError(connect.CodeUnimplemented, errors.New("qf.QuickFeedService.GetCourseLog is not implemented"))
+func (UnimplementedQuickFeedServiceHandler) CourseLogStream(context.Context, *qf.CourseLogRequest, *connect.ServerStream[qf.CourseLog]) error {
+	return connect.NewError(connect.CodeUnimplemented, errors.New("qf.QuickFeedService.CourseLogStream is not implemented"))
 }
 
 func (UnimplementedQuickFeedServiceHandler) GetRepositories(context.Context, *qf.CourseRequest) (*qf.Repositories, error) {

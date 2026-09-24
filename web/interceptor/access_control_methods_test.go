@@ -52,10 +52,10 @@ func TestAccessControlMethodsChecker(t *testing.T) {
 		"GetCourseNotes":           true,
 		"IsEmptyRepo":              true,
 		"GetSubmissionsByCourse":   true,
-		"GetCourseLog":             true,
 		"GetUsers":                 true,
 		"GetSubmission":            true,
 		"SubmissionStream":         true,
+		"CourseLogStream":          true,
 		"CreateAssignmentFeedback": true,
 		"GetAssignmentFeedback":    true,
 	}
