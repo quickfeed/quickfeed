@@ -16,7 +16,6 @@ import (
 	"github.com/quickfeed/quickfeed/qf"
 	"github.com/quickfeed/quickfeed/scm"
 	"github.com/quickfeed/quickfeed/web"
-	"google.golang.org/protobuf/types/known/timestamppb"
 )
 
 // seedCourseLog writes n records for course to a fresh store, alternating
@@ -98,8 +97,8 @@ func TestGetCourseLog(t *testing.T) {
 		now := time.Now()
 		_, err := client.GetCourseLog(client.Context(t, teacher), &qf.CourseLogRequest{
 			CourseID: course.GetID(),
-			From:     timestamppb.New(now),
-			To:       timestamppb.New(now.Add(-time.Hour)),
+			From:     qf.TimePosition(now),
+			To:       qf.TimePosition(now.Add(-time.Hour)),
 		})
 		if connect.CodeOf(err) != connect.CodeInvalidArgument {
 			t.Errorf("code = %v, want InvalidArgument for From after To", connect.CodeOf(err))

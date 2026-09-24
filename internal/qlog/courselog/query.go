@@ -3,10 +3,11 @@ package courselog
 import (
 	"bufio"
 	"encoding/json"
+	"errors"
 	"fmt"
+	"io"
 	"log/slog"
 	"os"
-	"path/filepath"
 	"slices"
 	"time"
 
@@ -15,75 +16,193 @@ import (
 	"google.golang.org/protobuf/types/known/timestamppb"
 )
 
-// Query returns org's entries matching req in chronological order, every
-// repository with an entry timestamped within req's resolved interval
+// ErrInvalidCursor reports a cursor that this store did not hand out: one that
+// is not a valid position at all, that names a position inside a record
+// rather than just past one, or that lies beyond what the store has written.
+var ErrInvalidCursor = errors.New("invalid course log cursor")
+
+// Query returns org's entries matching req in the order they were written,
+// every repository with an entry timestamped within req's resolved interval
 // regardless of req's repository or level filter (so a repository filter
 // never removes its own options), and whether the match count exceeded req's
-// resolved limit.
+// resolved limit. Over the limit, req's Newest keeps the newest matches;
+// otherwise the oldest are kept. Each entry carries its cursor.
 //
-// req's interval and limit default and clamp the same way GetCourseLog
+// req's interval and limit default and clamp the same way CourseLogStream
 // documents: To is clamped to now and From to oldestRetainedDate. An interval
 // left inverted after clamping returns an empty result.
+//
+// From and To may each be a cursor instead of a time, bounding the result by
+// position: only entries written after From's entry, and before To's. Unless
+// until is nil, the result also ends at until, inclusive. A timestamp cannot
+// draw these lines, since records can share one and need not be written in
+// timestamp order. A cursor this store did not hand out, including one beyond
+// today's file or beyond until, fails with an error wrapping ErrInvalidCursor.
 //
 // A malformed final line, characteristic of a partial write, is ignored; any
 // other read failure is returned. A course with no activity in range, or no
 // log at all, returns an empty result rather than an error.
-func (s *Store) Query(org string, req *qf.CourseLogRequest) ([]*qf.CourseLogEntry, []string, bool, error) {
+func (s *Store) Query(org string, req *qf.CourseLogRequest, until *qf.LogCursor) ([]*qf.CourseLogEntry, []string, bool, error) {
+	after, before := req.GetFrom().GetCursor(), req.GetTo().GetCursor()
 	now := s.now()
+	if err := checkCursors(after, before, until, now); err != nil {
+		return nil, nil, false, err
+	}
 	from, to := req.Interval(oldestRetainedDate(now), now)
 	if from.After(to) {
 		return nil, nil, false, nil
 	}
+	last := lastFiled(to, now)
+	if before != nil && before.Day().Before(last) {
+		last = before.Day()
+	}
+	upper, exclusive := until, false
+	if before != nil && (upper == nil || !before.Beyond(upper)) {
+		upper, exclusive = before, true
+	}
 
-	dir := filepath.Join(s.dir, sanitize(org))
-	ring := newEntryRing(req.EffectiveLimit())
-	repos := make(map[string]bool)
-	repository, level := req.GetRepository(), req.GetLevel()
-
-	for _, date := range datesBetween(from, to) {
-		path := filepath.Join(dir, date+".jsonl")
-		if err := scanFile(path, from, to, repository, level, ring, repos); err != nil {
+	org = sanitize(org)
+	sc := &scan{
+		from:       from,
+		to:         to,
+		repository: req.GetRepository(),
+		level:      req.GetLevel(),
+		kept:       newEntryLimit(req.EffectiveLimit(), req.GetNewest()),
+		repos:      make(map[string]bool),
+	}
+	for _, day := range daysBetween(from, last) {
+		sp, ok := spanOf(day, after, upper, exclusive)
+		if !ok {
+			continue
+		}
+		path := s.path(org, day)
+		if err := sc.file(path, day, sp); err != nil {
 			return nil, nil, false, fmt.Errorf("reading course log %s: %w", path, err)
 		}
 	}
 
-	entries, truncated := ring.ordered()
-	repositories := make([]string, 0, len(repos))
-	for repo := range repos {
+	entries, truncated := sc.kept.ordered()
+	repositories := make([]string, 0, len(sc.repos))
+	for repo := range sc.repos {
 		repositories = append(repositories, repo)
 	}
 	slices.Sort(repositories)
 	return entries, repositories, truncated, nil
 }
 
+// checkCursors rejects a cursor bound that no reader could have been handed:
+// one that is no position at all, or one naming a date file later than
+// today's. After, the lower bound, must also not lie beyond until where until
+// bounds the query. The positions a store hands out never run ahead of what
+// it has written; a cursor that does would otherwise read as an empty backlog
+// followed by the live tail, hiding the client's mistake. Whether a cursor
+// lies on a record boundary is checked when its file is read. The validation
+// interceptor rejects an invalid cursor before a request gets this far, but
+// Query does not rely on being called behind it.
+func checkCursors(after, before, until *qf.LogCursor, now time.Time) error {
+	for _, c := range []*qf.LogCursor{after, before} {
+		if c == nil {
+			continue
+		}
+		if !c.IsValid() {
+			return fmt.Errorf("%w: %v", ErrInvalidCursor, c)
+		}
+		if c.Day().After(qf.LogDay(now)) {
+			return beyondTheEnd(c)
+		}
+	}
+	if after != nil && until != nil && after.Beyond(until) {
+		return beyondTheEnd(after)
+	}
+	return nil
+}
+
+func beyondTheEnd(c *qf.LogCursor) error {
+	return fmt.Errorf("%w: offset %d of %s is beyond the end of the log", ErrInvalidCursor, c.GetOffset(), c.Day().Format(dateLayout))
+}
+
+// lastFiled returns the latest instant whose date file can hold a record
+// stamped at or before to. A record is filed under the date it is written,
+// and it is stamped before that, so one stamped just before midnight can land
+// in the next day's file; that file is read too, unless it lies in the future.
+func lastFiled(to, now time.Time) time.Time {
+	if next := to.Add(24 * time.Hour); next.Before(now) {
+		return next
+	}
+	return now
+}
+
+// span is the byte range of one date file a query reads: from start, and up
+// to end unless end is negative. If exclusive is set, the record ending at end
+// is left out, which is how a cursor bound leaves out the entry it came from.
+type span struct {
+	start, end int64
+	exclusive  bool
+}
+
+// spanOf returns the part of day's file lying after after and at or before
+// upper, or before upper if exclusive is set, or false if none of it does. A
+// nil cursor bounds nothing.
+func spanOf(day time.Time, after, upper *qf.LogCursor, exclusive bool) (span, bool) {
+	sp := span{start: 0, end: -1}
+	if after != nil {
+		switch {
+		case day.Before(after.Day()):
+			return span{}, false
+		case day.Equal(after.Day()):
+			sp.start = after.Position()
+		}
+	}
+	if upper != nil {
+		switch {
+		case day.After(upper.Day()):
+			return span{}, false
+		case day.Equal(upper.Day()):
+			sp.end, sp.exclusive = upper.Position(), exclusive
+		}
+	}
+	if sp.end >= 0 && sp.end <= sp.start {
+		return span{}, false
+	}
+	return sp, true
+}
+
 // oldestRetainedDate returns the UTC midnight of the oldest date
 // cleanupCourseDir still guarantees to keep, as of now.
 func oldestRetainedDate(now time.Time) time.Time {
 	cutoff := now.Add(-Retention).UTC()
-	midnight := time.Date(cutoff.Year(), cutoff.Month(), cutoff.Day(), 0, 0, 0, 0, time.UTC)
+	midnight := qf.LogDay(cutoff)
 	if midnight.Before(cutoff) {
 		return midnight.AddDate(0, 0, 1)
 	}
 	return midnight
 }
 
-// datesBetween returns the UTC calendar dates, inclusive, that could hold
-// records timestamped within [from, to].
-func datesBetween(from, to time.Time) []string {
-	from, to = from.UTC(), to.UTC()
-	first := time.Date(from.Year(), from.Month(), from.Day(), 0, 0, 0, 0, time.UTC)
-	var dates []string
-	for d := first; !d.After(to); d = d.AddDate(0, 0, 1) {
-		dates = append(dates, d.Format(dateLayout))
+// daysBetween returns the UTC midnights of the days from from's through to's,
+// inclusive.
+func daysBetween(from, to time.Time) []time.Time {
+	var days []time.Time
+	for d := qf.LogDay(from); !d.After(to); d = d.AddDate(0, 0, 1) {
+		days = append(days, d)
 	}
-	return dates
+	return days
 }
 
-// scanFile decodes path line by line, adding entries matching [from, to],
-// repository, and level to ring, and every repository with an entry
-// timestamped within [from, to] to repos. A missing file means the course had
-// no activity that day, not a failure.
-func scanFile(path string, from, to time.Time, repository string, level qf.CourseLogEntry_Level, ring *entryRing, repos map[string]bool) error {
+// scan holds a query's filters and what it has collected so far, across the
+// date files it reads.
+type scan struct {
+	from, to   time.Time
+	repository string
+	level      qf.CourseLogEntry_Level
+	kept       *entryLimit
+	repos      map[string]bool
+}
+
+// file decodes the part of path that sp covers line by line, adding entries
+// matching the query's interval, repository, and level to kept, and
+// every repository with an entry timestamped within the interval to repos.
+// A missing file means the course had no activity that day, not a failure.
+func (sc *scan) file(path string, day time.Time, sp span) error {
 	f, err := os.Open(path)
 	if err != nil {
 		if os.IsNotExist(err) {
@@ -93,11 +212,30 @@ func scanFile(path string, from, to time.Time, repository string, level qf.Cours
 	}
 	defer f.Close()
 
-	// apply decodes line and folds it into ring/repos. final marks the file's
-	// true last line: only there is a decode error tolerated, on the theory
-	// that the process was killed mid-write, rather than returned as a
-	// failure of the whole query.
-	apply := func(line string, final bool) error {
+	if err := atRecordBoundary(f, sp.start); err != nil {
+		return err
+	}
+	if sp.exclusive {
+		if err := atRecordBoundary(f, sp.end); err != nil {
+			return err
+		}
+	}
+	if _, err := f.Seek(sp.start, io.SeekStart); err != nil {
+		return err
+	}
+	var r io.Reader = f
+	if sp.end >= 0 {
+		r = io.LimitReader(f, sp.end-sp.start)
+	}
+
+	// apply decodes line and folds it into kept/repos, marking the entry with
+	// end, the position just past it. final marks the last line read: only
+	// there is a decode error tolerated, on the theory that the process was
+	// killed mid-write, rather than returned as a failure of the whole query.
+	apply := func(line string, end int64, final bool) error {
+		if sp.exclusive && end == sp.end {
+			return nil
+		}
 		entry, err := decodeEntry(line)
 		if err != nil {
 			if final {
@@ -105,21 +243,30 @@ func scanFile(path string, from, to time.Time, repository string, level qf.Cours
 			}
 			return err
 		}
-		if entry.GetRepository() != "" && entry.InInterval(from, to) {
-			repos[entry.GetRepository()] = true
+		entry.Cursor = qf.NewLogCursor(day, end)
+		if entry.GetRepository() != "" && entry.InInterval(sc.from, sc.to) {
+			sc.repos[entry.GetRepository()] = true
 		}
-		if entry.Matches(from, to, repository, level) {
-			ring.add(entry)
+		if entry.Matches(sc.from, sc.to, sc.repository, sc.level) {
+			sc.kept.add(entry)
 		}
 		return nil
 	}
 
-	scanner := bufio.NewScanner(f)
+	scanner := bufio.NewScanner(r)
 	// A record can carry several fields independently truncated to 64 KiB
 	// each (see maxFieldBytes), so grow well past both a single field and
 	// bufio.Scanner's 64 KiB default cap; a line still over this is corrupt
 	// rather than merely large, and fails the query as any other read error.
 	scanner.Buffer(make([]byte, 0, 64*1024), 1024*1024)
+	// Counting what the scanner consumes, newline included, is what gives
+	// each line its position; the text it returns has the newline cut off.
+	offset := sp.start
+	scanner.Split(func(data []byte, atEOF bool) (int, []byte, error) {
+		advance, token, err := bufio.ScanLines(data, atEOF)
+		offset += int64(advance)
+		return advance, token, err
+	})
 
 	// pending trails the scanner by one line, so a line is only ever applied
 	// once Scan() has confirmed whether a further line follows it; that is
@@ -127,20 +274,36 @@ func scanFile(path string, from, to time.Time, repository string, level qf.Cours
 	// without first holding the whole file (tens to hundreds of MiB for a
 	// busy course) in memory to find out which line that was.
 	var pending string
+	var pendingEnd int64
 	havePending := false
 	for scanner.Scan() {
 		if havePending {
-			if err := apply(pending, false); err != nil {
+			if err := apply(pending, pendingEnd, false); err != nil {
 				return err
 			}
 		}
-		pending, havePending = scanner.Text(), true
+		pending, pendingEnd, havePending = scanner.Text(), offset, true
 	}
 	if err := scanner.Err(); err != nil {
 		return err
 	}
 	if havePending {
-		return apply(pending, true)
+		return apply(pending, pendingEnd, true)
+	}
+	return nil
+}
+
+// atRecordBoundary checks that offset is the start of f or just past a
+// record's newline. Anywhere else is not a position this store handed out,
+// and reading from it would misreport the rest of the record as one that is
+// malformed.
+func atRecordBoundary(f *os.File, offset int64) error {
+	if offset == 0 {
+		return nil
+	}
+	var last [1]byte
+	if _, err := f.ReadAt(last[:], offset-1); err != nil || last[0] != '\n' {
+		return fmt.Errorf("%w: offset %d is not at a record boundary", ErrInvalidCursor, offset)
 	}
 	return nil
 }
@@ -230,39 +393,43 @@ func stringify(raw json.RawMessage) string {
 	return string(raw)
 }
 
-// entryRing keeps the newest limit entries added to it, in the order added.
-type entryRing struct {
-	limit int
-	buf   []*qf.CourseLogEntry
-	start int
-	total int
+// entryLimit keeps limit of the entries added to it, in the order added: the
+// newest ones if newest is set, or else the oldest.
+type entryLimit struct {
+	limit  int
+	newest bool
+	buf    []*qf.CourseLogEntry
+	start  int
+	total  int
 }
 
-func newEntryRing(limit int) *entryRing {
+func newEntryLimit(limit int, newest bool) *entryLimit {
 	if limit < 1 {
 		limit = 1
 	}
-	return &entryRing{limit: limit, buf: make([]*qf.CourseLogEntry, 0, limit)}
+	return &entryLimit{limit: limit, newest: newest, buf: make([]*qf.CourseLogEntry, 0, limit)}
 }
 
-func (r *entryRing) add(e *qf.CourseLogEntry) {
-	r.total++
-	if len(r.buf) < r.limit {
-		r.buf = append(r.buf, e)
-		return
+func (l *entryLimit) add(e *qf.CourseLogEntry) {
+	l.total++
+	switch {
+	case len(l.buf) < l.limit:
+		l.buf = append(l.buf, e)
+	case l.newest:
+		// A ring: the oldest kept entry makes room for the new one.
+		l.buf[l.start] = e
+		l.start = (l.start + 1) % l.limit
 	}
-	r.buf[r.start] = e
-	r.start = (r.start + 1) % r.limit
 }
 
-// ordered returns the retained entries in chronological order, and whether
-// any entry was evicted to stay within limit.
-func (r *entryRing) ordered() ([]*qf.CourseLogEntry, bool) {
-	if r.total <= r.limit {
-		return r.buf, false
+// ordered returns the kept entries in the order added, and whether any entry
+// was left out to stay within limit.
+func (l *entryLimit) ordered() ([]*qf.CourseLogEntry, bool) {
+	if l.total <= l.limit || l.start == 0 {
+		return l.buf, l.total > l.limit
 	}
-	ordered := make([]*qf.CourseLogEntry, 0, len(r.buf))
-	ordered = append(ordered, r.buf[r.start:]...)
-	ordered = append(ordered, r.buf[:r.start]...)
+	ordered := make([]*qf.CourseLogEntry, 0, len(l.buf))
+	ordered = append(ordered, l.buf[l.start:]...)
+	ordered = append(ordered, l.buf[:l.start]...)
 	return ordered, true
 }
