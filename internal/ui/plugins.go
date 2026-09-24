@@ -1,6 +1,9 @@
 package ui
 
 import (
+	"bytes"
+	"crypto/sha256"
+	"encoding/hex"
 	"fmt"
 	"html/template"
 	"os"
@@ -95,25 +98,58 @@ func resetDistFolder() error {
 	return nil
 }
 
+// htmlData holds the values injected into the index.tmpl.html template.
+type htmlData struct {
+	// TailwindHash versions the Tailwind stylesheet's URL, since esbuild does not hash it.
+	// Without it, browsers may pair freshly deployed JS with a cached stylesheet
+	// that lacks the Tailwind classes the new JS uses.
+	TailwindHash string
+	OutputFiles  []api.OutputFile
+}
+
 // createHtml creates the index.html file from the index.tmpl.html template
 // Injects file links into the index template
 func createHtml(outputFiles []api.OutputFile) error {
-	file, err := os.Create(public("assets/index.html"))
+	// The Tailwind step only warns when it fails; link the new bundles anyway
+	// rather than leave index.html pointing at the ones the rebuild removed.
+	tailwindHash, _ := fileHash(filepath.Join(distDir, "tailwind.css"))
+	html, err := renderHtml(public("index.tmpl.html"), htmlData{
+		TailwindHash: tailwindHash,
+		OutputFiles:  outputFiles,
+	})
 	if err != nil {
 		return err
+	}
+	return os.WriteFile(public("assets/index.html"), html, 0o644)
+}
+
+// renderHtml executes the template at tmplPath with data.
+func renderHtml(tmplPath string, data htmlData) ([]byte, error) {
+	tmpl, err := os.ReadFile(tmplPath)
+	if err != nil {
+		return nil, err
 	}
 	funcMap := template.FuncMap{
 		"ext":  filepath.Ext,
 		"base": filepath.Base,
 	}
-	tmplName := "index.tmpl.html"
-	tmpl, err := os.ReadFile(public(tmplName))
+	t, err := template.New(filepath.Base(tmplPath)).Funcs(funcMap).Parse(string(tmpl))
 	if err != nil {
-		return err
+		return nil, err
 	}
-	t, err := template.New(tmplName).Funcs(funcMap).Parse(string(tmpl))
+	var buf bytes.Buffer
+	if err := t.Execute(&buf, data); err != nil {
+		return nil, err
+	}
+	return buf.Bytes(), nil
+}
+
+// fileHash returns a short hash of the file's content.
+func fileHash(path string) (string, error) {
+	content, err := os.ReadFile(path)
 	if err != nil {
-		return err
+		return "", err
 	}
-	return t.Execute(file, outputFiles)
+	sum := sha256.Sum256(content)
+	return hex.EncodeToString(sum[:4]), nil
 }
