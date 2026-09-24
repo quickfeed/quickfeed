@@ -2,8 +2,10 @@ package ui_test
 
 import (
 	"os"
+	"regexp"
 	"testing"
 
+	"github.com/quickfeed/quickfeed/internal/env"
 	"github.com/quickfeed/quickfeed/internal/ui"
 )
 
@@ -12,7 +14,15 @@ func TestBuild(t *testing.T) {
 		t.Skipf("Skipping %s when running on GitHub", t.Name())
 	}
 	if err := ui.Build(t.TempDir(), true); err != nil {
-		t.Errorf("Build failed: %v", err)
+		t.Fatalf("Build failed: %v", err)
+	}
+	html, err := os.ReadFile(env.Root("public", "assets", "index.html"))
+	if err != nil {
+		t.Fatal(err)
+	}
+	versionedTailwind := regexp.MustCompile(`href="/static/tailwind\.css\?v=[0-9a-f]{8}"`)
+	if !versionedTailwind.Match(html) {
+		t.Errorf("index.html does not link a versioned Tailwind stylesheet:\n%s", html)
 	}
 }
 
