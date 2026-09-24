@@ -26,13 +26,14 @@ export const initializeOvermind = (state: Partial<State & SubType<{ review: Part
     return overmind
 }
 
-/** UnaryApiClient is a type that represents the ApiClient without streaming methods. */
-interface UnaryApiClient {
+/** MockableApiClient is the ApiClient without the submission stream, which is
+ *  started once for the whole app rather than by any one component. */
+interface MockableApiClient {
     client: Omit<ApiClient["client"], "submissionStream">
 }
 
-/** Methods is a type that represents the methods of the UnaryApiClient */
-type Methods = UnaryApiClient["client"]
+/** Methods is a type that represents the methods of the MockableApiClient */
+type Methods = MockableApiClient["client"]
 
 /** mock is a helper function that takes a method and a mocked function to run in place of the method.
  *  It returns a function that can be used to replace the method in the ApiClient.
