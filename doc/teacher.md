@@ -106,8 +106,21 @@ It does not include the operator-only server log, and it never includes a studen
 
 QuickFeed keeps 14 days of history.
 
-The interval, repository, and level filters take effect when you click Refresh.
+The buttons `15m`, `1h`, `4h`, `24h`, and `3d` show the newest entries from that stretch of time and apply as soon as you click one; the page opens on `1h`.
+The page then keeps itself up to date: entries appear as the server records them, so you can push to your `tests` repository and watch what QuickFeed makes of it without pressing anything.
+
+To look at a particular moment, pick a date and time in From instead.
+The page then shows the entries from that moment on.
+Leave To blank to read on up to now, and the page follows new entries once it has caught up; set To to stop at a moment of your choosing.
+Picked dates, and the repository and level filters, take effect when you press Enter or click Refresh.
+
+The page loads at most 2000 entries at a time.
+When a range holds more, "Load older" or "Load newer" appears at the end that was left out, and brings in the next 2000 from there.
+The badge beside the presets says whether the page is following new entries: Live, Reconnecting, or Not following while To is set or Load newer has more to bring in.
+
 The free-text box and the Columns row instead act on what is already on screen; Copy and Download include attributes you have hidden.
+Entries read oldest first, with new ones arriving at the bottom; the order button reverses that.
+While you are scrolled to the newest end, the view follows along, and it stops following as soon as you scroll away to read something.
 
 ## Teaching Assistants
 
