@@ -13,9 +13,17 @@ import (
 )
 
 const (
-	// streamTimeout is the timeout for the submission stream.
+	// streamTimeout is the timeout for the server's streaming procedures.
 	streamTimeout = 15 * time.Minute
 )
+
+// streamProcedures are the procedures controller gives a write deadline; a
+// streaming procedure left out of this set is cut off by the server's own
+// write timeout.
+var streamProcedures = map[string]bool{
+	qfconnect.QuickFeedServiceSubmissionStreamProcedure: true,
+	qfconnect.QuickFeedServiceCourseLogStreamProcedure:  true,
+}
 
 func (s *QuickFeedService) NewQuickFeedHandler() (string, http.Handler) {
 	interceptors := connect.WithInterceptors(
@@ -65,12 +73,12 @@ func (s *QuickFeedService) RegisterRouter(webHookSecret, public string) *http.Se
 	return router
 }
 
-// controller is a wrapper for the QuickFeedService handler that sets a write deadline for the submission stream.
+// controller is a wrapper for the QuickFeedService handler that sets a write deadline for the streaming procedures.
 // TODO: Remove this when connect-go finally supports deadlines.
 // TODO: https://github.com/connectrpc/connect-go/issues/604
 func controller(h http.Handler, timeout time.Duration) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		if r.URL.Path == qfconnect.QuickFeedServiceSubmissionStreamProcedure {
+		if streamProcedures[r.URL.Path] {
 			control := http.NewResponseController(w)
 			_ = control.SetWriteDeadline(time.Now().Add(timeout))
 		}

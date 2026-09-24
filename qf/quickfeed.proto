@@ -73,7 +73,7 @@ service QuickFeedService {
 
     // logs //
 
-    rpc GetCourseLog(CourseLogRequest) returns (CourseLog) {}
+    rpc CourseLogStream(CourseLogRequest) returns (stream CourseLog) {}
 
     // misc //
 
