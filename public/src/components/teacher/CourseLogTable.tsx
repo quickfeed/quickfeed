@@ -39,9 +39,8 @@ const columns: Column[] = [
     { id: "source", label: "Source", render: entry => entry.source },
 ]
 
-// FOLLOW_SLACK is how close to the newest end of the log the view must be for
-// it to keep following: a teacher who has scrolled away to read something is
-// not dragged back by the next entry that arrives.
+// FOLLOW_SLACK is how close, in pixels, to the newest end the view must be
+// for it to keep following new entries.
 const FOLLOW_SLACK = 32
 
 interface CourseLogTableProps {
@@ -58,9 +57,8 @@ const CourseLogTable = ({ entries, rows, controls, onLoadOlder, onLoadNewer }: C
     const [hidden, setHidden] = useState<Set<string>>(new Set())
     const [newestFirst, setNewestFirst] = useState(false)
     const scroller = useRef<HTMLDivElement>(null)
-    // Whether the view sits at the newest end of the log. Recorded as the
-    // teacher scrolls rather than when new rows land, since by then the new
-    // rows have already moved the scroll position.
+    // Whether the view sits at the newest end of the log. Recorded on scroll,
+    // since new rows have already moved the scroll position when they land.
     const following = useRef(true)
     const handleScroll = () => {
         const el = scroller.current
@@ -92,8 +90,7 @@ const CourseLogTable = ({ entries, rows, controls, onLoadOlder, onLoadNewer }: C
             })),
     ], [entries])
     const visible = available.filter(column => !hidden.has(column.id))
-    // The server sends entries oldest first; reversing is a view concern, so
-    // Copy, Download, and the free-text filter are unaffected by it.
+    // Reversing only affects the view, not Copy or Download.
     const ordered = newestFirst ? [...rows].reverse() : rows
     const toggleColumn = (id: string) => setHidden(previous => {
         const next = new Set(previous)
@@ -113,9 +110,7 @@ const CourseLogTable = ({ entries, rows, controls, onLoadOlder, onLoadNewer }: C
     )
 
     // Stay mounted through loading and empty results to preserve column
-    // choices. With no rows there is no table to draw, but paging has to stay
-    // within reach: a search that matched nothing on screen may match what is
-    // yet to be loaded.
+    // choices, and keep paging reachable when nothing loaded matches.
     if (rows.length === 0) {
         return (onLoadOlder || onLoadNewer) && (
             <div className="flex justify-center gap-2 shrink-0">{paging}</div>

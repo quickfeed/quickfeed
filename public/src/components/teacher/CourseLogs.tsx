@@ -1,5 +1,6 @@
 import { ConnectError } from "@connectrpc/connect"
 import { useState, type KeyboardEvent } from "react"
+import type { CourseLogEntry } from "../../../proto/qf/requests_pb"
 import { CourseLogEntry_Level } from "../../../proto/qf/requests_pb"
 import { ConnStatus } from "../../Helpers"
 import { useCourseID } from "../../hooks/useCourseID"
@@ -9,6 +10,8 @@ import { CenteredMessage } from "../CenteredMessage"
 import Search from "../Search"
 import CourseLogTable from "./CourseLogTable"
 import { DAY, entryText, HOUR, LEVEL_NAMES, logText, MINUTE, RETENTION, toLocalDatetimeInput } from "./courseLogFormatting"
+
+const EMPTY_ENTRIES: CourseLogEntry[] = []
 
 const PRESETS = [
     { label: "15m", duration: 15 * MINUTE },
@@ -20,11 +23,17 @@ const PRESETS = [
 
 const DEFAULT_PRESET = HOUR
 
-const BADGES = {
-    live: { color: "badge-success", text: "Live", title: "Log entries appear here as the server records them" },
-    reconnecting: { color: "badge-warning", text: "Reconnecting…", title: "The connection dropped; the view picks up where it left off" },
-    notFollowing: { color: "badge-ghost", text: "Not following", title: "The range has an end, or Load newer has more to fetch" },
-    notConnected: { color: "badge-ghost", text: "Not connected", title: "The log could not be reached" },
+interface Badge {
+    color: string
+    text: string
+    title?: string
+}
+
+const BADGES: Record<"live" | "reconnecting" | "notFollowing" | "notConnected", Badge> = {
+    live: { color: "badge-success", text: "Live", title: "New entries appear as they are logged" },
+    reconnecting: { color: "badge-warning", text: "Reconnecting…" },
+    notFollowing: { color: "badge-ghost", text: "Not following", title: "New entries are not shown; clear To or click Load newer" },
+    notConnected: { color: "badge-ghost", text: "Not connected" },
 }
 
 interface Draft {
@@ -56,14 +65,10 @@ const rangeOf = (draft: Draft): CourseLogRange => draft.preset !== null
     : { kind: "dates", from: new Date(draft.from), to: draft.to ? new Date(draft.to) : null }
 
 /** CourseLogs is the teacher-only "Course Logs" page at /course/:id/logs.
- *  It shows a range of the current course's log. A preset shows the newest
- *  entries of the last stretch of time and follows new ones as they are
- *  logged, so a teacher can push and watch what QuickFeed makes of it. A
- *  picked date shows the range from that moment, and Load newer reads on
- *  until the view catches up and follows. A preset applies at once; picked
- *  dates and the repository and level filters wait for Enter or Refresh. The
- *  free-text box, the order toggle, Copy, and Download act on what is already
- *  loaded. */
+ *  It streams the current course's log and lets a teacher narrow it by range,
+ *  repository, and minimum level, then locally filter, copy, or download
+ *  whatever was loaded. A preset applies at once; picked dates and the other
+ *  filters take effect on Enter or Refresh. */
 const CourseLogs = () => {
     const courseID = useCourseID()
     const [notice, setNotice] = useState<string | null>(null)
@@ -121,7 +126,7 @@ const CourseLogs = () => {
         ? [...repositories, repository].sort((a, b) => a.localeCompare(b))
         : repositories
 
-    const entries = result?.entries ?? []
+    const entries = result?.entries ?? EMPTY_ENTRIES
     const filtered = search
         ? entries.filter(entry => entryText(entry).toLowerCase().includes(search))
         : entries
@@ -137,9 +142,7 @@ const CourseLogs = () => {
         }
     }
 
-    // A failed Load older leaves the live view alone: the stream is still
-    // running and the loaded entries still stand, so it reports as a notice
-    // rather than replacing the page with an error.
+    // A failed Load older leaves the live view running, so report it as a notice.
     const handleLoadOlder = async () => {
         try {
             await loadOlder()
@@ -193,8 +196,7 @@ const CourseLogs = () => {
                             <span className="label-text font-semibold">To</span>
                             <input
                                 type="datetime-local"
-                                aria-label="To"
-                                title="Leave blank to read up to now and keep following"
+                                title="Leave blank to follow new entries"
                                 lang="nb-NO"
                                 className="input input-bordered w-full"
                                 {...pickerBounds}
@@ -245,7 +247,6 @@ const CourseLogs = () => {
                                     type="button"
                                     className={`btn join-item ${draft.preset === p.duration ? "btn-primary btn-soft" : ""}`}
                                     aria-pressed={draft.preset === p.duration}
-                                    title={`Show the last ${p.label} and follow new entries`}
                                     onClick={() => applyPreset(p.duration)}
                                 >
                                     {p.label}

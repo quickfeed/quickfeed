@@ -832,18 +832,15 @@ func (x *NotesRequest) GetEnrollmentID() uint64 {
 	return 0
 }
 
-// CourseLogRequest selects a range of a course's log. When more entries match
-// than the limit allows, newest says which end of the range is sent: the
-// newest entries, or the oldest.
 type CourseLogRequest struct {
 	state         protoimpl.MessageState `protogen:"open.v1"`
 	CourseID      uint64                 `protobuf:"varint,1,opt,name=courseID,proto3" json:"courseID,omitempty"`
-	From          *LogPosition           `protobuf:"bytes,2,opt,name=from,proto3" json:"from,omitempty"`                                 // default: 1 hour before to if it is a time, else before now
-	To            *LogPosition           `protobuf:"bytes,3,opt,name=to,proto3" json:"to,omitempty"`                                     // unset: up to now, and the stream keeps sending new entries
-	Newest        bool                   `protobuf:"varint,4,opt,name=newest,proto3" json:"newest,omitempty"`                            // over the limit, send the newest entries rather than the oldest
-	Limit         uint32                 `protobuf:"varint,5,opt,name=limit,proto3" json:"limit,omitempty"`                              // default 2000, server maximum 5000
-	Repository    string                 `protobuf:"bytes,6,opt,name=repository,proto3" json:"repository,omitempty"`                     // exact match; unset selects every repository
-	Level         CourseLogEntry_Level   `protobuf:"varint,7,opt,name=level,proto3,enum=qf.CourseLogEntry_Level" json:"level,omitempty"` // minimum level to include
+	From          *LogPosition           `protobuf:"bytes,2,opt,name=from,proto3" json:"from,omitempty"`                                 // default: 1 hour before to
+	To            *LogPosition           `protobuf:"bytes,3,opt,name=to,proto3" json:"to,omitempty"`                                     // default: now, and the stream keeps sending new entries
+	Repository    string                 `protobuf:"bytes,4,opt,name=repository,proto3" json:"repository,omitempty"`                     // exact match; unset selects every repository
+	Level         CourseLogEntry_Level   `protobuf:"varint,5,opt,name=level,proto3,enum=qf.CourseLogEntry_Level" json:"level,omitempty"` // minimum level to include
+	Limit         uint32                 `protobuf:"varint,6,opt,name=limit,proto3" json:"limit,omitempty"`                              // default 2000, server maximum 5000
+	Newest        bool                   `protobuf:"varint,7,opt,name=newest,proto3" json:"newest,omitempty"`                            // over the limit, send the newest entries rather than the oldest
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
 }
@@ -899,20 +896,6 @@ func (x *CourseLogRequest) GetTo() *LogPosition {
 	return nil
 }
 
-func (x *CourseLogRequest) GetNewest() bool {
-	if x != nil {
-		return x.Newest
-	}
-	return false
-}
-
-func (x *CourseLogRequest) GetLimit() uint32 {
-	if x != nil {
-		return x.Limit
-	}
-	return 0
-}
-
 func (x *CourseLogRequest) GetRepository() string {
 	if x != nil {
 		return x.Repository
@@ -927,6 +910,20 @@ func (x *CourseLogRequest) GetLevel() CourseLogEntry_Level {
 	return CourseLogEntry_DEBUG
 }
 
+func (x *CourseLogRequest) GetLimit() uint32 {
+	if x != nil {
+		return x.Limit
+	}
+	return 0
+}
+
+func (x *CourseLogRequest) GetNewest() bool {
+	if x != nil {
+		return x.Newest
+	}
+	return false
+}
+
 type CourseLogEntry struct {
 	state          protoimpl.MessageState `protogen:"open.v1"`
 	Time           *timestamppb.Timestamp `protobuf:"bytes,1,opt,name=time,proto3" json:"time,omitempty"`
@@ -937,7 +934,7 @@ type CourseLogEntry struct {
 	RepositoryType string                 `protobuf:"bytes,6,opt,name=repositoryType,proto3" json:"repositoryType,omitempty"`
 	Fields         map[string]string      `protobuf:"bytes,7,rep,name=fields,proto3" json:"fields,omitempty" protobuf_key:"bytes,1,opt,name=key" protobuf_val:"bytes,2,opt,name=value"` // remaining structured attributes
 	Truncated      bool                   `protobuf:"varint,8,opt,name=truncated,proto3" json:"truncated,omitempty"`
-	Cursor         *LogCursor             `protobuf:"bytes,9,opt,name=cursor,proto3" json:"cursor,omitempty"` // position just past this entry; unset for the stream's own gap reports
+	Cursor         *LogCursor             `protobuf:"bytes,9,opt,name=cursor,proto3" json:"cursor,omitempty"` // unset for the stream's own gap reports
 	unknownFields  protoimpl.UnknownFields
 	sizeCache      protoimpl.SizeCache
 }
@@ -1120,11 +1117,9 @@ func (*LogPosition_Time) isLogPosition_Position() {}
 
 func (*LogPosition_Cursor) isLogPosition_Position() {}
 
-// LogCursor is a position in a log, just past one entry: the day of the date
-// file holding the entry, and the byte offset just past its newline in that
-// file. Unlike a timestamp, it follows the order entries were written, and no
-// two entries share one. Clients should not construct a cursor, only send
-// back one the server handed out.
+// LogCursor is the position just past an entry in a course's log. Unlike a
+// timestamp, it follows the order entries were written, and no two entries
+// share one. Clients should only send back cursors the server handed out.
 type LogCursor struct {
 	state         protoimpl.MessageState `protogen:"open.v1"`
 	Date          *timestamppb.Timestamp `protobuf:"bytes,1,opt,name=date,proto3" json:"date,omitempty"`      // UTC midnight of the date file's day
@@ -1184,7 +1179,7 @@ type CourseLog struct {
 	state         protoimpl.MessageState `protogen:"open.v1"`
 	Entries       []*CourseLogEntry      `protobuf:"bytes,1,rep,name=entries,proto3" json:"entries,omitempty"`           // in the order written, which may differ slightly from timestamp order
 	Repositories  []string               `protobuf:"bytes,2,rep,name=repositories,proto3" json:"repositories,omitempty"` // repositories with entries in the selected interval
-	Truncated     bool                   `protobuf:"varint,3,opt,name=truncated,proto3" json:"truncated,omitempty"`      // entries were left out by the limit, at the end newest did not ask for
+	Truncated     bool                   `protobuf:"varint,3,opt,name=truncated,proto3" json:"truncated,omitempty"`      // set when entries were cut off by the limit
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
 }
@@ -1383,13 +1378,13 @@ const file_qf_requests_proto_rawDesc = "" +
 	"\x10CourseLogRequest\x12\x1a\n" +
 	"\bcourseID\x18\x01 \x01(\x04R\bcourseID\x12#\n" +
 	"\x04from\x18\x02 \x01(\v2\x0f.qf.LogPositionR\x04from\x12\x1f\n" +
-	"\x02to\x18\x03 \x01(\v2\x0f.qf.LogPositionR\x02to\x12\x16\n" +
-	"\x06newest\x18\x04 \x01(\bR\x06newest\x12\x14\n" +
-	"\x05limit\x18\x05 \x01(\rR\x05limit\x12\x1e\n" +
+	"\x02to\x18\x03 \x01(\v2\x0f.qf.LogPositionR\x02to\x12\x1e\n" +
 	"\n" +
-	"repository\x18\x06 \x01(\tR\n" +
+	"repository\x18\x04 \x01(\tR\n" +
 	"repository\x12.\n" +
-	"\x05level\x18\a \x01(\x0e2\x18.qf.CourseLogEntry.LevelR\x05level\"\xd5\x03\n" +
+	"\x05level\x18\x05 \x01(\x0e2\x18.qf.CourseLogEntry.LevelR\x05level\x12\x14\n" +
+	"\x05limit\x18\x06 \x01(\rR\x05limit\x12\x16\n" +
+	"\x06newest\x18\a \x01(\bR\x06newest\"\xd5\x03\n" +
 	"\x0eCourseLogEntry\x12.\n" +
 	"\x04time\x18\x01 \x01(\v2\x1a.google.protobuf.TimestampR\x04time\x12.\n" +
 	"\x05level\x18\x02 \x01(\x0e2\x18.qf.CourseLogEntry.LevelR\x05level\x12\x18\n" +

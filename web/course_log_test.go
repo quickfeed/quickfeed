@@ -518,11 +518,9 @@ func messages(log *qf.CourseLog) []string {
 	return msgs
 }
 
-// TestCourseLogStreamResume covers a client that loses the stream and
-// reconnects from the cursor of the newest entry it has. Whatever it missed
-// while disconnected must be in the new backlog, and nothing it already has.
-// A timestamp cannot draw that line in either case below: the ties share
-// one, and the out-of-order record is older than an entry already delivered.
+// TestCourseLogStreamResume checks that a client reconnecting from its newest
+// entry's cursor receives exactly the entries it missed, including entries
+// sharing a timestamp and one written out of timestamp order.
 func TestCourseLogStreamResume(t *testing.T) {
 	db, cleanup := qtest.TestDB(t)
 	defer cleanup()

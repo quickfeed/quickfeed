@@ -17,11 +17,8 @@ import (
 const droppedLabel = "dropped"
 
 // subscriptionBuffer is how many entries a subscriber may fall behind by
-// before entries are dropped. A teacher's browser reads far slower than a
-// course can log, so the buffer absorbs a burst, such as a push that rebuilds
-// every submission, without either blocking the logger or losing the burst.
-// The channel holds one slot beyond this, kept free so that a report of what
-// was dropped always has somewhere to go.
+// before entries are dropped. The channel holds one more slot, reserved for a
+// gap report.
 const subscriptionBuffer = 512
 
 // Subscription delivers a course's log entries as they are written. Close it
@@ -38,9 +35,8 @@ type Subscription struct {
 	dropped int
 }
 
-// Start reports the position in the course's log at which the subscription
-// began. Every entry at or before it belongs to the backlog a caller reads
-// with Query bounded by it; every entry after it arrives on the channel.
+// Start returns the cursor at which the subscription began; entries after it
+// arrive on the channel.
 func (sub *Subscription) Start() *qf.LogCursor { return sub.start }
 
 // C returns the channel entries arrive on. It is closed when the subscription
@@ -54,21 +50,17 @@ func (sub *Subscription) Close() {
 }
 
 // Subscribe returns a Subscription delivering org's entries written after
-// the subscription's Start. Subscribe before reading the backlog, and bound
-// the backlog by Start: every entry is then in exactly one of the two.
+// its Start. A backlog read with Query bounded by Start therefore holds
+// exactly the entries the subscription does not.
 func (s *Store) Subscribe(org string) *Subscription {
 	sub := &Subscription{
 		store: s,
 		org:   sanitize(org),
 		ch:    make(chan *qf.CourseLogEntry, subscriptionBuffer+1),
 	}
-	// The course's file lock is what write holds from writing a record until
-	// it has been published, so with it held no record is half way between
-	// the two: each one is either within the file's end, read here, or yet to
-	// be written, and so delivered to the subscription registered here.
-	// Reading the end without it, a record could land after the end was read
-	// but be published before the subscription was registered, and reach
-	// neither the backlog nor the channel.
+	// write holds cf.mu from writing a record until publishing it, so with
+	// it held, each record is either before the end read here or delivered
+	// to the subscription registered here.
 	cf := s.courseFileFor(sub.org)
 	cf.mu.Lock()
 	defer cf.mu.Unlock()
@@ -77,9 +69,7 @@ func (s *Store) Subscribe(org string) *Subscription {
 	s.subsMu.Lock()
 	defer s.subsMu.Unlock()
 	if s.closed {
-		// The store is shut down, so nothing will be written or delivered
-		// again: hand back a subscription that is already over rather than
-		// one whose channel no one is left to close.
+		// No one is left to close the channel, so close it now.
 		close(sub.ch)
 		return sub
 	}
@@ -87,15 +77,9 @@ func (s *Store) Subscribe(org string) *Subscription {
 	return sub
 }
 
-// end returns the position just past org's last record, as Subscribe needs
-// it. Callers must hold cf.mu.
-//
-// A course this process has not yet written to has no open file, but may
-// have one on disk from before a restart, which the next write appends to;
-// its size is where that write will land. If the size cannot be read, end
-// returns nil, which leaves the backlog unbounded: it may then repeat an entry
-// the subscription also delivers, which is better than silently leaving one
-// out.
+// end returns the cursor just past org's last record, which may be in a file
+// from before a restart. It returns nil if the file's size cannot be read,
+// leaving the backlog unbounded. Callers must hold cf.mu.
 func (s *Store) end(org string, cf *courseFile) *qf.LogCursor {
 	if end := cf.end(); end != nil {
 		return end
@@ -130,9 +114,8 @@ func (s *Store) unsubscribe(sub *Subscription) {
 	}
 }
 
-// closeSubscriptions closes every open subscription, ending the streams that
-// read from them, and marks the store closed so a later Subscribe ends at once
-// rather than waiting on a channel nothing will close.
+// closeSubscriptions closes every open subscription, and marks the store
+// closed so that a later Subscribe returns a closed subscription.
 func (s *Store) closeSubscriptions() {
 	s.subsMu.Lock()
 	defer s.subsMu.Unlock()
@@ -145,9 +128,7 @@ func (s *Store) closeSubscriptions() {
 	}
 }
 
-// hasSubscribers reports whether any subscription is open for org. The write
-// path checks this before decoding, so logging costs nothing extra while no
-// teacher is watching.
+// hasSubscribers reports whether any subscription is open for org.
 func (s *Store) hasSubscribers(org string) bool {
 	s.subsMu.Lock()
 	defer s.subsMu.Unlock()
@@ -163,9 +144,7 @@ func (s *Store) publish(org string, day time.Time, start int64, p []byte) {
 	if !s.hasSubscribers(org) {
 		return
 	}
-	// slog.JSONHandler writes one complete record per call, but a Write
-	// carrying several lines would otherwise decode as one malformed record,
-	// and every record in it but the last would be given the wrong position.
+	// A Write may carry several records; give each its own cursor.
 	pos := start
 	for line := range strings.SplitAfterSeq(string(p), "\n") {
 		pos += int64(len(line))
@@ -190,18 +169,14 @@ func (s *Store) deliver(org string, entry *qf.CourseLogEntry) {
 	}
 }
 
-// send queues entry, dropping it if the subscriber is too far behind. A
-// subscriber that has dropped entries is told so, so a teacher knows the view
-// has a hole in it rather than silently missing records. Callers must hold the
-// store's subsMu.
+// send queues entry, or drops it and queues a gap report if the subscriber is
+// too far behind. Callers must hold the store's subsMu.
 func (sub *Subscription) send(entry *qf.CourseLogEntry) {
 	if sub.dropped > 0 {
 		sub.reportDropped()
 	}
-	// Only the reserved slot is left once the buffer holds subscriptionBuffer
-	// entries. Sends happen under subsMu and the reader only takes entries
-	// out, so a length seen below the reserve cannot have grown by the time
-	// we send: queuing here never blocks.
+	// Sends happen under subsMu and the reader only takes entries out, so
+	// queuing below the reserved slot never blocks.
 	if len(sub.ch) < cap(sub.ch)-1 {
 		sub.ch <- entry
 		return
@@ -210,18 +185,9 @@ func (sub *Subscription) send(entry *qf.CourseLogEntry) {
 	sub.reportDropped()
 }
 
-// reportDropped queues a gap report in the slot kept free for it, and resets
-// the count it carries. Reporting at the moment of the drop is what makes the
-// loss visible at all: a burst that fills the buffer may be the last thing the
-// course logs, and a report deferred to the next record would then never be
-// sent, leaving the subscriber to drain the buffer and see nothing amiss.
-//
-// The slot is free unless an earlier report is still unread. Drops while one
-// is outstanding therefore keep accumulating and ride on the next report, so a
-// report counts the entries lost since the one before it rather than every
-// entry lost so far. A tail of drops behind an unread report is not counted at
-// all, but the report the subscriber does receive already says the view is
-// incomplete, which is what it has to act on.
+// reportDropped queues a gap report in the reserved slot and resets the
+// dropped count. If an earlier report is still unread, the count carries over
+// to the next report.
 func (sub *Subscription) reportDropped() {
 	select {
 	case sub.ch <- droppedEntry(sub.dropped):
@@ -230,17 +196,14 @@ func (sub *Subscription) reportDropped() {
 	}
 }
 
-// Dropped reports whether entry is a subscription's own report of a gap in
-// delivery rather than a record read from the course log. It says the view is
-// incomplete, so a stream must deliver it whatever the caller asked to see;
-// nothing written through the sink carries this attribute.
+// Dropped reports whether entry is a subscription's gap report rather than a
+// record from the course log.
 func Dropped(entry *qf.CourseLogEntry) bool {
 	_, ok := entry.GetFields()[droppedLabel]
 	return ok
 }
 
-// droppedEntry reports a gap in a subscription's delivery as a log entry of
-// its own, so it reaches the teacher through the same path as any other.
+// droppedEntry returns a gap report for dropped entries.
 func droppedEntry(dropped int) *qf.CourseLogEntry {
 	return &qf.CourseLogEntry{
 		Time:    timestamppb.Now(),

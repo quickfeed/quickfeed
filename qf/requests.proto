@@ -1,10 +1,10 @@
 syntax = "proto3";
 package qf;
-option go_package   = "github.com/quickfeed/quickfeed/qf";
-option swift_prefix = "";
 
 import "google/protobuf/timestamp.proto";
 import "qf/types.proto";
+option go_package   = "github.com/quickfeed/quickfeed/qf";
+option swift_prefix = "";
 
 // Message types that are used as requests and responses in API calls.
 
@@ -84,17 +84,14 @@ message NotesRequest {
     uint64 enrollmentID = 4;
 }
 
-// CourseLogRequest selects a range of a course's log. When more entries match
-// than the limit allows, newest says which end of the range is sent: the
-// newest entries, or the oldest.
 message CourseLogRequest {
     uint64 courseID            = 1;
-    LogPosition from           = 2;  // default: 1 hour before to if it is a time, else before now
-    LogPosition to             = 3;  // unset: up to now, and the stream keeps sending new entries
-    bool newest                = 4;  // over the limit, send the newest entries rather than the oldest
-    uint32 limit               = 5;  // default 2000, server maximum 5000
-    string repository          = 6;  // exact match; unset selects every repository
-    CourseLogEntry.Level level = 7;  // minimum level to include
+    LogPosition from           = 2;  // default: 1 hour before to
+    LogPosition to             = 3;  // default: now, and the stream keeps sending new entries
+    string repository          = 4;  // exact match; unset selects every repository
+    CourseLogEntry.Level level = 5;  // minimum level to include
+    uint32 limit               = 6;  // default 2000, server maximum 5000
+    bool newest                = 7;  // over the limit, send the newest entries rather than the oldest
 }
 
 message CourseLogEntry {
@@ -112,7 +109,7 @@ message CourseLogEntry {
     string repositoryType          = 6;
     map<string, string> fields     = 7;  // remaining structured attributes
     bool truncated                 = 8;
-    LogCursor cursor               = 9;  // position just past this entry; unset for the stream's own gap reports
+    LogCursor cursor               = 9;  // unset for the stream's own gap reports
 }
 
 // LogPosition is one end of a log range: a time, or an entry's cursor. A time
@@ -125,11 +122,9 @@ message LogPosition {
     }
 }
 
-// LogCursor is a position in a log, just past one entry: the day of the date
-// file holding the entry, and the byte offset just past its newline in that
-// file. Unlike a timestamp, it follows the order entries were written, and no
-// two entries share one. Clients should not construct a cursor, only send
-// back one the server handed out.
+// LogCursor is the position just past an entry in a course's log. Unlike a
+// timestamp, it follows the order entries were written, and no two entries
+// share one. Clients should only send back cursors the server handed out.
 message LogCursor {
     google.protobuf.Timestamp date = 1;  // UTC midnight of the date file's day
     uint64 offset                  = 2;  // bytes into that file, just past the entry's newline
@@ -141,7 +136,7 @@ message LogCursor {
 message CourseLog {
     repeated CourseLogEntry entries = 1;  // in the order written, which may differ slightly from timestamp order
     repeated string repositories    = 2;  // repositories with entries in the selected interval
-    bool truncated                  = 3;  // entries were left out by the limit, at the end newest did not ask for
+    bool truncated                  = 3;  // set when entries were cut off by the limit
 }
 
 // RepositoryIssues reports the number of content problems found in a repository.
