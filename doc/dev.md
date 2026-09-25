@@ -233,6 +233,8 @@ For GitHub integration we are using the [Go implementation](https://github.com/g
   - The Docker container and run.sh script used for building and testing student submitted code.
 - Push events from the `username-labs` repositories may trigger test execution.
 - The webhook will POST events to `$DOMAIN/hook/`, where `$DOMAIN` is the domain name of the server, as defined in your `.env` file.
+- GitHub cannot reach a server running on localhost; run it as `quickfeed -dev -hook` to have QuickFeed forward the events from your course organizations to it.
+  See [Using GitHub Webhooks When Running Server On Localhost](deploy.md#using-github-webhooks-when-running-server-on-localhost).
 
 ### User roles/access levels for organization / repository
 

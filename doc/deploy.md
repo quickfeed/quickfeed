@@ -184,12 +184,17 @@ To view the full usage details:
 | `http.public`   | Path to content to serve                                          |             |
 | `dev`           | Run development server with self-signed certificates              |             |
 | `secret`        | Force regeneration of JWT signing secret (will log out all users) |             |
+| `hook`          | Forward GitHub webhook events to this server                      |             |
 
 **About the `-secret` flag:**
 QuickFeed uses the `QUICKFEED_AUTH_SECRET` environment variable to sign JWT tokens.
 On first run, a secret is generated and saved to `.env`.
 Use `-secret` to rotate the secret (logs out all users).
 Without `-secret`, the existing secret is reused, preserving user sessions across restarts.
+
+**About the `-hook` flag:**
+The flag forwards GitHub webhook events to the server, which is only needed when GitHub cannot reach it directly, such as on localhost.
+See [Using GitHub Webhooks When Running Server On Localhost](#using-github-webhooks-when-running-server-on-localhost) below.
 
 ### Using GitHub Webhooks When Running Server On Localhost
 
@@ -248,11 +253,35 @@ The [GitHub CLI](https://cli.github.com/) provides a built-in webhook forwarding
 
 **Forward webhook events:**
 
-Run this from the QuickFeed repository, so that `.env` is found:
+With the prerequisites in place, start the server with the `-hook` flag:
 
 ```sh
-gh webhook forward --org=your-org-name --events=push,pull_request,pull_request_review --url=https://localhost/hook/ --secret=your-webhook-secret
+% quickfeed -dev -hook
 ```
+
+QuickFeed then runs `gh webhook forward` itself, one process per course organization in its database, for as long as the server runs.
+Pressing `Ctrl+C` stops the forwarders together with the server.
+
+QuickFeed fills in every argument from what it already knows:
+the URL from the server's domain and the webhook route, so the trailing slash is correct by construction;
+the event types from what the webhook handler dispatches on;
+and the secret from `QUICKFEED_WEBHOOK_SECRET` in `.env`.
+The output of each forwarder is written to the server log, tagged with its organization, so received events stay visible.
+
+Forwarding is a convenience, so a failure does not stop the server.
+If `gh` or the `gh-webhook` extension is missing, QuickFeed logs a warning naming `make webhook-setup` and runs without forwarding.
+The same holds when the database has no courses yet, since the organizations to forward from come from the courses.
+
+**Forwarding by hand:**
+
+The `-hook` flag replaces the command below; run it yourself only to forward from an organization that QuickFeed does not know about, or to watch events in a separate terminal.
+Run it from the QuickFeed repository, so that `.env` is found:
+
+```sh
+gh webhook forward --org=your-org-name --events=push,installation --url=https://localhost/hook/ --secret=your-webhook-secret
+```
+
+The event types must be the ones the webhook handler dispatches on; forwarding any other type only adds noise.
 
 **Important:** The webhook URL **must** include the trailing slash (`/hook/`).
 If you omit it (`/hook`), the POST request will be redirected (301) to `/hook/`, and the redirect will convert it to a GET request, losing the webhook payload.
