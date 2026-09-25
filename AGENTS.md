@@ -9,21 +9,16 @@ This file focuses on helping AI agents understand how to develop QuickFeed effec
 ### Go Code Style
 
 Ensure that the length of functions does not compromise cyclomatic complexity and readability.
+Check using `golangci-lint`.
+Aim for a cyclomatic complexity of 15 or less per function.
 Keep functions focused and break down complex logic into smaller, well-named helper functions.
 
-Always add a newline at the end of files.
-
-Always run `gofumpt` before committing your changes to ensure consistent formatting.
-Install it with: `go install mvdan.cc/gofumpt@latest`
-
-Do not add unnecessary comments to explain code whose logic is clear.
-Focus comments on explaining why something is done, not what is done.
-
-Do not add unnecessary whitespace.
 Follow the standard Go formatting conventions.
+Always run `gofumpt` before committing your changes to ensure consistent formatting.
 
 Follow [Google Go style guidelines](https://google.github.io/styleguide/go/index) for writing clear and maintainable code.
 Use idiomatic Go practices and conventions to ensure consistency across the codebase.
+
 Add helper methods to protocol buffer message types in the `qf` and `score` packages to make code more readable and maintainable.
 
 When writing Go tests, use the `testing` package and follow the standard Go testing conventions, including table-driven tests where appropriate.
@@ -33,15 +28,33 @@ When writing Go tests, use the `testing` package and follow the standard Go test
 When designing frontend features, think critically about the user experience and how to make the interface intuitive and efficient.
 Use as few clicks as possible to achieve a task.
 
+Make each page self-explanatory through clear labels, placeholders, and tooltips.
+When a page needs more explanation than that, put it in the page, next to the control it explains.
+
 Follow TypeScript best practices and maintain type safety throughout the codebase.
 Use proper interfaces and type definitions for all data structures.
+
+### Comments
+
+These rules apply to Go, TypeScript, and `.proto` files alike.
+
+Write doc comments in succinct Go style: a sentence or two, starting with the identifier's name, that state the end result for the caller, such as what a function returns or how the state of the system changes.
+Document only what the name and signature leave out, such as a precondition, an error the caller must handle, or a side effect.
+Avoid redundant information that is already clear from the code.
+Only write comments when the code itself is not clear enough to convey the intent or behavior.
+
+Edit a doc comment only when the behavior it states changes.
+A change to the implementation beneath it leaves the comment as it is.
 
 ### Documentation Style
 
 When writing documentation in markdown files, ensure proper formatting and structure that follows formatting and style guidelines of the markdown linter.
 Follow the one sentence per line rule for better readability and version control diffs.
 
-Whenever you update code or add a new feature, make sure to update the relevant documentation files in `doc/` to reflect the changes.
+The markdown files in `doc/` cover what neither the code nor the UI can tell their reader: deploying, configuring, and developing QuickFeed, and what a teacher sets up outside QuickFeed, such as the course organization, its repositories, and test scripts.
+Update them only when what their reader must do changes, such as a new setting or a new deployment step.
+Keep implementation details in the code: limits, defaults, storage formats, and how a feature works inside.
+Explanations of a page's controls belong in the frontend (see Frontend Code Style), not in `doc/teacher.md`.
 
 ## Development Workflow
 
@@ -200,10 +213,11 @@ When modifying database models or queries:
 Always run these commands before finishing a change:
 
 1. `go fix ./...` - Apply recommended Go fixes
-2. `gofumpt -w .` - Format Go code consistently
-3. `cd public && npm run lint` - Check frontend code style
-4. `make test` - Run complete test suite to ensure nothing is broken
-5. `git diff` - Review your changes carefully before committing
+2. `golangci-lint run ./...` - Run linter to catch potential issues
+3. `gofumpt -w .` - Format Go code consistently
+4. `cd public && npm run lint` - Check frontend code style
+5. `make test` - Run complete test suite to ensure nothing is broken
+6. `git diff` - Review your changes carefully before committing
 
 ### Error Handling
 
