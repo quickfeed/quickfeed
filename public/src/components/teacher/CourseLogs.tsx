@@ -6,6 +6,7 @@ import { ConnStatus } from "../../Helpers"
 import { useCourseID } from "../../hooks/useCourseID"
 import type { CourseLogRange } from "../../hooks/useCourseLogStream"
 import { useCourseLogStream } from "../../hooks/useCourseLogStream"
+import { copyText, downloadText } from "../../textActions"
 import { CenteredMessage } from "../CenteredMessage"
 import Search from "../Search"
 import CourseLogTable from "./CourseLogTable"
@@ -132,14 +133,7 @@ const CourseLogs = () => {
         : entries
 
     const handleCopy = async () => {
-        try {
-            // navigator.clipboard is undefined outside a secure context, and
-            // writeText rejects when the browser denies clipboard access.
-            await navigator.clipboard.writeText(logText(filtered))
-            setNotice(null)
-        } catch {
-            setNotice("Could not copy the log; the browser denied access to the clipboard")
-        }
+        setNotice(await copyText(logText(filtered)) ? null : "Could not copy the log; the browser denied access to the clipboard")
     }
 
     // A failed Load older leaves the live view running, so report it as a notice.
@@ -150,17 +144,6 @@ const CourseLogs = () => {
         } catch (err) {
             setNotice(`Could not load older entries: ${ConnectError.from(err).message}`)
         }
-    }
-
-    const handleDownload = () => {
-        const url = URL.createObjectURL(new Blob([logText(filtered)], { type: "text/plain" }))
-        const link = document.createElement("a")
-        link.href = url
-        link.download = `course-${courseID}-log.txt`
-        link.click()
-        // Revoking the URL before the browser has read it cancels the download
-        // the click just started, so leave that to the next tick.
-        setTimeout(() => URL.revokeObjectURL(url), 0)
     }
 
     const badge = status === ConnStatus.CONNECTED ? BADGES.live
@@ -275,7 +258,7 @@ const CourseLogs = () => {
                 controls={
                     <>
                         <button type="button" className="btn btn-sm" onClick={() => void handleCopy()}>Copy</button>
-                        <button type="button" className="btn btn-sm" onClick={handleDownload}>Download</button>
+                        <button type="button" className="btn btn-sm" onClick={() => downloadText(logText(filtered), `course-${courseID}-log`)}>Download</button>
                     </>
                 }
             />
