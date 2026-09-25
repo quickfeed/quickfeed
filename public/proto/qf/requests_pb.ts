@@ -14,7 +14,7 @@ import type { Message } from "@bufbuild/protobuf";
  * Describes the file qf/requests.proto.
  */
 export const file_qf_requests: GenFile = /*@__PURE__*/
-  fileDesc("ChFxZi9yZXF1ZXN0cy5wcm90bxICcWYilQEKEUNvdXJzZVN1Ym1pc3Npb25zEjsKC3N1Ym1pc3Npb25zGAEgAygLMiYucWYuQ291cnNlU3VibWlzc2lvbnMuU3VibWlzc2lvbnNFbnRyeRpDChBTdWJtaXNzaW9uc0VudHJ5EgsKA2tleRgBIAEoBBIeCgV2YWx1ZRgCIAEoCzIPLnFmLlN1Ym1pc3Npb25zOgI4ASI9Cg1SZXZpZXdSZXF1ZXN0EhAKCGNvdXJzZUlEGAEgASgEEhoKBnJldmlldxgCIAEoCzIKLnFmLlJldmlldyIhCg1Db3Vyc2VSZXF1ZXN0EhAKCGNvdXJzZUlEGAEgASgEIkEKDEdyb3VwUmVxdWVzdBIQCghjb3Vyc2VJRBgBIAEoBBIOCgZ1c2VySUQYAiABKAQSDwoHZ3JvdXBJRBgDIAEoBCJGCgxPcmdhbml6YXRpb24SGQoRU2NtT3JnYW5pemF0aW9uSUQYASABKAQSGwoTU2NtT3JnYW5pemF0aW9uTmFtZRgCIAEoCSJzChFFbnJvbGxtZW50UmVxdWVzdBISCghjb3Vyc2VJRBgBIAEoBEgAEhAKBnVzZXJJRBgCIAEoBEgAEisKCHN0YXR1c2VzGAMgAygOMhkucWYuRW5yb2xsbWVudC5Vc2VyU3RhdHVzQgsKCUZldGNoTW9kZSLrAQoRU3VibWlzc2lvblJlcXVlc3QSEAoIQ291cnNlSUQYASABKAQSFAoMQXNzaWdubWVudElEGAIgASgEEhAKBlVzZXJJRBgDIAEoBEgAEhEKB0dyb3VwSUQYBCABKARIABIWCgxTdWJtaXNzaW9uSUQYBSABKARIABI0CgRUeXBlGAYgASgOMiQucWYuU3VibWlzc2lvblJlcXVlc3QuU3VibWlzc2lvblR5cGVIACIuCg5TdWJtaXNzaW9uVHlwZRIHCgNBTEwQABIICgRVU0VSEAESCQoFR1JPVVAQAkILCglGZXRjaE1vZGUiRgoRUmVwb3NpdG9yeVJlcXVlc3QSDgoGdXNlcklEGAEgASgEEg8KB2dyb3VwSUQYAiABKAQSEAoIY291cnNlSUQYAyABKAQiZQoMUmVwb3NpdG9yaWVzEigKBFVSTHMYASADKAsyGi5xZi5SZXBvc2l0b3JpZXMuVVJMc0VudHJ5GisKCVVSTHNFbnRyeRILCgNrZXkYASABKA0SDQoFdmFsdWUYAiABKAk6AjgBIk4KDlJlYnVpbGRSZXF1ZXN0EhAKCGNvdXJzZUlEGAEgASgEEhQKDGFzc2lnbm1lbnRJRBgCIAEoBBIUCgxzdWJtaXNzaW9uSUQYAyABKAQiXQoMTm90ZXNSZXF1ZXN0EhAKCGNvdXJzZUlEGAEgASgEEhQKDHN1Ym1pc3Npb25JRBgCIAEoBBIPCgdncm91cElEGAMgASgEEhQKDGVucm9sbG1lbnRJRBgEIAEoBCK8AQoQQ291cnNlTG9nUmVxdWVzdBIQCghjb3Vyc2VJRBgBIAEoBBIdCgRmcm9tGAIgASgLMg8ucWYuTG9nUG9zaXRpb24SGwoCdG8YAyABKAsyDy5xZi5Mb2dQb3NpdGlvbhIOCgZuZXdlc3QYBCABKAgSDQoFbGltaXQYBSABKA0SEgoKcmVwb3NpdG9yeRgGIAEoCRInCgVsZXZlbBgHIAEoDjIYLnFmLkNvdXJzZUxvZ0VudHJ5LkxldmVsIvQCCg5Db3Vyc2VMb2dFbnRyeRIoCgR0aW1lGAEgASgLMhouZ29vZ2xlLnByb3RvYnVmLlRpbWVzdGFtcBInCgVsZXZlbBgCIAEoDjIYLnFmLkNvdXJzZUxvZ0VudHJ5LkxldmVsEg8KB21lc3NhZ2UYAyABKAkSDgoGc291cmNlGAQgASgJEhIKCnJlcG9zaXRvcnkYBSABKAkSFgoOcmVwb3NpdG9yeVR5cGUYBiABKAkSLgoGZmllbGRzGAcgAygLMh4ucWYuQ291cnNlTG9nRW50cnkuRmllbGRzRW50cnkSEQoJdHJ1bmNhdGVkGAggASgIEh0KBmN1cnNvchgJIAEoCzINLnFmLkxvZ0N1cnNvchotCgtGaWVsZHNFbnRyeRILCgNrZXkYASABKAkSDQoFdmFsdWUYAiABKAk6AjgBIjEKBUxldmVsEgkKBURFQlVHEAASCAoESU5GTxABEggKBFdBUk4QAhIJCgVFUlJPUhADImYKC0xvZ1Bvc2l0aW9uEioKBHRpbWUYASABKAsyGi5nb29nbGUucHJvdG9idWYuVGltZXN0YW1wSAASHwoGY3Vyc29yGAIgASgLMg0ucWYuTG9nQ3Vyc29ySABCCgoIcG9zaXRpb24iRQoJTG9nQ3Vyc29yEigKBGRhdGUYASABKAsyGi5nb29nbGUucHJvdG9idWYuVGltZXN0YW1wEg4KBm9mZnNldBgCIAEoBCJZCglDb3Vyc2VMb2cSIwoHZW50cmllcxgBIAMoCzISLnFmLkNvdXJzZUxvZ0VudHJ5EhQKDHJlcG9zaXRvcmllcxgCIAMoCRIRCgl0cnVuY2F0ZWQYAyABKAgiIQoQUmVwb3NpdG9yeUlzc3VlcxINCgVjb3VudBgBIAEoDSIGCgRWb2lkQiZaIWdpdGh1Yi5jb20vcXVpY2tmZWVkL3F1aWNrZmVlZC9xZroCAGIGcHJvdG8z", [file_google_protobuf_timestamp, file_qf_types]);
+  fileDesc("ChFxZi9yZXF1ZXN0cy5wcm90bxICcWYilQEKEUNvdXJzZVN1Ym1pc3Npb25zEjsKC3N1Ym1pc3Npb25zGAEgAygLMiYucWYuQ291cnNlU3VibWlzc2lvbnMuU3VibWlzc2lvbnNFbnRyeRpDChBTdWJtaXNzaW9uc0VudHJ5EgsKA2tleRgBIAEoBBIeCgV2YWx1ZRgCIAEoCzIPLnFmLlN1Ym1pc3Npb25zOgI4ASI9Cg1SZXZpZXdSZXF1ZXN0EhAKCGNvdXJzZUlEGAEgASgEEhoKBnJldmlldxgCIAEoCzIKLnFmLlJldmlldyIhCg1Db3Vyc2VSZXF1ZXN0EhAKCGNvdXJzZUlEGAEgASgEIkEKDEdyb3VwUmVxdWVzdBIQCghjb3Vyc2VJRBgBIAEoBBIOCgZ1c2VySUQYAiABKAQSDwoHZ3JvdXBJRBgDIAEoBCJGCgxPcmdhbml6YXRpb24SGQoRU2NtT3JnYW5pemF0aW9uSUQYASABKAQSGwoTU2NtT3JnYW5pemF0aW9uTmFtZRgCIAEoCSJzChFFbnJvbGxtZW50UmVxdWVzdBISCghjb3Vyc2VJRBgBIAEoBEgAEhAKBnVzZXJJRBgCIAEoBEgAEisKCHN0YXR1c2VzGAMgAygOMhkucWYuRW5yb2xsbWVudC5Vc2VyU3RhdHVzQgsKCUZldGNoTW9kZSLrAQoRU3VibWlzc2lvblJlcXVlc3QSEAoIQ291cnNlSUQYASABKAQSFAoMQXNzaWdubWVudElEGAIgASgEEhAKBlVzZXJJRBgDIAEoBEgAEhEKB0dyb3VwSUQYBCABKARIABIWCgxTdWJtaXNzaW9uSUQYBSABKARIABI0CgRUeXBlGAYgASgOMiQucWYuU3VibWlzc2lvblJlcXVlc3QuU3VibWlzc2lvblR5cGVIACIuCg5TdWJtaXNzaW9uVHlwZRIHCgNBTEwQABIICgRVU0VSEAESCQoFR1JPVVAQAkILCglGZXRjaE1vZGUiRgoRUmVwb3NpdG9yeVJlcXVlc3QSDgoGdXNlcklEGAEgASgEEg8KB2dyb3VwSUQYAiABKAQSEAoIY291cnNlSUQYAyABKAQiZQoMUmVwb3NpdG9yaWVzEigKBFVSTHMYASADKAsyGi5xZi5SZXBvc2l0b3JpZXMuVVJMc0VudHJ5GisKCVVSTHNFbnRyeRILCgNrZXkYASABKA0SDQoFdmFsdWUYAiABKAk6AjgBIk4KDlJlYnVpbGRSZXF1ZXN0EhAKCGNvdXJzZUlEGAEgASgEEhQKDGFzc2lnbm1lbnRJRBgCIAEoBBIUCgxzdWJtaXNzaW9uSUQYAyABKAQiXQoMTm90ZXNSZXF1ZXN0EhAKCGNvdXJzZUlEGAEgASgEEhQKDHN1Ym1pc3Npb25JRBgCIAEoBBIPCgdncm91cElEGAMgASgEEhQKDGVucm9sbG1lbnRJRBgEIAEoBCK8AQoQQ291cnNlTG9nUmVxdWVzdBIQCghjb3Vyc2VJRBgBIAEoBBIdCgRmcm9tGAIgASgLMg8ucWYuTG9nUG9zaXRpb24SGwoCdG8YAyABKAsyDy5xZi5Mb2dQb3NpdGlvbhISCgpyZXBvc2l0b3J5GAQgASgJEicKBWxldmVsGAUgASgOMhgucWYuQ291cnNlTG9nRW50cnkuTGV2ZWwSDQoFbGltaXQYBiABKA0SDgoGbmV3ZXN0GAcgASgIIvQCCg5Db3Vyc2VMb2dFbnRyeRIoCgR0aW1lGAEgASgLMhouZ29vZ2xlLnByb3RvYnVmLlRpbWVzdGFtcBInCgVsZXZlbBgCIAEoDjIYLnFmLkNvdXJzZUxvZ0VudHJ5LkxldmVsEg8KB21lc3NhZ2UYAyABKAkSDgoGc291cmNlGAQgASgJEhIKCnJlcG9zaXRvcnkYBSABKAkSFgoOcmVwb3NpdG9yeVR5cGUYBiABKAkSLgoGZmllbGRzGAcgAygLMh4ucWYuQ291cnNlTG9nRW50cnkuRmllbGRzRW50cnkSEQoJdHJ1bmNhdGVkGAggASgIEh0KBmN1cnNvchgJIAEoCzINLnFmLkxvZ0N1cnNvchotCgtGaWVsZHNFbnRyeRILCgNrZXkYASABKAkSDQoFdmFsdWUYAiABKAk6AjgBIjEKBUxldmVsEgkKBURFQlVHEAASCAoESU5GTxABEggKBFdBUk4QAhIJCgVFUlJPUhADImYKC0xvZ1Bvc2l0aW9uEioKBHRpbWUYASABKAsyGi5nb29nbGUucHJvdG9idWYuVGltZXN0YW1wSAASHwoGY3Vyc29yGAIgASgLMg0ucWYuTG9nQ3Vyc29ySABCCgoIcG9zaXRpb24iRQoJTG9nQ3Vyc29yEigKBGRhdGUYASABKAsyGi5nb29nbGUucHJvdG9idWYuVGltZXN0YW1wEg4KBm9mZnNldBgCIAEoBCJZCglDb3Vyc2VMb2cSIwoHZW50cmllcxgBIAMoCzISLnFmLkNvdXJzZUxvZ0VudHJ5EhQKDHJlcG9zaXRvcmllcxgCIAMoCRIRCgl0cnVuY2F0ZWQYAyABKAgiIQoQUmVwb3NpdG9yeUlzc3VlcxINCgVjb3VudBgBIAEoDSIGCgRWb2lkQiZaIWdpdGh1Yi5jb20vcXVpY2tmZWVkL3F1aWNrZmVlZC9xZroCAGIGcHJvdG8z", [file_google_protobuf_timestamp, file_qf_types]);
 
 /**
  * @generated from message qf.CourseSubmissions
@@ -361,10 +361,6 @@ export const NotesRequestSchema: GenMessage<NotesRequest> = /*@__PURE__*/
   messageDesc(file_qf_requests, 10);
 
 /**
- * CourseLogRequest selects a range of a course's log. When more entries match
- * than the limit allows, newest says which end of the range is sent: the
- * newest entries, or the oldest.
- *
  * @generated from message qf.CourseLogRequest
  */
 export type CourseLogRequest = Message<"qf.CourseLogRequest"> & {
@@ -374,46 +370,46 @@ export type CourseLogRequest = Message<"qf.CourseLogRequest"> & {
   courseID: bigint;
 
   /**
-   * default: 1 hour before to if it is a time, else before now
+   * default: 1 hour before to
    *
    * @generated from field: qf.LogPosition from = 2;
    */
   from?: LogPosition | undefined;
 
   /**
-   * unset: up to now, and the stream keeps sending new entries
+   * default: now, and the stream keeps sending new entries
    *
    * @generated from field: qf.LogPosition to = 3;
    */
   to?: LogPosition | undefined;
 
   /**
-   * over the limit, send the newest entries rather than the oldest
-   *
-   * @generated from field: bool newest = 4;
-   */
-  newest: boolean;
-
-  /**
-   * default 2000, server maximum 5000
-   *
-   * @generated from field: uint32 limit = 5;
-   */
-  limit: number;
-
-  /**
    * exact match; unset selects every repository
    *
-   * @generated from field: string repository = 6;
+   * @generated from field: string repository = 4;
    */
   repository: string;
 
   /**
    * minimum level to include
    *
-   * @generated from field: qf.CourseLogEntry.Level level = 7;
+   * @generated from field: qf.CourseLogEntry.Level level = 5;
    */
   level: CourseLogEntry_Level;
+
+  /**
+   * default 2000, server maximum 5000
+   *
+   * @generated from field: uint32 limit = 6;
+   */
+  limit: number;
+
+  /**
+   * over the limit, send the newest entries rather than the oldest
+   *
+   * @generated from field: bool newest = 7;
+   */
+  newest: boolean;
 };
 
 /**
@@ -472,7 +468,7 @@ export type CourseLogEntry = Message<"qf.CourseLogEntry"> & {
   truncated: boolean;
 
   /**
-   * position just past this entry; unset for the stream's own gap reports
+   * unset for the stream's own gap reports
    *
    * @generated from field: qf.LogCursor cursor = 9;
    */
@@ -551,11 +547,9 @@ export const LogPositionSchema: GenMessage<LogPosition> = /*@__PURE__*/
   messageDesc(file_qf_requests, 13);
 
 /**
- * LogCursor is a position in a log, just past one entry: the day of the date
- * file holding the entry, and the byte offset just past its newline in that
- * file. Unlike a timestamp, it follows the order entries were written, and no
- * two entries share one. Clients should not construct a cursor, only send
- * back one the server handed out.
+ * LogCursor is the position just past an entry in a course's log. Unlike a
+ * timestamp, it follows the order entries were written, and no two entries
+ * share one. Clients should only send back cursors the server handed out.
  *
  * @generated from message qf.LogCursor
  */
@@ -605,7 +599,7 @@ export type CourseLog = Message<"qf.CourseLog"> & {
   repositories: string[];
 
   /**
-   * entries were left out by the limit, at the end newest did not ask for
+   * set when entries were cut off by the limit
    *
    * @generated from field: bool truncated = 3;
    */

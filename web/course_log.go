@@ -11,22 +11,16 @@ import (
 	"github.com/quickfeed/quickfeed/qf"
 )
 
-// CourseLogStream streams the course log entries in the request's range that
-// match its repository and minimum level. The first message holds the backlog
+// CourseLogStream streams the course log entries matching the request's
+// range, repository, and minimum level. The first message holds the backlog
 // and the repositories available as filter options. From defaults to an hour
-// ago and Limit to 2000; a backlog exceeding Limit is marked Truncated, and
-// holds the oldest entries in range unless Newest asks for the newest.
+// ago and Limit to 2000; a backlog exceeding Limit is marked Truncated and
+// holds the oldest entries, or the newest if Newest is set. A cursor the
+// server did not hand out is rejected with InvalidArgument.
 //
-// From and To may be the cursor of an entry the client already has, which
-// leaves that entry out. That is how a client pages through a range, and
-// resumes a dropped stream, without skipping an entry or repeating one; a
-// timestamp cannot say the same, since entries can share one and need not be
-// written in timestamp order. A cursor the server did not hand out is
-// rejected as InvalidArgument.
-//
-// The stream stays open, sending each new entry as it is logged, if To is
-// unset and the backlog reaches the present. Otherwise it ends after the
-// backlog.
+// If To is set, the stream ends after the first message. Otherwise, it stays
+// open and sends each new entry as it is logged, unless the backlog was
+// truncated before the present.
 func (s *QuickFeedService) CourseLogStream(ctx context.Context, in *qf.CourseLogRequest, st *connect.ServerStream[qf.CourseLog]) error {
 	logger := qlog.FromContext(ctx)
 	logger.Debug("streaming course log", label.Repository, in.GetRepository())
@@ -41,6 +35,7 @@ func (s *QuickFeedService) CourseLogStream(ctx context.Context, in *qf.CourseLog
 	}
 	org := course.GetScmOrganizationName()
 
+	// If To is not set, the stream stays open and sends each new entry as it is logged.
 	if in.GetTo() == nil {
 		return s.followCourseLog(ctx, st, org, in)
 	}
@@ -57,12 +52,11 @@ func (s *QuickFeedService) CourseLogStream(ctx context.Context, in *qf.CourseLog
 // cut short before the present ends the stream instead.
 func (s *QuickFeedService) followCourseLog(ctx context.Context, st *connect.ServerStream[qf.CourseLog], org string, in *qf.CourseLogRequest) error {
 	// Subscribe before querying, so entries logged during the query are
-	// received on the subscription rather than lost. Those are exactly the
-	// entries after the subscription's start, so bounding the backlog there
-	// sends each entry once, in one path or the other.
+	// received on the subscription rather than lost.
 	sub := s.courseLogs.Subscribe(org)
 	defer sub.Close()
 
+	// Entries after sub.Start() arrive on the subscription.
 	backlog, err := s.courseLog(ctx, org, in, sub.Start())
 	if err != nil {
 		return err
@@ -70,17 +64,16 @@ func (s *QuickFeedService) followCourseLog(ctx context.Context, st *connect.Serv
 	if err := st.Send(backlog); err != nil {
 		return err
 	}
-	// The limit left out the newest entries, so sending new ones would leave
-	// a hole between the two. The client asks again from the backlog's newest
-	// entry, and the stream follows once a backlog reaches the present.
+	// Following now would skip the entries the limit left out; the client
+	// continues from the backlog's newest entry instead.
 	if backlog.GetTruncated() && !in.GetNewest() {
 		return nil
 	}
 	return tailCourseLog(ctx, st, sub, in, backlog)
 }
 
-// courseLog returns the stored entries matching in, and written no later than
-// until unless it is nil, as a single message.
+// courseLog returns the stored entries matching in as a single message,
+// ending at until if it is non-nil.
 func (s *QuickFeedService) courseLog(ctx context.Context, org string, in *qf.CourseLogRequest, until *qf.LogCursor) (*qf.CourseLog, error) {
 	entries, repositories, truncated, err := s.courseLogs.Query(org, in, until)
 	if errors.Is(err, courselog.ErrInvalidCursor) {
@@ -122,14 +115,9 @@ func tailCourseLog(ctx context.Context, st *connect.ServerStream[qf.CourseLog], 
 	}
 }
 
-// deliverable reports whether a live entry matches in's filters and From.
+// deliverable reports whether a live entry matches in's filters and From time.
 // Gap reports are always delivered: they signal missing entries and have no
 // repository or level to filter on.
-//
-// From is checked because the subscription delivers every entry written after
-// it began, whatever the entry's timestamp; the backlog query applies From,
-// but the subscription does not. A From cursor needs no check: every live
-// entry was written after it.
 func deliverable(entry *qf.CourseLogEntry, in *qf.CourseLogRequest) bool {
 	if courselog.Dropped(entry) {
 		return true

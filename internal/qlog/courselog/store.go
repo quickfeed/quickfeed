@@ -7,10 +7,6 @@
 // course for the lifetime of the process: courses are registered lazily, on
 // their first write, so a course created after the server started requires
 // no restart before it starts logging.
-//
-// Every entry read back carries a cursor, its position in the course's log,
-// which is what a reader resumes from: Query returns only entries after a
-// cursor, and a Subscription says at which position its delivery begins.
 package courselog
 
 import (
@@ -121,8 +117,7 @@ func (s *Store) cleanupLoop() {
 }
 
 // Close stops the retention loop, ends every open subscription, and closes
-// every open course file. Calling it more than once is a no-op, so a store
-// handed to both a server's cleanup and a test's is safe to close twice.
+// every open course file. It is safe to call more than once.
 func (s *Store) Close() error {
 	var errs []error
 	s.closeOnce.Do(func() {
@@ -182,16 +177,14 @@ func (s *Store) write(org string, p []byte) (int, error) {
 	}
 	start := cf.size
 	n, err := cf.file.Write(p)
-	// Counted even on failure: a short write still moved the end of the file,
-	// and a later record's position has to say where it really is.
+	// A short write still moves the end of the file.
 	cf.size += int64(n)
 	if err != nil {
 		s.reportError(org, "writing course log record", err)
 		return n, err
 	}
-	// Still holding cf.mu, so subscribers see this course's records in the
-	// same order the file has them, and Subscribe cannot read the file's end
-	// between this record being written and it being delivered.
+	// Publish under cf.mu, so subscribers see records in file order, and
+	// Subscribe cannot read the file's end between writing and publishing.
 	s.publish(org, cf.day, start, p)
 	return n, nil
 }

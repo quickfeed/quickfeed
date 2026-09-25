@@ -13,9 +13,9 @@ const (
 	maxCourseLogLimit        = 5000
 )
 
-// Interval returns the time bounds of req's range, clamped to [minFrom, maxTo].
-// To defaults to maxTo, and From to an hour before To. A bound given as a
-// cursor leaves that side to the cursor, so its time bound is minFrom or maxTo.
+// Interval returns req's time bounds, clamped to [minFrom, maxTo].
+// To defaults to maxTo, and From to an hour before To.
+// A From cursor yields minFrom, and a To cursor yields maxTo.
 func (req *CourseLogRequest) Interval(minFrom, maxTo time.Time) (from, to time.Time) {
 	to = maxTo
 	if t := req.GetTo().GetTime(); t != nil {
@@ -63,9 +63,8 @@ func (e *CourseLogEntry) Matches(from, to time.Time, repository string, level Co
 	return e.InInterval(from, to) && e.MatchesFilters(repository, level)
 }
 
-// MatchesFilters reports whether e is at or above level and, when repository
-// is given, was recorded against it. It leaves the interval out, for a live
-// tail where every entry is newer than the query's upper bound by definition.
+// MatchesFilters reports whether e is at or above level and, if repository
+// is non-empty, belongs to repository.
 func (e *CourseLogEntry) MatchesFilters(repository string, level CourseLogEntry_Level) bool {
 	if e.GetLevel() < level {
 		return false
@@ -73,25 +72,22 @@ func (e *CourseLogEntry) MatchesFilters(repository string, level CourseLogEntry_
 	return repository == "" || e.GetRepository() == repository
 }
 
-// NewLogCursor returns the position offset bytes into the date file of t's
-// UTC day.
+// NewLogCursor returns the cursor at offset in the date file of t's day.
 func NewLogCursor(t time.Time, offset int64) *LogCursor {
 	return &LogCursor{Date: timestamppb.New(LogDay(t)), Offset: uint64(offset)}
 }
 
-// TimePosition returns a range bound at t, which includes entries stamped at t.
+// TimePosition returns a LogPosition for t.
 func TimePosition(t time.Time) *LogPosition {
 	return &LogPosition{Position: &LogPosition_Time{Time: timestamppb.New(t)}}
 }
 
-// CursorPosition returns a range bound at c, which leaves out the entry that
-// carried c.
+// CursorPosition returns a LogPosition for c.
 func CursorPosition(c *LogCursor) *LogPosition {
 	return &LogPosition{Position: &LogPosition_Cursor{Cursor: c}}
 }
 
-// IsValid reports whether p names exactly one bound, and that bound is a valid
-// time or a valid cursor.
+// IsValid reports whether p holds a valid time or a valid cursor.
 func (p *LogPosition) IsValid() bool {
 	switch pos := p.GetPosition().(type) {
 	case *LogPosition_Time:
@@ -103,16 +99,14 @@ func (p *LogPosition) IsValid() bool {
 	}
 }
 
-// LogDay returns the UTC midnight that begins t's day, which names the date
-// file a record written at t is filed in.
+// LogDay returns the UTC midnight of t's day, which names t's date file.
 func LogDay(t time.Time) time.Time {
 	t = t.UTC()
 	return time.Date(t.Year(), t.Month(), t.Day(), 0, 0, 0, 0, time.UTC)
 }
 
-// IsValid reports whether c is a position a course log could have handed out:
-// a date at exactly a UTC midnight, and an offset that fits a file position.
-// Whether a record ends at that offset only the store can tell.
+// IsValid reports whether c's date is a UTC midnight and its offset fits in
+// an int64.
 func (c *LogCursor) IsValid() bool {
 	date := c.GetDate()
 	if !date.IsValid() || c.GetOffset() > math.MaxInt64 {
@@ -122,19 +116,17 @@ func (c *LogCursor) IsValid() bool {
 	return day.Equal(LogDay(day))
 }
 
-// Day returns the UTC midnight of the day whose date file c points into.
+// Day returns the day of c's date file.
 func (c *LogCursor) Day() time.Time {
 	return c.GetDate().AsTime()
 }
 
-// Position returns c's offset as a position in its date file; IsValid is what
-// guarantees the conversion loses nothing.
+// Position returns c's offset as an int64, which is exact if c is valid.
 func (c *LogCursor) Position() int64 {
 	return int64(c.GetOffset())
 }
 
-// Beyond reports whether c lies after other in the log: in a later day's file,
-// or further into the same one.
+// Beyond reports whether c comes after other in the log.
 func (c *LogCursor) Beyond(other *LogCursor) bool {
 	if day, otherDay := c.Day(), other.Day(); !day.Equal(otherDay) {
 		return day.After(otherDay)

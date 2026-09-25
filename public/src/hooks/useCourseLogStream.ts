@@ -35,8 +35,8 @@ interface CourseLogResult {
     moreNewer: boolean
 }
 
-/** A result and the query it answers, so a result outlives its query by
- *  exactly nothing: changing the query hides the old entries at once. */
+/** CourseLogResponse pairs a result with the query it answers, so changing
+ *  the query hides the old entries at once. */
 interface CourseLogResponse {
     query: CourseLogQuery
     result: CourseLogResult | null
@@ -45,9 +45,8 @@ interface CourseLogResponse {
 
 const EMPTY: CourseLogResult = { entries: [], repositories: [], moreOlder: false, moreNewer: false }
 
-// RECONNECT_DELAY is how long to wait before reopening a dropped stream, and
-// the step by which that wait grows; the log view is a background window, so
-// it backs off rather than hammering a server that is down.
+// RECONNECT_DELAY is the initial wait before reopening a dropped stream; the
+// wait doubles on each retry, up to MAX_RECONNECT_DELAY.
 const RECONNECT_DELAY = 1000
 const MAX_RECONNECT_DELAY = 30 * 1000
 
@@ -72,14 +71,10 @@ export const useCourseLogStream = (courseID: bigint, initialFilters: CourseLogFi
     const [query, setQuery] = useState<CourseLogQuery>(() => ({ courseID, filters: initialFilters }))
     const [response, setResponse] = useState<CourseLogResponse | null>(null)
     const [status, setStatus] = useState(ConnStatus.DISCONNECTED)
-    // Where the range begins, fixed when the query is applied: a preset is
-    // measured back from the moment it was chosen, so that a reconnect or
-    // Load older asks for the range the view began with rather than one that
-    // slid forward past what it has not seen.
+    // Where the range begins, fixed when the query is applied, so that Load
+    // older asks for the range the view began with.
     const start = useRef<LogPosition | null>(null)
-    // Held in a ref so a second Load older click while the first is in flight
-    // is a no-op, rather than asking for the same page twice and prepending
-    // it twice.
+    // Makes a Load older click while one is in flight a no-op.
     const loadingOlder = useRef(false)
     // Set while the stream waits for Load newer; calling it asks for the next
     // page forward.
@@ -100,11 +95,9 @@ export const useCourseLogStream = (courseID: bigint, initialFilters: CourseLogFi
         const to = range.kind === "dates" && range.to ? timePosition(range.to) : undefined
         start.current = from
         // The cursor of the newest entry on screen, which the next request
-        // continues from, so it neither repeats an entry nor skips one.
+        // continues from.
         let latest: LogCursor | undefined
-        // A message that arrives after the stream was abandoned belongs to a
-        // query no longer on screen; writing it would hide the new one's
-        // answer behind a stale response.
+        // Ignore messages for a stream that was abandoned.
         const update = (change: (previous: CourseLogResponse | null) => CourseLogResponse) => {
             if (controller.signal.aborted) {
                 return
@@ -134,29 +127,22 @@ export const useCourseLogStream = (courseID: bigint, initialFilters: CourseLogFi
                     }, { signal: controller.signal })
                     let first = true
                     for await (const message of stream) {
-                        // An abandoned stream can still yield a message it had
-                        // already buffered. It answers a query no longer on
-                        // screen: reporting it Live would mislabel the new
-                        // connection, and letting its entries through to latest
-                        // would continue the new stream past entries it has
-                        // never seen, or from a cursor into another course's
-                        // log. The update below guards the response; these two
-                        // have to be guarded here.
+                        // An abandoned stream can still yield a buffered
+                        // message; it must not touch status or latest.
                         if (controller.signal.aborted) {
                             return
                         }
                         delay = RECONNECT_DELAY
                         // Only the first message is a backlog the limit can cut
-                        // short. A forward one cut short, or one with To set,
-                        // is all the stream will send, so it is not Live.
+                        // short. A stream with To set, or cut short going
+                        // forward, ends after it, so it is not Live.
                         const moreOlder = first && newest && message.truncated
                         moreNewer = first && !newest && message.truncated
                         if (!to && !moreNewer) {
                             setStatus(ConnStatus.CONNECTED)
                         }
-                        // Entries arrive in the order they were written, so
-                        // the last one is the newest. A gap report has no
-                        // cursor, since it is no entry of the log.
+                        // Entries arrive in the order written; gap reports
+                        // have no cursor.
                         for (const entry of message.entries) {
                             if (entry.cursor) {
                                 latest = entry.cursor
@@ -182,8 +168,8 @@ export const useCourseLogStream = (courseID: bigint, initialFilters: CourseLogFi
                         return
                     }
                     // A stream that ends without following has sent its page:
-                    // either the range is done, or the view waits for Load
-                    // newer. Any other end is the server going away.
+                    // either the range is done, or it waits for Load newer.
+                    // Any other end is the server going away.
                     if (to || moreNewer) {
                         setStatus(ConnStatus.DISCONNECTED)
                         if (!moreNewer) {
@@ -193,10 +179,8 @@ export const useCourseLogStream = (courseID: bigint, initialFilters: CourseLogFi
                         continue
                     }
                 } catch (err) {
-                    // Only the page's own abort ends the stream quietly. A cancel
-                    // from anywhere else, such as a proxy, is a dropped stream
-                    // like any other; returning here would leave the page
-                    // loading for good, with nothing to say why.
+                    // Only the page's own abort ends the stream quietly; any
+                    // other cancel, such as from a proxy, is a dropped stream.
                     if (controller.signal.aborted) {
                         return
                     }
@@ -241,13 +225,9 @@ export const useCourseLogStream = (courseID: bigint, initialFilters: CourseLogFi
         next()
     }
 
-    /**
-     * loadOlder fetches the page before the oldest entry on screen, within the
-     * range. It is a bounded request, so it ends on its own without disturbing
-     * the live stream. It rejects if the request fails, leaving the loaded
-     * entries as they were, so the caller can say so without tearing down the
-     * live view.
-     */
+    /** loadOlder prepends the page before the oldest entry on screen, without
+     *  disturbing the live stream. It rejects if the request fails, leaving
+     *  the loaded entries as they were. */
     const loadOlder = async () => {
         const oldest = current?.result?.entries.find(entry => entry.cursor)?.cursor
         if (!oldest || !start.current || loadingOlder.current) {

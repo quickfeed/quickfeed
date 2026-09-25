@@ -16,9 +16,7 @@ import (
 	"google.golang.org/protobuf/types/known/timestamppb"
 )
 
-// ErrInvalidCursor reports a cursor that this store did not hand out: one that
-// is not a valid position at all, that names a position inside a record
-// rather than just past one, or that lies beyond what the store has written.
+// ErrInvalidCursor reports a cursor that the store did not hand out.
 var ErrInvalidCursor = errors.New("invalid course log cursor")
 
 // Query returns org's entries matching req in the order they were written,
@@ -32,12 +30,9 @@ var ErrInvalidCursor = errors.New("invalid course log cursor")
 // documents: To is clamped to now and From to oldestRetainedDate. An interval
 // left inverted after clamping returns an empty result.
 //
-// From and To may each be a cursor instead of a time, bounding the result by
-// position: only entries written after From's entry, and before To's. Unless
-// until is nil, the result also ends at until, inclusive. A timestamp cannot
-// draw these lines, since records can share one and need not be written in
-// timestamp order. A cursor this store did not hand out, including one beyond
-// today's file or beyond until, fails with an error wrapping ErrInvalidCursor.
+// From and To may be cursors, which leave out the entry they came from. If
+// until is non-nil, the result ends at until, inclusive. A cursor the store
+// did not hand out fails with an error wrapping ErrInvalidCursor.
 //
 // A malformed final line, characteristic of a partial write, is ignored; any
 // other read failure is returned. A course with no activity in range, or no
@@ -90,15 +85,8 @@ func (s *Store) Query(org string, req *qf.CourseLogRequest, until *qf.LogCursor)
 	return entries, repositories, truncated, nil
 }
 
-// checkCursors rejects a cursor bound that no reader could have been handed:
-// one that is no position at all, or one naming a date file later than
-// today's. After, the lower bound, must also not lie beyond until where until
-// bounds the query. The positions a store hands out never run ahead of what
-// it has written; a cursor that does would otherwise read as an empty backlog
-// followed by the live tail, hiding the client's mistake. Whether a cursor
-// lies on a record boundary is checked when its file is read. The validation
-// interceptor rejects an invalid cursor before a request gets this far, but
-// Query does not rely on being called behind it.
+// checkCursors returns an error wrapping ErrInvalidCursor if after or before
+// is invalid or lies beyond today, or if after lies beyond until.
 func checkCursors(after, before, until *qf.LogCursor, now time.Time) error {
 	for _, c := range []*qf.LogCursor{after, before} {
 		if c == nil {
@@ -122,9 +110,8 @@ func beyondTheEnd(c *qf.LogCursor) error {
 }
 
 // lastFiled returns the latest instant whose date file can hold a record
-// stamped at or before to. A record is filed under the date it is written,
-// and it is stamped before that, so one stamped just before midnight can land
-// in the next day's file; that file is read too, unless it lies in the future.
+// stamped at or before to. A record stamped just before midnight may be
+// written to the next day's file.
 func lastFiled(to, now time.Time) time.Time {
 	if next := to.Add(24 * time.Hour); next.Before(now) {
 		return next
@@ -140,9 +127,8 @@ type span struct {
 	exclusive  bool
 }
 
-// spanOf returns the part of day's file lying after after and at or before
-// upper, or before upper if exclusive is set, or false if none of it does. A
-// nil cursor bounds nothing.
+// spanOf returns the part of day's file after after and up to upper, or false
+// if that part is empty. A nil cursor bounds nothing.
 func spanOf(day time.Time, after, upper *qf.LogCursor, exclusive bool) (span, bool) {
 	sp := span{start: 0, end: -1}
 	if after != nil {
@@ -212,45 +198,9 @@ func (sc *scan) file(path string, day time.Time, sp span) error {
 	}
 	defer f.Close()
 
-	if err := atRecordBoundary(f, sp.start); err != nil {
+	r, err := sp.reader(f)
+	if err != nil {
 		return err
-	}
-	if sp.exclusive {
-		if err := atRecordBoundary(f, sp.end); err != nil {
-			return err
-		}
-	}
-	if _, err := f.Seek(sp.start, io.SeekStart); err != nil {
-		return err
-	}
-	var r io.Reader = f
-	if sp.end >= 0 {
-		r = io.LimitReader(f, sp.end-sp.start)
-	}
-
-	// apply decodes line and folds it into kept/repos, marking the entry with
-	// end, the position just past it. final marks the last line read: only
-	// there is a decode error tolerated, on the theory that the process was
-	// killed mid-write, rather than returned as a failure of the whole query.
-	apply := func(line string, end int64, final bool) error {
-		if sp.exclusive && end == sp.end {
-			return nil
-		}
-		entry, err := decodeEntry(line)
-		if err != nil {
-			if final {
-				return nil
-			}
-			return err
-		}
-		entry.Cursor = qf.NewLogCursor(day, end)
-		if entry.GetRepository() != "" && entry.InInterval(sc.from, sc.to) {
-			sc.repos[entry.GetRepository()] = true
-		}
-		if entry.Matches(sc.from, sc.to, sc.repository, sc.level) {
-			sc.kept.add(entry)
-		}
-		return nil
 	}
 
 	scanner := bufio.NewScanner(r)
@@ -270,7 +220,7 @@ func (sc *scan) file(path string, day time.Time, sp span) error {
 
 	// pending trails the scanner by one line, so a line is only ever applied
 	// once Scan() has confirmed whether a further line follows it; that is
-	// what lets the final line alone get the partial-write tolerance above,
+	// what lets the final line alone get apply's partial-write tolerance,
 	// without first holding the whole file (tens to hundreds of MiB for a
 	// busy course) in memory to find out which line that was.
 	var pending string
@@ -278,7 +228,7 @@ func (sc *scan) file(path string, day time.Time, sp span) error {
 	havePending := false
 	for scanner.Scan() {
 		if havePending {
-			if err := apply(pending, pendingEnd, false); err != nil {
+			if err := sc.apply(pending, day, sp, pendingEnd, false); err != nil {
 				return err
 			}
 		}
@@ -288,15 +238,56 @@ func (sc *scan) file(path string, day time.Time, sp span) error {
 		return err
 	}
 	if havePending {
-		return apply(pending, pendingEnd, true)
+		return sc.apply(pending, day, sp, pendingEnd, true)
 	}
 	return nil
 }
 
-// atRecordBoundary checks that offset is the start of f or just past a
-// record's newline. Anywhere else is not a position this store handed out,
-// and reading from it would misreport the rest of the record as one that is
-// malformed.
+// apply decodes line and folds it into kept and repos, giving the entry the
+// cursor end in day's file. A decode error is tolerated only if final is set,
+// on the theory that the process was killed mid-write.
+func (sc *scan) apply(line string, day time.Time, sp span, end int64, final bool) error {
+	if sp.exclusive && end == sp.end {
+		return nil
+	}
+	entry, err := decodeEntry(line)
+	if err != nil {
+		if final {
+			return nil
+		}
+		return err
+	}
+	entry.Cursor = qf.NewLogCursor(day, end)
+	if entry.GetRepository() != "" && entry.InInterval(sc.from, sc.to) {
+		sc.repos[entry.GetRepository()] = true
+	}
+	if entry.Matches(sc.from, sc.to, sc.repository, sc.level) {
+		sc.kept.add(entry)
+	}
+	return nil
+}
+
+// reader returns a reader of the part of f that sp covers.
+func (sp span) reader(f *os.File) (io.Reader, error) {
+	if err := atRecordBoundary(f, sp.start); err != nil {
+		return nil, err
+	}
+	if sp.exclusive {
+		if err := atRecordBoundary(f, sp.end); err != nil {
+			return nil, err
+		}
+	}
+	if _, err := f.Seek(sp.start, io.SeekStart); err != nil {
+		return nil, err
+	}
+	if sp.end < 0 {
+		return f, nil
+	}
+	return io.LimitReader(f, sp.end-sp.start), nil
+}
+
+// atRecordBoundary returns an error wrapping ErrInvalidCursor unless offset
+// is zero or just past a newline in f.
 func atRecordBoundary(f *os.File, offset int64) error {
 	if offset == 0 {
 		return nil
