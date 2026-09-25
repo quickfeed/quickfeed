@@ -15,6 +15,16 @@ import "patch/go.proto";
 // the custom serializer for timestamp because timestamppb.Timestamp is not supported.
 // The serializer converts timestamp fields to time.Time which will be saved in the database as "datetime".
 
+// TestStatus is the outcome the test framework reported for a single test.
+// It is independent of the score: a test may fail while holding partial credit,
+// and may pass while scoring below its max score.
+enum TestStatus {
+    NOT_RUN = 0;  // the run recorded no outcome for this test
+    PASSED  = 1;  // the test ran to completion without failing
+    FAILED  = 2;  // the test reported a failure
+    SKIPPED = 3;  // the test was skipped
+}
+
 // Score give the score for a single test named TestName.
 message Score {
     uint64 ID           = 1;
@@ -26,6 +36,10 @@ message Score {
     int32 MaxScore     = 6;  // max score possible to get on this specific test
     int32 Weight       = 7;  // the weight of this test; used to compute final grade
     string TestDetails = 8;  // if populated, the frontend may display these details
+
+    string TestOutput = 9;      // the run's output attributed to this test
+    TestStatus Status = 10;     // outcome reported by the test framework
+    double Elapsed    = 11;     // seconds the test took to run
 }
 
 // RunStatus classifies the outcome of a test run. BUILD_FAILURE records

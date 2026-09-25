@@ -1,0 +1,34 @@
+{"Time":"2026-09-21T23:05:01.820352+02:00","Action":"start","Package":"fixtures"}
+{"Time":"2026-09-21T23:05:01.920999+02:00","Action":"run","Package":"fixtures","Test":"TestStack"}
+{"Time":"2026-09-21T23:05:01.921098+02:00","Action":"output","Package":"fixtures","Test":"TestStack","Output":"=== RUN   TestStack\n"}
+{"Time":"2026-09-21T23:05:01.921117+02:00","Action":"output","Package":"fixtures","Test":"TestStack","Output":"stack: pushing 3 elements\n"}
+{"Time":"2026-09-21T23:05:01.92113+02:00","Action":"attr","Package":"fixtures","Test":"TestStack","Key":"score","Value":"{\"Secret\":\"Ie7cJP1sYQvqO2Xk\",\"TestName\":\"TestStack\",\"Score\":5,\"MaxScore\":5,\"Weight\":1,\"TestDetails\":\"\"}"}
+{"Time":"2026-09-21T23:05:01.921138+02:00","Action":"output","Package":"fixtures","Test":"TestStack","Output":"=== ATTR  TestStack score {\"Secret\":\"Ie7cJP1sYQvqO2Xk\",\"TestName\":\"TestStack\",\"Score\":5,\"MaxScore\":5,\"Weight\":1,\"TestDetails\":\"\"}\n"}
+{"Time":"2026-09-21T23:05:01.921165+02:00","Action":"output","Package":"fixtures","Test":"TestStack","Output":"--- PASS: TestStack (0.00s)\n"}
+{"Time":"2026-09-21T23:05:01.921175+02:00","Action":"pass","Package":"fixtures","Test":"TestStack","Elapsed":0}
+{"Time":"2026-09-21T23:05:01.921183+02:00","Action":"run","Package":"fixtures","Test":"TestQueue"}
+{"Time":"2026-09-21T23:05:01.92119+02:00","Action":"output","Package":"fixtures","Test":"TestQueue","Output":"=== RUN   TestQueue\n"}
+{"Time":"2026-09-21T23:05:01.921197+02:00","Action":"output","Package":"fixtures","Test":"TestQueue","Output":"queue: raw diagnostic from student code\n"}
+{"Time":"2026-09-21T23:05:01.921205+02:00","Action":"output","Package":"fixtures","Test":"TestQueue","Output":"    queue_test.go:43: queue length is 0\n"}
+{"Time":"2026-09-21T23:05:01.921212+02:00","Action":"output","Package":"fixtures","Test":"TestQueue","Output":"    queue_test.go:44: Pop() = \u003cnil\u003e, want: x\n"}
+{"Time":"2026-09-21T23:05:01.921223+02:00","Action":"run","Package":"fixtures","Test":"TestQueue/Drain"}
+{"Time":"2026-09-21T23:05:01.921229+02:00","Action":"output","Package":"fixtures","Test":"TestQueue/Drain","Output":"=== RUN   TestQueue/Drain\n"}
+{"Time":"2026-09-21T23:05:01.921237+02:00","Action":"output","Package":"fixtures","Test":"TestQueue/Drain","Output":"    queue_test.go:48: Drain() left 2 items\n"}
+{"Time":"2026-09-21T23:05:01.921243+02:00","Action":"attr","Package":"fixtures","Test":"TestQueue/Drain","Key":"score","Value":"{\"Secret\":\"Ie7cJP1sYQvqO2Xk\",\"TestName\":\"TestQueue/Drain\",\"Score\":0,\"MaxScore\":3,\"Weight\":1,\"TestDetails\":\"\"}"}
+{"Time":"2026-09-21T23:05:01.921254+02:00","Action":"output","Package":"fixtures","Test":"TestQueue/Drain","Output":"=== ATTR  TestQueue/Drain score {\"Secret\":\"Ie7cJP1sYQvqO2Xk\",\"TestName\":\"TestQueue/Drain\",\"Score\":0,\"MaxScore\":3,\"Weight\":1,\"TestDetails\":\"\"}\n"}
+{"Time":"2026-09-21T23:05:01.921263+02:00","Action":"output","Package":"fixtures","Test":"TestQueue/Drain","Output":"--- FAIL: TestQueue/Drain (0.00s)\n"}
+{"Time":"2026-09-21T23:05:01.921269+02:00","Action":"fail","Package":"fixtures","Test":"TestQueue/Drain","Elapsed":0}
+{"Time":"2026-09-21T23:05:01.921276+02:00","Action":"attr","Package":"fixtures","Test":"TestQueue","Key":"score","Value":"{\"Secret\":\"Ie7cJP1sYQvqO2Xk\",\"TestName\":\"TestQueue\",\"Score\":2,\"MaxScore\":5,\"Weight\":2,\"TestDetails\":\"/quickfeed/tests/lab1/queue_test.go:42: Pop() = \\u003cnil\\u003e, want: \\\"x\\\"\\n\"}"}
+{"Time":"2026-09-21T23:05:01.921285+02:00","Action":"output","Package":"fixtures","Test":"TestQueue","Output":"=== ATTR  TestQueue score {\"Secret\":\"Ie7cJP1sYQvqO2Xk\",\"TestName\":\"TestQueue\",\"Score\":2,\"MaxScore\":5,\"Weight\":2,\"TestDetails\":\"/quickfeed/tests/lab1/queue_test.go:42: Pop() = \\u003cnil\\u003e, want: \\\"x\\\"\\n\"}\n"}
+{"Time":"2026-09-21T23:05:01.921292+02:00","Action":"output","Package":"fixtures","Test":"TestQueue","Output":"--- FAIL: TestQueue (0.00s)\n"}
+{"Time":"2026-09-21T23:05:01.921298+02:00","Action":"fail","Package":"fixtures","Test":"TestQueue","Elapsed":0}
+{"Time":"2026-09-21T23:05:01.921303+02:00","Action":"run","Package":"fixtures","Test":"TestSkipped"}
+{"Time":"2026-09-21T23:05:01.921346+02:00","Action":"output","Package":"fixtures","Test":"TestSkipped","Output":"=== RUN   TestSkipped\n"}
+{"Time":"2026-09-21T23:05:01.921353+02:00","Action":"output","Package":"fixtures","Test":"TestSkipped","Output":"    queue_test.go:55: not implemented for this assignment\n"}
+{"Time":"2026-09-21T23:05:01.92136+02:00","Action":"attr","Package":"fixtures","Test":"TestSkipped","Key":"score","Value":"{\"Secret\":\"Ie7cJP1sYQvqO2Xk\",\"TestName\":\"TestSkipped\",\"Score\":0,\"MaxScore\":2,\"Weight\":1,\"TestDetails\":\"\"}"}
+{"Time":"2026-09-21T23:05:01.921366+02:00","Action":"output","Package":"fixtures","Test":"TestSkipped","Output":"=== ATTR  TestSkipped score {\"Secret\":\"Ie7cJP1sYQvqO2Xk\",\"TestName\":\"TestSkipped\",\"Score\":0,\"MaxScore\":2,\"Weight\":1,\"TestDetails\":\"\"}\n"}
+{"Time":"2026-09-21T23:05:01.921379+02:00","Action":"output","Package":"fixtures","Test":"TestSkipped","Output":"--- SKIP: TestSkipped (0.00s)\n"}
+{"Time":"2026-09-21T23:05:01.921386+02:00","Action":"skip","Package":"fixtures","Test":"TestSkipped","Elapsed":0}
+{"Time":"2026-09-21T23:05:01.921392+02:00","Action":"output","Package":"fixtures","Output":"FAIL\n"}
+{"Time":"2026-09-21T23:05:01.921995+02:00","Action":"output","Package":"fixtures","Output":"FAIL\tfixtures\t0.101s\n"}
+{"Time":"2026-09-21T23:05:01.922021+02:00","Action":"fail","Package":"fixtures","Elapsed":0.102}

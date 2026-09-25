@@ -42,8 +42,8 @@ func truncateLog(stdout *bytes.Buffer, truncate, last, maxLen int) string {
 func findScoreLines(lines string) string {
 	scoreLines := make([]string, 0)
 	for line := range strings.SplitSeq(lines, "\n") {
-		// check if line has expected JSON score string
-		if score.HasPrefix(line) {
+		// check if the line carries a score, in any of the forms a run prints one
+		if score.HasScore(line) {
 			scoreLines = append(scoreLines, line)
 		}
 	}
