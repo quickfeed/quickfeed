@@ -5,15 +5,23 @@ import { entryText, entryTime, logText, toLocalDatetimeInput } from "../componen
 
 describe("course log timestamps", () => {
     test.each([
-        { date: new Date(2026, 0, 2, 0, 3, 4), input: "2026-01-02T00:03", time: "2026-01-02 00:03:04" },
-        { date: new Date(2024, 1, 29, 23, 59, 58), input: "2024-02-29T23:59", time: "2024-02-29 23:59:58" },
-    ])("formats $time using local time and a 24-hour clock", ({ date, input, time }) => {
-        expect(toLocalDatetimeInput(date)).toBe(input)
+        { date: new Date(2026, 0, 2, 0, 3, 4), time: "2026-01-02 00:03:04" },
+        { date: new Date(2024, 1, 29, 23, 59, 58), time: "2024-02-29 23:59:58" },
+    ])("formats $time using local time and a 24-hour clock", ({ date, time }) => {
         expect(entryTime(create(CourseLogEntrySchema, { time: timestampFromDate(date) }))).toBe(time)
     })
 
     test("omits a missing timestamp", () => {
         expect(entryTime(create(CourseLogEntrySchema))).toBe("")
+    })
+})
+
+describe("course log date input", () => {
+    test.each([
+        { date: new Date(2026, 0, 2, 0, 3, 4), value: "2026-01-02T00:03" },
+        { date: new Date(2024, 1, 29, 23, 59, 58), value: "2024-02-29T23:59" },
+    ])("formats $value in local time, to the minute", ({ date, value }) => {
+        expect(toLocalDatetimeInput(date)).toBe(value)
     })
 })
 

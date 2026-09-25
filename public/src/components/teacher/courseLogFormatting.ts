@@ -11,6 +11,14 @@ export const LEVEL_NAMES: Record<CourseLogEntry_Level, string> = {
 
 const pad = (n: number): string => n.toString().padStart(2, "0")
 
+export const MINUTE = 60 * 1000
+export const HOUR = 60 * MINUTE
+export const DAY = 24 * HOUR
+
+// RETENTION is how long the server keeps a course's log; a range reaching
+// further back returns nothing more.
+export const RETENTION = 14 * DAY
+
 // toLocalDatetimeInput formats date for a <input type="datetime-local"> value, in the
 // browser's local time zone; Date#toISOString is always UTC, so it cannot be reused here.
 export const toLocalDatetimeInput = (date: Date): string =>

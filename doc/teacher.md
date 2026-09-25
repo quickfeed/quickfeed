@@ -106,7 +106,8 @@ It does not include the operator-only server log, and it never includes a studen
 
 QuickFeed keeps 14 days of history.
 
-The interval, repository, and level filters take effect when you click Refresh.
+The page shows new entries as the server records them, so you can push to your `tests` repository and watch what QuickFeed makes of it.
+The time presets apply at once; picked dates and the repository and level filters take effect when you press Enter or click Refresh.
 The free-text box and the Columns row instead act on what is already on screen; Copy and Download include attributes you have hidden.
 
 ## Teaching Assistants

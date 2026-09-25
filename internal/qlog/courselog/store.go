@@ -21,6 +21,7 @@ import (
 	"time"
 
 	"github.com/quickfeed/quickfeed/internal/qlog/label"
+	"github.com/quickfeed/quickfeed/qf"
 )
 
 // Retention is how long a course's date files are kept before being removed.
@@ -44,17 +45,40 @@ type Store struct {
 	mu      sync.Mutex // guards courses; each course's own file is guarded by its courseFile
 	courses map[string]*courseFile
 
-	stop    chan struct{}
-	stopped chan struct{}
+	// subsMu guards subs and closed. It is the innermost of the store's locks:
+	// publish takes it while holding a courseFile's lock, so that subscribers
+	// see a course's records in the order they were written, and Subscribe
+	// does too, so that a subscription begins exactly where the file ends.
+	// Nothing takes mu or a courseFile lock while holding it.
+	subsMu sync.Mutex
+	subs   map[string][]*Subscription
+	closed bool
+
+	closeOnce sync.Once
+	stop      chan struct{}
+	stopped   chan struct{}
 }
 
-// courseFile holds the currently open file for one course and the UTC date
-// it covers. Access is serialized by mu, so a course's records are written in
-// order even under concurrent logging.
+// courseFile holds the currently open file for one course, the UTC day it
+// covers, and its size. Access is serialized by mu, so a course's records are
+// written in order even under concurrent logging, and each is given the
+// position it was written at.
 type courseFile struct {
 	mu   sync.Mutex
 	file *os.File
-	date string
+	day  time.Time
+	// size is where the next write lands: the file is opened for appending,
+	// so its offset is always its size, and only this process writes to it.
+	size int64
+}
+
+// end returns the position just past the last record written to cf, or nil if
+// no file is open. Callers must hold cf.mu.
+func (cf *courseFile) end() *qf.LogCursor {
+	if cf.file == nil {
+		return nil
+	}
+	return qf.NewLogCursor(cf.day, cf.size)
 }
 
 // NewStore creates dir if it does not already exist, removes any date files
@@ -69,6 +93,7 @@ func NewStore(dir string, operator *slog.Logger) (*Store, error) {
 		operator: operator,
 		now:      time.Now,
 		courses:  make(map[string]*courseFile),
+		subs:     make(map[string][]*Subscription),
 		stop:     make(chan struct{}),
 		stopped:  make(chan struct{}),
 	}
@@ -91,24 +116,28 @@ func (s *Store) cleanupLoop() {
 	}
 }
 
-// Close stops the retention loop and closes every open course file.
+// Close stops the retention loop, ends every open subscription, and closes
+// every open course file. It is safe to call more than once.
 func (s *Store) Close() error {
-	close(s.stop)
-	<-s.stopped
-
-	s.mu.Lock()
-	defer s.mu.Unlock()
 	var errs []error
-	for _, cf := range s.courses {
-		cf.mu.Lock()
-		if cf.file != nil {
-			if err := cf.file.Close(); err != nil {
-				errs = append(errs, err)
+	s.closeOnce.Do(func() {
+		close(s.stop)
+		<-s.stopped
+		s.closeSubscriptions()
+
+		s.mu.Lock()
+		defer s.mu.Unlock()
+		for _, cf := range s.courses {
+			cf.mu.Lock()
+			if cf.file != nil {
+				if err := cf.file.Close(); err != nil {
+					errs = append(errs, err)
+				}
+				cf.file = nil
 			}
-			cf.file = nil
+			cf.mu.Unlock()
 		}
-		cf.mu.Unlock()
-	}
+	})
 	return errors.Join(errs...)
 }
 
@@ -133,24 +162,31 @@ func (s *Store) write(org string, p []byte) (int, error) {
 	cf.mu.Lock()
 	defer cf.mu.Unlock()
 
-	today := s.now().UTC().Format(dateLayout)
-	if cf.file == nil || cf.date != today {
+	today := qf.LogDay(s.now())
+	if cf.file == nil || !cf.day.Equal(today) {
 		if cf.file != nil {
 			_ = cf.file.Close()
 		}
-		f, err := s.openFile(org, today)
+		cf.file = nil
+		f, size, err := s.openFile(org, today)
 		if err != nil {
 			s.reportError(org, "opening course log file", err)
 			return 0, err
 		}
-		cf.file = f
-		cf.date = today
+		cf.file, cf.day, cf.size = f, today, size
 	}
+	start := cf.size
 	n, err := cf.file.Write(p)
+	// A short write still moves the end of the file.
+	cf.size += int64(n)
 	if err != nil {
 		s.reportError(org, "writing course log record", err)
+		return n, err
 	}
-	return n, err
+	// Publish under cf.mu, so subscribers see records in file order, and
+	// Subscribe cannot read the file's end between writing and publishing.
+	s.publish(org, cf.day, start, p)
+	return n, nil
 }
 
 // courseFileFor returns org's file state, registering the course on its
@@ -168,13 +204,29 @@ func (s *Store) courseFileFor(org string) *courseFile {
 	return cf
 }
 
-func (s *Store) openFile(org, date string) (*os.File, error) {
+// openFile opens org's file for day for appending, and returns its size, which
+// is where the first record written to it will begin.
+func (s *Store) openFile(org string, day time.Time) (*os.File, int64, error) {
 	dir := filepath.Join(s.dir, org)
 	if err := os.MkdirAll(dir, 0o750); err != nil {
-		return nil, err
+		return nil, 0, err
 	}
-	path := filepath.Join(dir, date+".jsonl")
-	return os.OpenFile(path, os.O_CREATE|os.O_WRONLY|os.O_APPEND, 0o600)
+	f, err := os.OpenFile(s.path(org, day), os.O_CREATE|os.O_WRONLY|os.O_APPEND, 0o600)
+	if err != nil {
+		return nil, 0, err
+	}
+	info, err := f.Stat()
+	if err != nil {
+		_ = f.Close()
+		return nil, 0, err
+	}
+	return f, info.Size(), nil
+}
+
+// path returns the file holding org's records for day, a UTC midnight. org
+// must already be sanitized.
+func (s *Store) path(org string, day time.Time) string {
+	return filepath.Join(s.dir, org, day.Format(dateLayout)+".jsonl")
 }
 
 func (s *Store) reportError(org, action string, err error) {
