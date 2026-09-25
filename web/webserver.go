@@ -43,6 +43,9 @@ func (s *QuickFeedService) RegisterRouter(webHookSecret, public string) *http.Se
 		http.ServeFile(w, r, public+"/assets/robots.txt")
 	}))
 	router.Handle("/", http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		// Revalidate index.html on every load; it is the only place that
+		// names the current (versioned) bundles and stylesheets.
+		w.Header().Set("Cache-Control", "no-cache")
 		http.ServeFile(w, r, public+"/assets/index.html")
 	}))
 	paths, handler := s.NewQuickFeedHandler()

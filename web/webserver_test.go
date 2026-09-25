@@ -33,6 +33,7 @@ func TestRegisterRouter(t *testing.T) {
 		Get("/").
 		Expect(t).
 		Status(http.StatusOK).
+		Header("Cache-Control", "no-cache").
 		Body("hello, world!").
 		End()
 
