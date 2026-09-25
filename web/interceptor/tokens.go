@@ -3,7 +3,6 @@ package interceptor
 import (
 	"context"
 	"fmt"
-	"strings"
 
 	"connectrpc.com/connect"
 	"github.com/quickfeed/quickfeed/web/auth"
@@ -53,23 +52,18 @@ func NewTokenInterceptor(tm *auth.TokenManager) *TokenInterceptor {
 }
 
 func (*TokenInterceptor) WrapStreamingHandler(next connect.StreamingHandlerFunc) connect.StreamingHandlerFunc {
-	return connect.StreamingHandlerFunc(func(ctx context.Context, conn connect.StreamingHandlerConn) error {
-		return next(ctx, conn)
-	})
+	return next
 }
 
 func (*TokenInterceptor) WrapStreamingClient(next connect.StreamingClientFunc) connect.StreamingClientFunc {
-	return connect.StreamingClientFunc(func(ctx context.Context, spec connect.Spec) connect.StreamingClientConn {
-		return next(ctx, spec)
-	})
+	return next
 }
 
 // WrapUnary updates list of users who need a new JWT next time they send a request to the server.
 // This method only logs errors to avoid overwriting the gRPC error messages returned by the server.
 func (t *TokenInterceptor) WrapUnary(next connect.UnaryFunc) connect.UnaryFunc {
 	return connect.UnaryFunc(func(ctx context.Context, request connect.AnyRequest) (connect.AnyResponse, error) {
-		procedure := request.Spec().Procedure
-		method := procedure[strings.LastIndex(procedure, "/")+1:]
+		method := methodName(request)
 		if tokenUpdateFn, ok := tokenUpdateMethods[method]; ok {
 			if msg, ok := request.Any().(userIDs); ok {
 				if err := tokenUpdateFn(ctx, t.tokenManager, msg); err != nil {

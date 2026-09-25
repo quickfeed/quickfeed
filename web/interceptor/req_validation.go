@@ -29,16 +29,25 @@ func NewValidationInterceptor() *ValidationInterceptor {
 	return &ValidationInterceptor{}
 }
 
+// WrapStreamingHandler validates the request once the handler receives it; see
+// checkedConn. Only the request validation applies to a stream: there is no
+// single response to clean of remote IDs.
 func (*ValidationInterceptor) WrapStreamingHandler(next connect.StreamingHandlerFunc) connect.StreamingHandlerFunc {
 	return connect.StreamingHandlerFunc(func(ctx context.Context, conn connect.StreamingHandlerConn) error {
-		return next(ctx, conn)
+		return next(ctx, &checkedConn{
+			StreamingHandlerConn: conn,
+			check: func(req any) error {
+				if req == nil {
+					return nil
+				}
+				return validate(ctx, req)
+			},
+		})
 	})
 }
 
 func (*ValidationInterceptor) WrapStreamingClient(next connect.StreamingClientFunc) connect.StreamingClientFunc {
-	return connect.StreamingClientFunc(func(ctx context.Context, spec connect.Spec) connect.StreamingClientConn {
-		return next(ctx, spec)
-	})
+	return next
 }
 
 // WrapUnary returns a new unary server interceptor that validates requests

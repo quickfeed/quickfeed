@@ -4,7 +4,6 @@ import (
 	"cmp"
 	"context"
 	"fmt"
-	"strings"
 
 	"connectrpc.com/connect"
 	"github.com/quickfeed/quickfeed/database"
@@ -215,37 +214,50 @@ func NewAccessControlInterceptor(db database.Database) *AccessControlInterceptor
 	return &AccessControlInterceptor{db: db}
 }
 
-func (*AccessControlInterceptor) WrapStreamingHandler(next connect.StreamingHandlerFunc) connect.StreamingHandlerFunc {
+// WrapStreamingHandler checks the access checker for the method against the
+// caller's JWT claims, for the first message received by the streaming handler.
+func (a *AccessControlInterceptor) WrapStreamingHandler(next connect.StreamingHandlerFunc) connect.StreamingHandlerFunc {
 	return connect.StreamingHandlerFunc(func(ctx context.Context, conn connect.StreamingHandlerConn) error {
-		return next(ctx, conn)
+		method := methodName(conn)
+		return next(ctx, &checkedConn{
+			StreamingHandlerConn: conn,
+			check: func(req any) error {
+				return a.authorize(ctx, method, req)
+			},
+		})
 	})
 }
 
 func (*AccessControlInterceptor) WrapStreamingClient(next connect.StreamingClientFunc) connect.StreamingClientFunc {
-	return connect.StreamingClientFunc(func(ctx context.Context, spec connect.Spec) connect.StreamingClientConn {
-		return next(ctx, spec)
-	})
+	return next
 }
 
 // WrapUnary checks user information stored in the JWT claims against the access checker for the method.
 func (a *AccessControlInterceptor) WrapUnary(next connect.UnaryFunc) connect.UnaryFunc {
 	return connect.UnaryFunc(func(ctx context.Context, request connect.AnyRequest) (connect.AnyResponse, error) {
-		procedure := request.Spec().Procedure
-		method := procedure[strings.LastIndex(procedure, "/")+1:]
-		req := request.Any()
-		claims, ok := auth.ClaimsFromContext(ctx)
-		if !ok {
-			return nil, accessDeniedError(method, "failed to get claims from request context")
-		}
-		checker, ok := methodCheckers[method]
-		if !ok {
-			return nil, accessDeniedError(method, "unknown method")
-		}
-		if reason := checker(a.db, req, claims); reason != "" {
-			return nil, accessDeniedError(method, reason)
+		if err := a.authorize(ctx, methodName(request), request.Any()); err != nil {
+			return nil, err
 		}
 		return next(ctx, request)
 	})
+}
+
+// authorize checks req against the access checker registered for method, using
+// the caller's JWT claims. It is the single access control rule for both unary
+// and streaming RPCs.
+func (a *AccessControlInterceptor) authorize(ctx context.Context, method string, req any) error {
+	claims, ok := auth.ClaimsFromContext(ctx)
+	if !ok {
+		return accessDeniedError(method, "failed to get claims from request context")
+	}
+	checker, ok := methodCheckers[method]
+	if !ok {
+		return accessDeniedError(method, "unknown method")
+	}
+	if reason := checker(a.db, req, claims); reason != "" {
+		return accessDeniedError(method, reason)
+	}
+	return nil
 }
 
 // accessDeniedError creates a standardized access denied error for the given method and reason.

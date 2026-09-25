@@ -196,6 +196,13 @@ belongs in the handler.
 4. Update frontend client code to call the new RPC method
 5. Add frontend tests for the new functionality
 
+Every method, streaming or unary, needs an entry in `methodCheckers`
+(`web/interceptor/access_control.go`); several tests enumerate the service and
+fail without one. A streaming interceptor is handed the connection rather than
+the request, so access control and validation run on the first message the
+handler receives, through `checkedConn` in `web/interceptor/streaming.go`; a
+handler therefore repeats neither check.
+
 #### Database Changes
 
 When modifying database models or queries:
