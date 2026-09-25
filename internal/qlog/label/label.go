@@ -4,8 +4,9 @@
 // keep component-specific or one-off attribute names local to the component.
 //
 // For RPC handlers, the logging interceptors already attach RPCMethod, and,
-// once access control has accepted the request, UserID for the calling user and
-// CourseID for the requested course. Handlers must not repeat those attributes,
+// once access control has accepted the request, UserID and User for the calling
+// user and CourseID and CourseCode for a trusted course. Names are best-effort
+// database lookups. Handlers must not repeat those attributes,
 // since slog records every attribute it is given, including duplicate keys.
 // When a handler acts on some other user than the caller, use TargetUser and
 // TargetUserID to keep the two apart.

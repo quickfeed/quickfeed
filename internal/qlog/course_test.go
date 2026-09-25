@@ -58,21 +58,22 @@ func TestWithCourse(t *testing.T) {
 	}
 }
 
-// TestWithCourseLogOmitsCourseID guards the variant used where the RPC
-// interceptors already attached course_id from the caller's claims: it must
-// not repeat it, only add CourseCode and the log marker.
-func TestWithCourseLogOmitsCourseID(t *testing.T) {
+// The RPC interceptors already supply both course attributes; the helper
+// must add the log marker without duplicating either attribute.
+func TestWithCourseLogOmitsCourseScope(t *testing.T) {
 	var output bytes.Buffer
 	logger := New(&output)
 	course := fakeCourse{id: 42, code: "DAT520", org: "dat520-2026"}
 
-	ambient := logger.With(label.CourseID, uint64(42)) // simulates enrichRequestLogger
+	ambient := logger.With(label.CourseID, uint64(42), label.CourseCode, "DAT520")
 	_, scoped := WithCourseLog(NewContext(context.Background(), ambient), course)
 	scoped.Info("scoped record")
 
 	got := output.String()
-	if n := strings.Count(got, "course_id="); n != 1 {
-		t.Errorf("log output %q has course_id %d times, want exactly once", got, n)
+	for _, key := range []string{"course_id=", "course_code="} {
+		if n := strings.Count(got, key); n != 1 {
+			t.Errorf("log output %q has %s %d times, want exactly once", got, key, n)
+		}
 	}
 	for _, want := range []string{"course_code=DAT520", "course_log=dat520-2026"} {
 		if !strings.Contains(got, want) {
