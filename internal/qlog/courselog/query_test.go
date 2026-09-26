@@ -67,10 +67,11 @@ func withNewest() func(*qf.CourseLogRequest) {
 func TestQueryEmptyLog(t *testing.T) {
 	store, _ := newTestStore(t)
 	now := time.Now().UTC()
-	entries, repos, truncated, err := store.Query("never-logged", req(now.Add(-time.Hour), now), nil)
+	got, err := store.Query("never-logged", req(now.Add(-time.Hour), now), nil)
 	if err != nil {
 		t.Fatalf("Query() error = %v", err)
 	}
+	entries, repos, truncated := got.GetEntries(), got.GetRepositories(), got.GetTruncated()
 	if len(entries) != 0 || len(repos) != 0 || truncated {
 		t.Errorf("Query() = (%v, %v, %v), want empty result for a course with no log", entries, repos, truncated)
 	}
@@ -83,10 +84,11 @@ func TestQueryFiltersByTime(t *testing.T) {
 	writeEntry(t, store, "dat520-2026", base.Add(-2*time.Hour), slog.LevelInfo, "before range")
 	writeEntry(t, store, "dat520-2026", base.Add(2*time.Hour), slog.LevelInfo, "after range")
 
-	entries, _, _, err := store.Query("dat520-2026", req(base.Add(-time.Minute), base.Add(time.Minute)), nil)
+	got, err := store.Query("dat520-2026", req(base.Add(-time.Minute), base.Add(time.Minute)), nil)
 	if err != nil {
 		t.Fatalf("Query() error = %v", err)
 	}
+	entries := got.GetEntries()
 	if len(entries) != 1 || entries[0].Message != "in range" {
 		t.Errorf("Query() entries = %v, want only the in-range record", entries)
 	}
@@ -98,10 +100,11 @@ func TestQueryFiltersByLevel(t *testing.T) {
 	writeEntry(t, store, "dat520-2026", base, slog.LevelDebug, "debug record")
 	writeEntry(t, store, "dat520-2026", base.Add(time.Minute), slog.LevelError, "error record")
 
-	entries, _, _, err := store.Query("dat520-2026", req(base.Add(-time.Hour), base.Add(time.Hour), withLevel(qf.CourseLogEntry_WARN)), nil)
+	got, err := store.Query("dat520-2026", req(base.Add(-time.Hour), base.Add(time.Hour), withLevel(qf.CourseLogEntry_WARN)), nil)
 	if err != nil {
 		t.Fatalf("Query() error = %v", err)
 	}
+	entries := got.GetEntries()
 	if len(entries) != 1 || entries[0].Message != "error record" {
 		t.Errorf("Query() entries = %v, want only the record at or above the minimum level", entries)
 	}
@@ -117,10 +120,11 @@ func TestQueryRepositoryFilterKeepsFullRepositoryList(t *testing.T) {
 	writeEntry(t, store, "dat520-2026", base, slog.LevelInfo, "repo a", slog.String(label.Repository, "repo-a"))
 	writeEntry(t, store, "dat520-2026", base.Add(time.Minute), slog.LevelInfo, "repo b", slog.String(label.Repository, "repo-b"))
 
-	entries, repos, _, err := store.Query("dat520-2026", req(base.Add(-time.Hour), base.Add(time.Hour), withRepository("repo-a")), nil)
+	got, err := store.Query("dat520-2026", req(base.Add(-time.Hour), base.Add(time.Hour), withRepository("repo-a")), nil)
 	if err != nil {
 		t.Fatalf("Query() error = %v", err)
 	}
+	entries, repos := got.GetEntries(), got.GetRepositories()
 	if len(entries) != 1 || entries[0].Repository != "repo-a" {
 		t.Errorf("Query() entries = %v, want only repo-a's record", entries)
 	}
@@ -153,10 +157,11 @@ func TestQueryLimit(t *testing.T) {
 	for name, tt := range tests {
 		t.Run(name, func(t *testing.T) {
 			opts := append([]func(*qf.CourseLogRequest){withLimit(3)}, tt.opts...)
-			entries, _, truncated, err := store.Query("dat520-2026", req(base.Add(-time.Hour), base.Add(time.Hour), opts...), nil)
+			got, err := store.Query("dat520-2026", req(base.Add(-time.Hour), base.Add(time.Hour), opts...), nil)
 			if err != nil {
 				t.Fatalf("Query() error = %v", err)
 			}
+			entries, truncated := got.GetEntries(), got.GetTruncated()
 			if got := messages(entries); !slices.Equal(got, tt.want) {
 				t.Errorf("Query() = %v, want %v, in the order written", got, tt.want)
 			}
@@ -184,10 +189,11 @@ func TestQueryIgnoresMalformedFinalLine(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	entries, _, _, err := store.Query("dat520-2026", req(base.Add(-time.Hour), base.Add(time.Hour)), nil)
+	got, err := store.Query("dat520-2026", req(base.Add(-time.Hour), base.Add(time.Hour)), nil)
 	if err != nil {
 		t.Fatalf("Query() error = %v, want the malformed final line ignored", err)
 	}
+	entries := got.GetEntries()
 	if len(entries) != 1 || entries[0].Message != "valid record" {
 		t.Errorf("Query() entries = %v, want only the well-formed record", entries)
 	}
@@ -211,7 +217,7 @@ func TestQuerySurfacesMalformedNonFinalLine(t *testing.T) {
 	}
 	writeEntry(t, store, "dat520-2026", base.Add(time.Minute), slog.LevelInfo, "third record")
 
-	_, _, _, err = store.Query("dat520-2026", req(base.Add(-time.Hour), base.Add(time.Hour)), nil)
+	_, err = store.Query("dat520-2026", req(base.Add(-time.Hour), base.Add(time.Hour)), nil)
 	if err == nil {
 		t.Fatal("Query() error = nil, want a failure for a malformed line that is not the file's last")
 	}
@@ -224,20 +230,21 @@ func TestQuerySpansMultipleDays(t *testing.T) {
 	writeEntry(t, store, "dat520-2026", day1, slog.LevelInfo, "day one")
 	writeEntry(t, store, "dat520-2026", day2, slog.LevelInfo, "day two")
 
-	entries, _, _, err := store.Query("dat520-2026", req(day1.Add(-time.Hour), day2.Add(time.Hour)), nil)
+	got, err := store.Query("dat520-2026", req(day1.Add(-time.Hour), day2.Add(time.Hour)), nil)
 	if err != nil {
 		t.Fatalf("Query() error = %v", err)
 	}
+	entries := got.GetEntries()
 	if len(entries) != 2 || entries[0].Message != "day one" || entries[1].Message != "day two" {
 		t.Errorf("Query() entries = %v, want both days' records in order", entries)
 	}
 }
 
-// TestQueryClampsToClockAndRetention guards Query as the one place that
+// TestQueryBoundedByClockAndRetention guards Query as the one place that
 // bounds a request's interval: a far-future To, or a From far beyond
 // Retention, must not make it walk one date file per day across that whole
 // span, regardless of what a caller (such as the RPC handler) asks for.
-func TestQueryClampsToClockAndRetention(t *testing.T) {
+func TestQueryBoundedByClockAndRetention(t *testing.T) {
 	store, _ := newTestStore(t)
 	now := time.Date(2026, 3, 10, 12, 0, 0, 0, time.UTC)
 	store.now = func() time.Time { return now }
@@ -245,41 +252,43 @@ func TestQueryClampsToClockAndRetention(t *testing.T) {
 
 	farFuture := time.Date(9999, 12, 31, 0, 0, 0, 0, time.UTC)
 	farPast := now.Add(-10 * Retention)
-	entries, _, _, err := store.Query("dat520-2026", req(farPast, farFuture), nil)
+	got, err := store.Query("dat520-2026", req(farPast, farFuture), nil)
 	if err != nil {
-		t.Fatalf("Query() error = %v, want the far-future/far-past interval clamped rather than walked in full", err)
+		t.Fatalf("Query() error = %v, want the far-future/far-past interval bounded rather than walked in full", err)
 	}
+	entries := got.GetEntries()
 	if len(entries) != 1 || entries[0].Message != "recent record" {
 		t.Errorf("Query() entries = %v, want only the one written record", entries)
 	}
 }
 
-// TestQueryEmptyWhenIntervalInvertedAfterClamp guards that clamping To down
+// TestQueryEmptyWhenIntervalInvertedByNow guards that moving To back
 // to now can legitimately invert the interval (an explicit From already
-// after the clamped To), which must yield an empty result rather than an
+// after the new To), which must yield an empty result rather than an
 // error or a backward walk.
-func TestQueryEmptyWhenIntervalInvertedAfterClamp(t *testing.T) {
+func TestQueryEmptyWhenIntervalInvertedByNow(t *testing.T) {
 	store, _ := newTestStore(t)
 	now := time.Date(2026, 3, 10, 12, 0, 0, 0, time.UTC)
 	store.now = func() time.Time { return now }
 
 	farFuture := time.Date(9999, 12, 31, 0, 0, 0, 0, time.UTC)
-	entries, repos, truncated, err := store.Query("dat520-2026", req(now.Add(time.Minute), farFuture), nil)
+	got, err := store.Query("dat520-2026", req(now.Add(time.Minute), farFuture), nil)
 	if err != nil {
 		t.Fatalf("Query() error = %v", err)
 	}
+	entries, repos, truncated := got.GetEntries(), got.GetRepositories(), got.GetTruncated()
 	if len(entries) != 0 || len(repos) != 0 || truncated {
-		t.Errorf("Query() = (%v, %v, %v), want empty once To is clamped to now and From is still after it", entries, repos, truncated)
+		t.Errorf("Query() = (%v, %v, %v), want empty once To is moved back to now and From is still after it", entries, repos, truncated)
 	}
 }
 
-// TestQueryFromClampedToRetainedFileBoundary guards that From is clamped to
+// TestQueryFromBoundedByRetainedFileBoundary guards that From is moved up to
 // the UTC midnight of the oldest date cleanup still guarantees to keep, not
 // to the raw now-Retention instant: cleanupCourseDir removes a date file once
-// its UTC midnight falls before that instant, so clamping to the instant
+// its UTC midnight falls before that instant, so moving From up to the instant
 // itself could report a window wider than what the on-disk files can answer
 // for.
-func TestQueryFromClampedToRetainedFileBoundary(t *testing.T) {
+func TestQueryFromBoundedByRetainedFileBoundary(t *testing.T) {
 	store, _ := newTestStore(t)
 	// A "now" with a non-zero time-of-day, so now-Retention does not itself
 	// land on a UTC midnight, exercising the boundary's round-up.
@@ -294,10 +303,11 @@ func TestQueryFromClampedToRetainedFileBoundary(t *testing.T) {
 	writeEntry(t, store, "dat520-2026", oldestKept.Add(time.Minute), slog.LevelInfo, "retained")
 	store.now = func() time.Time { return now } // writeEntry moved the clock; restore it for Query
 
-	entries, _, _, err := store.Query("dat520-2026", req(now.Add(-2*Retention), now), nil)
+	got, err := store.Query("dat520-2026", req(now.Add(-2*Retention), now), nil)
 	if err != nil {
 		t.Fatalf("Query() error = %v", err)
 	}
+	entries := got.GetEntries()
 	if len(entries) != 1 || entries[0].Message != "retained" {
 		t.Errorf("Query() entries = %v, want only the record inside the retained-file boundary", entries)
 	}
@@ -314,10 +324,11 @@ func TestQueryDecodesDedicatedAndGenericAttributes(t *testing.T) {
 		slog.Uint64(label.SubmissionID, 7),
 	)
 
-	entries, _, _, err := store.Query("dat520-2026", req(base.Add(-time.Minute), base.Add(time.Minute), withLimit(10)), nil)
+	got, err := store.Query("dat520-2026", req(base.Add(-time.Minute), base.Add(time.Minute), withLimit(10)), nil)
 	if err != nil {
 		t.Fatalf("Query() error = %v", err)
 	}
+	entries := got.GetEntries()
 	if len(entries) != 1 {
 		t.Fatalf("len(entries) = %d, want 1", len(entries))
 	}
@@ -385,10 +396,11 @@ func TestQueryEntriesCarryTheirPosition(t *testing.T) {
 		writeEntry(t, store, testOrg, base.Add(time.Duration(i)*time.Minute), slog.LevelInfo, fmt.Sprintf("record %d", i))
 	}
 
-	entries, _, _, err := store.Query(testOrg, req(base.Add(-time.Hour), base.Add(time.Hour)), nil)
+	got, err := store.Query(testOrg, req(base.Add(-time.Hour), base.Add(time.Hour)), nil)
 	if err != nil {
 		t.Fatalf("Query() error = %v", err)
 	}
+	entries := got.GetEntries()
 	content, err := os.ReadFile(store.path(testOrg, base))
 	if err != nil {
 		t.Fatal(err)
@@ -415,10 +427,11 @@ func TestQueryBoundedByPosition(t *testing.T) {
 	for i := range 5 {
 		writeEntry(t, store, testOrg, base.Add(time.Duration(i)*time.Minute), slog.LevelInfo, fmt.Sprintf("record %d", i))
 	}
-	all, _, _, err := store.Query(testOrg, req(base.Add(-time.Hour), base.Add(time.Hour)), nil)
+	got, err := store.Query(testOrg, req(base.Add(-time.Hour), base.Add(time.Hour)), nil)
 	if err != nil {
 		t.Fatalf("Query() error = %v", err)
 	}
+	all := got.GetEntries()
 	c := cursors(t, all)
 	startOfDay := qf.NewLogCursor(base, 0)
 
@@ -446,10 +459,11 @@ func TestQueryBoundedByPosition(t *testing.T) {
 	}
 	for name, tt := range tests {
 		t.Run(name, func(t *testing.T) {
-			entries, _, _, err := store.Query(testOrg, req(base.Add(-time.Hour), base.Add(time.Hour), withAfter(tt.after), withBefore(tt.before)), tt.until)
+			got, err := store.Query(testOrg, req(base.Add(-time.Hour), base.Add(time.Hour), withAfter(tt.after), withBefore(tt.before)), tt.until)
 			if err != nil {
 				t.Fatalf("Query() error = %v", err)
 			}
+			entries := got.GetEntries()
 			if got := messages(entries); !slices.Equal(got, tt.want) {
 				t.Errorf("Query() = %v, want %v", got, tt.want)
 			}
@@ -466,10 +480,11 @@ func TestQueryPagesByCursor(t *testing.T) {
 	for i := range 6 {
 		writeEntry(t, store, testOrg, base.Add(time.Duration(i)*time.Minute), slog.LevelInfo, fmt.Sprintf("record %d", i))
 	}
-	all, _, _, err := store.Query(testOrg, req(base.Add(-time.Hour), base.Add(time.Hour)), nil)
+	got, err := store.Query(testOrg, req(base.Add(-time.Hour), base.Add(time.Hour)), nil)
 	if err != nil {
 		t.Fatalf("Query() error = %v", err)
 	}
+	all := got.GetEntries()
 	c := cursors(t, all)
 
 	tests := map[string]struct {
@@ -495,10 +510,11 @@ func TestQueryPagesByCursor(t *testing.T) {
 	for name, tt := range tests {
 		t.Run(name, func(t *testing.T) {
 			opts := append([]func(*qf.CourseLogRequest){withLimit(2)}, tt.opts...)
-			entries, _, truncated, err := store.Query(testOrg, req(base.Add(-time.Hour), base.Add(time.Hour), opts...), nil)
+			got, err := store.Query(testOrg, req(base.Add(-time.Hour), base.Add(time.Hour), opts...), nil)
 			if err != nil {
 				t.Fatalf("Query() error = %v", err)
 			}
+			entries, truncated := got.GetEntries(), got.GetTruncated()
 			if got := messages(entries); !slices.Equal(got, tt.want) {
 				t.Errorf("Query() = %v, want %v", got, tt.want)
 			}
@@ -517,15 +533,17 @@ func TestQueryCursorAndTimeBoundsBothApply(t *testing.T) {
 	writeEntry(t, store, testOrg, base, slog.LevelInfo, "first")
 	writeEntry(t, store, testOrg, base.Add(time.Hour), slog.LevelInfo, "outside the interval")
 	writeEntry(t, store, testOrg, base.Add(time.Minute), slog.LevelInfo, "inside the interval")
-	first, _, _, err := store.Query(testOrg, req(base, base), nil)
+	got, err := store.Query(testOrg, req(base, base), nil)
+	first := got.GetEntries()
 	if err != nil || len(first) != 1 {
 		t.Fatalf("Query() = %v, %v, want the first record", first, err)
 	}
 
-	entries, _, _, err := store.Query(testOrg, req(base, base.Add(30*time.Minute), withAfter(cursorOf(t, first[0]))), nil)
+	got, err = store.Query(testOrg, req(base, base.Add(30*time.Minute), withAfter(cursorOf(t, first[0]))), nil)
 	if err != nil {
 		t.Fatalf("Query() error = %v", err)
 	}
+	entries := got.GetEntries()
 	if got, want := messages(entries), []string{"inside the interval"}; !slices.Equal(got, want) {
 		t.Errorf("Query() = %v, want %v", got, want)
 	}
@@ -549,7 +567,8 @@ func TestQueryAfterSurvivesRestart(t *testing.T) {
 
 	before := open()
 	writeEntry(t, before, testOrg, base, slog.LevelInfo, "before the restart")
-	seen, _, _, err := before.Query(testOrg, req(base.Add(-time.Hour), base.Add(time.Hour)), nil)
+	got, err := before.Query(testOrg, req(base.Add(-time.Hour), base.Add(time.Hour)), nil)
+	seen := got.GetEntries()
 	if err != nil || len(seen) != 1 {
 		t.Fatalf("Query() = %v, %v, want one record", seen, err)
 	}
@@ -559,10 +578,11 @@ func TestQueryAfterSurvivesRestart(t *testing.T) {
 
 	after := open()
 	writeEntry(t, after, testOrg, base.Add(time.Minute), slog.LevelInfo, "after the restart")
-	entries, _, _, err := after.Query(testOrg, req(base.Add(-time.Hour), base.Add(time.Hour), withAfter(cursorOf(t, seen[0]))), nil)
+	got, err = after.Query(testOrg, req(base.Add(-time.Hour), base.Add(time.Hour), withAfter(cursorOf(t, seen[0]))), nil)
 	if err != nil {
 		t.Fatalf("Query() error = %v", err)
 	}
+	entries := got.GetEntries()
 	if got, want := messages(entries), []string{"after the restart"}; !slices.Equal(got, want) {
 		t.Fatalf("Query() = %v, want %v", got, want)
 	}
@@ -581,10 +601,11 @@ func TestQueryPositionAcrossDateRollover(t *testing.T) {
 	writeEntry(t, store, testOrg, day1.Add(2*time.Minute), slog.LevelInfo, "day two")
 	interval := req(day1.Add(-time.Hour), day1.Add(time.Hour))
 
-	all, _, _, err := store.Query(testOrg, interval, nil)
+	got, err := store.Query(testOrg, interval, nil)
 	if err != nil {
 		t.Fatalf("Query() error = %v", err)
 	}
+	all := got.GetEntries()
 	c := cursors(t, all)
 	firstDay := qf.LogDay(day1)
 	nextDay := firstDay.AddDate(0, 0, 1)
@@ -609,10 +630,11 @@ func TestQueryPositionAcrossDateRollover(t *testing.T) {
 	for name, tt := range tests {
 		t.Run(name, func(t *testing.T) {
 			bounded := req(day1.Add(-time.Hour), day1.Add(time.Hour), withAfter(tt.after))
-			entries, _, _, err := store.Query(testOrg, bounded, tt.until)
+			got, err := store.Query(testOrg, bounded, tt.until)
 			if err != nil {
 				t.Fatalf("Query() error = %v", err)
 			}
+			entries := got.GetEntries()
 			if got := messages(entries); !slices.Equal(got, tt.want) {
 				t.Errorf("Query() = %v, want %v", got, tt.want)
 			}
@@ -626,10 +648,11 @@ func TestQueryPositionAcrossDateRollover(t *testing.T) {
 		"before day one's last":  {c[1], []string{"day one, first"}},
 	} {
 		t.Run(name, func(t *testing.T) {
-			entries, _, _, err := store.Query(testOrg, req(day1.Add(-time.Hour), day1.Add(time.Hour), withBefore(tt.before)), nil)
+			got, err := store.Query(testOrg, req(day1.Add(-time.Hour), day1.Add(time.Hour), withBefore(tt.before)), nil)
 			if err != nil {
 				t.Fatalf("Query() error = %v", err)
 			}
+			entries := got.GetEntries()
 			if got := messages(entries); !slices.Equal(got, tt.want) {
 				t.Errorf("Query() = %v, want %v", got, tt.want)
 			}
@@ -667,9 +690,9 @@ func TestQueryRejectsInvalidCursor(t *testing.T) {
 		for side, bound := range map[string]func(*qf.LogCursor) func(*qf.CourseLogRequest){"from": withAfter, "to": withBefore} {
 			t.Run(side+" "+name, func(t *testing.T) {
 				r := req(base.Add(-48*time.Hour), base.Add(time.Hour), bound(tt.cursor))
-				_, _, _, err := store.Query(testOrg, r, nil)
-				if tt.wantErr != errors.Is(err, ErrInvalidCursor) {
-					t.Errorf("Query(%s: %v) error = %v, want ErrInvalidCursor: %v", side, tt.cursor, err, tt.wantErr)
+				_, err := store.Query(testOrg, r, nil)
+				if tt.wantErr != errors.Is(err, qf.ErrInvalidLogCursor) {
+					t.Errorf("Query(%s: %v) error = %v, want ErrInvalidLogCursor: %v", side, tt.cursor, err, tt.wantErr)
 				}
 				if !tt.wantErr && err != nil {
 					t.Errorf("Query(%s: %v) error = %v, want nil", side, tt.cursor, err)
@@ -689,9 +712,9 @@ func TestQueryRejectsInvalidCursor(t *testing.T) {
 		"a day beyond until": {after: at(base, 0), until: at(yesterday, 42), wantErr: true},
 	} {
 		t.Run(name, func(t *testing.T) {
-			_, _, _, err := store.Query(testOrg, req(base.Add(-48*time.Hour), base.Add(time.Hour), withAfter(tt.after)), tt.until)
-			if tt.wantErr != errors.Is(err, ErrInvalidCursor) {
-				t.Errorf("Query(From: %v, until %v) error = %v, want ErrInvalidCursor: %v", tt.after, tt.until, err, tt.wantErr)
+			_, err := store.Query(testOrg, req(base.Add(-48*time.Hour), base.Add(time.Hour), withAfter(tt.after)), tt.until)
+			if tt.wantErr != errors.Is(err, qf.ErrInvalidLogCursor) {
+				t.Errorf("Query(From: %v, until %v) error = %v, want ErrInvalidLogCursor: %v", tt.after, tt.until, err, tt.wantErr)
 			}
 		})
 	}
@@ -719,10 +742,11 @@ func TestQueryFindsRecordFiledAfterMidnight(t *testing.T) {
 	} {
 		t.Run(name, func(t *testing.T) {
 			store.now = func() time.Time { return now }
-			entries, _, _, err := store.Query(testOrg, req(stamped.Add(-time.Hour), stamped), nil)
+			got, err := store.Query(testOrg, req(stamped.Add(-time.Hour), stamped), nil)
 			if err != nil {
 				t.Fatalf("Query() error = %v", err)
 			}
+			entries := got.GetEntries()
 			if got, want := messages(entries), []string{"late"}; !slices.Equal(got, want) {
 				t.Errorf("Query() = %v, want %v", got, want)
 			}

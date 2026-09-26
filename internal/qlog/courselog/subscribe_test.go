@@ -321,10 +321,11 @@ func TestSubscribeHandoffIsExact(t *testing.T) {
 	defer sub.Close()
 	wg.Wait()
 
-	backlog, _, _, err := store.Query(testOrg, &qf.CourseLogRequest{Limit: 5000}, sub.Start())
+	got, err := store.Query(testOrg, &qf.CourseLogRequest{Limit: 5000}, sub.Start())
 	if err != nil {
 		t.Fatalf("Query() error = %v", err)
 	}
+	backlog := got.GetEntries()
 	seen := make(map[string]int)
 	for _, entry := range backlog {
 		if c := cursorOf(t, entry); c.Beyond(sub.Start()) {

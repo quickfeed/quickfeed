@@ -25,7 +25,7 @@ import (
 )
 
 // Retention is how long a course's date files are kept before being removed.
-// Store.Query clamps a request's interval to this window.
+// Store.Query reads no further back than this.
 const Retention = 14 * 24 * time.Hour
 
 const dateLayout = "2006-01-02"

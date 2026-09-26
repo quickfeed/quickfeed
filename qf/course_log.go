@@ -1,6 +1,8 @@
 package qf
 
 import (
+	"errors"
+	"fmt"
 	"math"
 	"time"
 
@@ -13,7 +15,13 @@ const (
 	maxCourseLogLimit        = 5000
 )
 
-// Interval returns req's time bounds, clamped to [minFrom, maxTo].
+// EndOfLogFile is a LogCursor offset past the end of any date file.
+const EndOfLogFile = math.MaxInt64
+
+// ErrInvalidLogCursor reports a cursor that the course log did not hand out.
+var ErrInvalidLogCursor = errors.New("invalid course log cursor")
+
+// Interval returns req's time bounds, kept within [minFrom, maxTo].
 // To defaults to maxTo, and From to an hour before To.
 // A From cursor yields minFrom, and a To cursor yields maxTo.
 func (req *CourseLogRequest) Interval(minFrom, maxTo time.Time) (from, to time.Time) {
@@ -38,6 +46,69 @@ func (req *CourseLogRequest) Interval(minFrom, maxTo time.Time) (from, to time.T
 	return from, to
 }
 
+// FollowLog reports whether req asks for new entries as they are logged, which
+// it does unless To is set.
+func (req *CourseLogRequest) FollowLog() bool {
+	return req.GetTo() == nil
+}
+
+// CheckCursors returns an error wrapping ErrInvalidLogCursor if req's From or
+// To cursor is invalid or lies beyond now's date file, or if its From cursor
+// lies beyond until.
+func (req *CourseLogRequest) CheckCursors(until *LogCursor, now time.Time) error {
+	after, before := req.GetFrom().GetCursor(), req.GetTo().GetCursor()
+	for _, c := range []*LogCursor{after, before} {
+		if c == nil {
+			continue
+		}
+		if !c.IsValid() {
+			return fmt.Errorf("%w: %v", ErrInvalidLogCursor, c)
+		}
+		if c.Day().After(LogDay(now)) {
+			return beyondTheEnd(c)
+		}
+	}
+	if after != nil && until != nil && after.Beyond(until) {
+		return beyondTheEnd(after)
+	}
+	return nil
+}
+
+func beyondTheEnd(c *LogCursor) error {
+	return fmt.Errorf("%w: offset %d of %s is beyond the end of the log", ErrInvalidLogCursor, c.GetOffset(), c.Day().Format(time.DateOnly))
+}
+
+// Start returns where reading req's range begins: at req's From cursor, or
+// at the start of from's date file if that is later.
+func (req *CourseLogRequest) Start(from time.Time) *LogCursor {
+	start := NewLogCursor(from, 0)
+	if c := req.GetFrom().GetCursor(); c != nil && c.Beyond(start) {
+		return c
+	}
+	return start
+}
+
+// End returns where reading req's range ends: the earliest of req's To
+// cursor, until, and the end of the date file that can hold a record stamped
+// at to. It also reports whether the entry ending there is left out, which
+// only a To cursor does. A record stamped just before midnight may be written
+// to the next day's file, so the range reaches one day past to, unless that
+// is beyond now.
+func (req *CourseLogRequest) End(to, now time.Time, until *LogCursor) (*LogCursor, bool) {
+	last := to.Add(24 * time.Hour)
+	if last.After(now) {
+		last = now
+	}
+	end := NewLogCursor(last, EndOfLogFile)
+	if until != nil && end.Beyond(until) {
+		end = until
+	}
+	if c := req.GetTo().GetCursor(); c != nil && !c.Beyond(end) {
+		return c, true
+	}
+	return end, false
+}
+
 // EffectiveLimit returns req's requested entry limit, defaulting to 2000 and
 // capped at 5000.
 func (req *CourseLogRequest) EffectiveLimit() int {
@@ -49,6 +120,15 @@ func (req *CourseLogRequest) EffectiveLimit() int {
 	default:
 		return int(requested)
 	}
+}
+
+// HasMoreNewer reports whether entries newer than l's last one match but
+// were left out to stay within the limit. A truncated backlog keeps its
+// oldest matches unless newest is set, so it then ends before the newest
+// match: with a limit of 2000 and 5000 matches from 09:00 to 10:00, it holds
+// 09:00 to 09:20 and leaves out 09:20 to 10:00.
+func (l *CourseLog) HasMoreNewer(newest bool) bool {
+	return l.GetTruncated() && !newest
 }
 
 // InInterval reports whether e's timestamp falls within [from, to].

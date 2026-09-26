@@ -36,8 +36,13 @@ type Subscription struct {
 }
 
 // Start returns the cursor at which the subscription began; entries after it
-// arrive on the channel.
-func (sub *Subscription) Start() *qf.LogCursor { return sub.start }
+// arrive on the channel. A nil subscription returns nil.
+func (sub *Subscription) Start() *qf.LogCursor {
+	if sub == nil {
+		return nil
+	}
+	return sub.start
+}
 
 // C returns the channel entries arrive on. It is closed when the subscription
 // is closed, or when the store shuts down.

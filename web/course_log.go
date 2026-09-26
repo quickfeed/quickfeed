@@ -35,61 +35,39 @@ func (s *QuickFeedService) CourseLogStream(ctx context.Context, in *qf.CourseLog
 	}
 	org := course.GetScmOrganizationName()
 
-	// If To is not set, the stream stays open and sends each new entry as it is logged.
-	if in.GetTo() == nil {
-		return s.followCourseLog(ctx, st, org, in)
+	// Subscribe before querying, so no entry is missed: the backlog holds the
+	// entries up to sub.Start(), and the subscription delivers entries that are
+	// logged after sub.Start().
+	var sub *courselog.Subscription
+	if in.FollowLog() {
+		sub = s.courseLogs.Subscribe(org)
+		defer sub.Close()
 	}
-	// A closed range gets no new entries; send the backlog and end the stream.
-	backlog, err := s.courseLog(ctx, org, in, nil)
-	if err != nil {
-		return err
+	backlog, err := s.courseLogs.Query(org, in, sub.Start())
+	if errors.Is(err, qf.ErrInvalidLogCursor) {
+		return connect.NewError(connect.CodeInvalidArgument, errors.New("invalid course log cursor"))
 	}
-	return st.Send(backlog)
-}
-
-// followCourseLog sends the backlog up to now, followed by each entry logged
-// afterwards, until the client disconnects or the store shuts down. A backlog
-// cut short before the present ends the stream instead.
-func (s *QuickFeedService) followCourseLog(ctx context.Context, st *connect.ServerStream[qf.CourseLog], org string, in *qf.CourseLogRequest) error {
-	// Subscribe before querying, so entries logged during the query are
-	// received on the subscription rather than lost.
-	sub := s.courseLogs.Subscribe(org)
-	defer sub.Close()
-
-	// Entries after sub.Start() arrive on the subscription.
-	backlog, err := s.courseLog(ctx, org, in, sub.Start())
 	if err != nil {
-		return err
+		logger.Error("failed to read course log", label.Error, err)
+		return connect.NewError(connect.CodeInternal, errors.New("reading course log"))
 	}
 	if err := st.Send(backlog); err != nil {
 		return err
 	}
-	// Following now would skip the entries the limit left out; the client
-	// continues from the backlog's newest entry instead.
-	if backlog.GetTruncated() && !in.GetNewest() {
-		return nil
-	}
 	return tailCourseLog(ctx, st, sub, in, backlog)
-}
-
-// courseLog returns the stored entries matching in as a single message,
-// ending at until if it is non-nil.
-func (s *QuickFeedService) courseLog(ctx context.Context, org string, in *qf.CourseLogRequest, until *qf.LogCursor) (*qf.CourseLog, error) {
-	entries, repositories, truncated, err := s.courseLogs.Query(org, in, until)
-	if errors.Is(err, courselog.ErrInvalidCursor) {
-		return nil, connect.NewError(connect.CodeInvalidArgument, errors.New("invalid course log cursor"))
-	}
-	if err != nil {
-		qlog.FromContext(ctx).Error("failed to read course log", label.Error, err)
-		return nil, connect.NewError(connect.CodeInternal, errors.New("reading course log"))
-	}
-	return &qf.CourseLog{Entries: entries, Repositories: repositories, Truncated: truncated}, nil
 }
 
 // tailCourseLog sends each entry received on sub that matches in, one per
 // message. A message lists the entry's repository only if the client has not
-// been sent it before.
+// been sent it before. It returns immediately if sub is nil, or if backlog
+// has more newer entries than it holds.
 func tailCourseLog(ctx context.Context, st *connect.ServerStream[qf.CourseLog], sub *courselog.Subscription, in *qf.CourseLogRequest, backlog *qf.CourseLog) error {
+	// If the backlog ends at 09:20 because of the limit, sending new entries
+	// from 10:00 would hide that 09:20 to 10:00 is missing. End the stream
+	// instead; the client's "Load newer" asks for the entries after 09:20.
+	if sub == nil || backlog.HasMoreNewer(in.GetNewest()) {
+		return nil
+	}
 	seen := newSeenRepositories(backlog.GetRepositories())
 
 	for {
