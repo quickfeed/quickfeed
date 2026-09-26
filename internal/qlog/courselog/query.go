@@ -3,10 +3,10 @@ package courselog
 import (
 	"bufio"
 	"encoding/json"
-	"errors"
 	"fmt"
 	"io"
 	"log/slog"
+	"maps"
 	"os"
 	"slices"
 	"time"
@@ -16,141 +16,94 @@ import (
 	"google.golang.org/protobuf/types/known/timestamppb"
 )
 
-// ErrInvalidCursor reports a cursor that the store did not hand out.
-var ErrInvalidCursor = errors.New("invalid course log cursor")
-
-// Query returns org's entries matching req in the order they were written,
-// every repository with an entry timestamped within req's resolved interval
-// regardless of req's repository or level filter (so a repository filter
-// never removes its own options), and whether the match count exceeded req's
-// resolved limit. Over the limit, req's Newest keeps the newest matches;
-// otherwise the oldest are kept. Each entry carries its cursor.
+// Query returns org's course log entries that match req, in the order they
+// were written, each carrying its cursor.
 //
-// req's interval and limit default and clamp the same way CourseLogStream
-// documents: To is clamped to now and From to oldestRetainedDate. An interval
-// left inverted after clamping returns an empty result.
+// The result lists every repository with an entry in req's time range, also
+// those that req's repository and level filters leave out, so the client can
+// offer them all as filter options. If more entries match than req's limit,
+// the result is marked truncated and holds the oldest matches, or the newest
+// if req.Newest is set.
 //
-// From and To may be cursors, which leave out the entry they came from. If
-// until is non-nil, the result ends at until, inclusive. A cursor the store
-// did not hand out fails with an error wrapping ErrInvalidCursor.
+// The time range ends no later than now and starts no earlier than the
+// oldest date the store retains. A From or To cursor leaves out the entry it
+// names. If until is non-nil, the result ends at until, inclusive.
 //
-// A malformed final line, characteristic of a partial write, is ignored; any
-// other read failure is returned. A course with no activity in range, or no
-// log at all, returns an empty result rather than an error.
-func (s *Store) Query(org string, req *qf.CourseLogRequest, until *qf.LogCursor) ([]*qf.CourseLogEntry, []string, bool, error) {
-	after, before := req.GetFrom().GetCursor(), req.GetTo().GetCursor()
+// A cursor the store did not hand out fails with an error wrapping
+// qf.ErrInvalidLogCursor. A malformed final line, as left by a partial
+// write, is skipped.
+func (s *Store) Query(org string, req *qf.CourseLogRequest, until *qf.LogCursor) (*qf.CourseLog, error) {
 	now := s.now()
-	if err := checkCursors(after, before, until, now); err != nil {
-		return nil, nil, false, err
+	if err := req.CheckCursors(until, now); err != nil {
+		return nil, err
 	}
-	from, to := req.Interval(oldestRetainedDate(now), now)
-	if from.After(to) {
-		return nil, nil, false, nil
-	}
-	last := lastFiled(to, now)
-	if before != nil && before.Day().Before(last) {
-		last = before.Day()
-	}
-	upper, exclusive := until, false
-	if before != nil && (upper == nil || !before.Beyond(upper)) {
-		upper, exclusive = before, true
+	r := newReadRange(req, until, now)
+	if r.empty() {
+		return &qf.CourseLog{}, nil
 	}
 
-	org = sanitize(org)
 	sc := &scan{
-		from:       from,
-		to:         to,
+		from:       r.from,
+		to:         r.to,
 		repository: req.GetRepository(),
 		level:      req.GetLevel(),
 		kept:       newEntryLimit(req.EffectiveLimit(), req.GetNewest()),
 		repos:      make(map[string]bool),
 	}
-	for _, day := range daysBetween(from, last) {
-		sp, ok := spanOf(day, after, upper, exclusive)
-		if !ok {
-			continue
-		}
+	org = sanitize(org)
+	for _, day := range daysBetween(r.start.Day(), r.end.Day()) {
 		path := s.path(org, day)
-		if err := sc.file(path, day, sp); err != nil {
-			return nil, nil, false, fmt.Errorf("reading course log %s: %w", path, err)
+		if err := sc.file(path, day, r.span(day)); err != nil {
+			return nil, fmt.Errorf("reading course log %s: %w", path, err)
 		}
 	}
-
 	entries, truncated := sc.kept.ordered()
-	repositories := make([]string, 0, len(sc.repos))
-	for repo := range sc.repos {
-		repositories = append(repositories, repo)
-	}
-	slices.Sort(repositories)
-	return entries, repositories, truncated, nil
+	return &qf.CourseLog{
+		Entries:      entries,
+		Repositories: slices.Sorted(maps.Keys(sc.repos)),
+		Truncated:    truncated,
+	}, nil
 }
 
-// checkCursors returns an error wrapping ErrInvalidCursor if after or before
-// is invalid or lies beyond today, or if after lies beyond until.
-func checkCursors(after, before, until *qf.LogCursor, now time.Time) error {
-	for _, c := range []*qf.LogCursor{after, before} {
-		if c == nil {
-			continue
-		}
-		if !c.IsValid() {
-			return fmt.Errorf("%w: %v", ErrInvalidCursor, c)
-		}
-		if c.Day().After(qf.LogDay(now)) {
-			return beyondTheEnd(c)
-		}
-	}
-	if after != nil && until != nil && after.Beyond(until) {
-		return beyondTheEnd(after)
-	}
-	return nil
+// readRange is the part of the log a query reads, from start up to end, and
+// the time range its entries must fall within. If excludeEnd is set, the
+// entry ending at end is left out.
+type readRange struct {
+	from, to   time.Time
+	start, end *qf.LogCursor
+	excludeEnd bool
 }
 
-func beyondTheEnd(c *qf.LogCursor) error {
-	return fmt.Errorf("%w: offset %d of %s is beyond the end of the log", ErrInvalidCursor, c.GetOffset(), c.Day().Format(dateLayout))
+// newReadRange returns the part of the log to read for req, ending at until
+// if it is non-nil.
+func newReadRange(req *qf.CourseLogRequest, until *qf.LogCursor, now time.Time) *readRange {
+	from, to := req.Interval(oldestRetainedDate(now), now)
+	end, excludeEnd := req.End(to, now, until)
+	return &readRange{from: from, to: to, start: req.Start(from), end: end, excludeEnd: excludeEnd}
 }
 
-// lastFiled returns the latest instant whose date file can hold a record
-// stamped at or before to. A record stamped just before midnight may be
-// written to the next day's file.
-func lastFiled(to, now time.Time) time.Time {
-	if next := to.Add(24 * time.Hour); next.Before(now) {
-		return next
+// empty reports whether r holds no entries.
+func (r *readRange) empty() bool {
+	return r.from.After(r.to) || !r.end.Beyond(r.start)
+}
+
+// span returns the part of day's file that r covers.
+func (r *readRange) span(day time.Time) span {
+	sp := span{start: 0, end: qf.EndOfLogFile}
+	if day.Equal(r.start.Day()) {
+		sp.start = r.start.Position()
 	}
-	return now
+	if day.Equal(r.end.Day()) {
+		sp.end, sp.exclusive = r.end.Position(), r.excludeEnd
+	}
+	return sp
 }
 
-// span is the byte range of one date file a query reads: from start, and up
-// to end unless end is negative. If exclusive is set, the record ending at end
-// is left out, which is how a cursor bound leaves out the entry it came from.
+// span is the byte range of one date file a query reads: from start up to
+// end. If exclusive is set, the record ending at end is left out.
 type span struct {
 	start, end int64
 	exclusive  bool
-}
-
-// spanOf returns the part of day's file after after and up to upper, or false
-// if that part is empty. A nil cursor bounds nothing.
-func spanOf(day time.Time, after, upper *qf.LogCursor, exclusive bool) (span, bool) {
-	sp := span{start: 0, end: -1}
-	if after != nil {
-		switch {
-		case day.Before(after.Day()):
-			return span{}, false
-		case day.Equal(after.Day()):
-			sp.start = after.Position()
-		}
-	}
-	if upper != nil {
-		switch {
-		case day.After(upper.Day()):
-			return span{}, false
-		case day.Equal(upper.Day()):
-			sp.end, sp.exclusive = upper.Position(), exclusive
-		}
-	}
-	if sp.end >= 0 && sp.end <= sp.start {
-		return span{}, false
-	}
-	return sp, true
 }
 
 // oldestRetainedDate returns the UTC midnight of the oldest date
@@ -280,13 +233,10 @@ func (sp span) reader(f *os.File) (io.Reader, error) {
 	if _, err := f.Seek(sp.start, io.SeekStart); err != nil {
 		return nil, err
 	}
-	if sp.end < 0 {
-		return f, nil
-	}
 	return io.LimitReader(f, sp.end-sp.start), nil
 }
 
-// atRecordBoundary returns an error wrapping ErrInvalidCursor unless offset
+// atRecordBoundary returns an error wrapping qf.ErrInvalidLogCursor unless offset
 // is zero or just past a newline in f.
 func atRecordBoundary(f *os.File, offset int64) error {
 	if offset == 0 {
@@ -294,7 +244,7 @@ func atRecordBoundary(f *os.File, offset int64) error {
 	}
 	var last [1]byte
 	if _, err := f.ReadAt(last[:], offset-1); err != nil || last[0] != '\n' {
-		return fmt.Errorf("%w: offset %d is not at a record boundary", ErrInvalidCursor, offset)
+		return fmt.Errorf("%w: offset %d is not at a record boundary", qf.ErrInvalidLogCursor, offset)
 	}
 	return nil
 }

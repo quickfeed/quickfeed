@@ -94,8 +94,8 @@ func (req *RebuildRequest) IsValid() bool {
 
 // IsValid ensures that CourseID is set, that From and To are valid positions
 // when given, and that From is not after To when both are times or both are
-// cursors. The handler clamps the interval and limit to their server-enforced
-// maximums, rather than rejecting a request for exceeding them.
+// cursors. The handler shortens an interval or limit beyond its server-enforced
+// maximum, rather than rejecting the request.
 func (req *CourseLogRequest) IsValid() bool {
 	if req.GetCourseID() == 0 {
 		return false
