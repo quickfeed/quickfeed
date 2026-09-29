@@ -144,10 +144,7 @@ func (d *Docker) Run(ctx context.Context, job *Job) (string, error) {
 		stdout.WriteString("\nstderr:\n")
 		stdout.Write(stderr.Bytes())
 	}
-	if stdout.Len() > maxLogSize+lastSegmentSize {
-		return truncateLog(&stdout, maxLogSize, lastSegmentSize, maxToScan), waitErr
-	}
-	return stdout.String(), waitErr
+	return truncateLog(stdout.String(), maxLogSize, lastSegmentSize, maxToScan), waitErr
 }
 
 // createImage creates an image for the given job.
