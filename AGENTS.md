@@ -200,8 +200,10 @@ Every method, streaming or unary, needs an entry in `methodCheckers`
 (`web/interceptor/access_control.go`); several tests enumerate the service and
 fail without one. A streaming interceptor is handed the connection rather than
 the request, so access control and validation run on the first message the
-handler receives, through `checkedConn` in `web/interceptor/streaming.go`; a
-handler therefore repeats neither check.
+handler receives, through `checkedConn` in `web/interceptor/streaming.go`. A
+handler therefore repeats neither check, but it does need its procedure added
+to `streamProcedures` in `web/webserver.go`, which gives a long-lived stream its
+write deadline.
 
 #### Database Changes
 

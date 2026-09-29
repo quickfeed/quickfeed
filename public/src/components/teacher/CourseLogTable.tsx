@@ -1,4 +1,4 @@
-import { useMemo, useState, type ReactNode } from "react"
+import { useLayoutEffect, useMemo, useRef, useState, type ReactNode } from "react"
 import type { CourseLogEntry } from "../../../proto/qf/requests_pb"
 import { CourseLogEntry_Level } from "../../../proto/qf/requests_pb"
 import LogCard from "../LogCard"
@@ -39,14 +39,45 @@ const columns: Column[] = [
     { id: "source", label: "Source", render: entry => entry.source },
 ]
 
+// FOLLOW_SLACK is how close, in pixels, to the newest end the view must be
+// for it to keep following new entries.
+const FOLLOW_SLACK = 32
+
 interface CourseLogTableProps {
     entries: CourseLogEntry[]
     rows: CourseLogEntry[]
     controls?: ReactNode
+    /** Offered only while the limit left out entries before the oldest loaded. */
+    onLoadOlder?: () => void
+    /** Offered only while the limit left out entries after the newest loaded. */
+    onLoadNewer?: () => void
 }
 
-const CourseLogTable = ({ entries, rows, controls }: CourseLogTableProps) => {
+const CourseLogTable = ({ entries, rows, controls, onLoadOlder, onLoadNewer }: CourseLogTableProps) => {
     const [hidden, setHidden] = useState<Set<string>>(new Set())
+    const [newestFirst, setNewestFirst] = useState(false)
+    const scroller = useRef<HTMLDivElement>(null)
+    // Whether the view sits at the newest end of the log. Recorded on scroll,
+    // since new rows have already moved the scroll position when they land.
+    const following = useRef(true)
+    const handleScroll = () => {
+        const el = scroller.current
+        if (!el) {
+            return
+        }
+        following.current = newestFirst
+            ? el.scrollTop <= FOLLOW_SLACK
+            : el.scrollHeight - el.scrollTop - el.clientHeight <= FOLLOW_SLACK
+    }
+
+    // Keep the newest entry in view as the log grows, the way tail -f does.
+    useLayoutEffect(() => {
+        const el = scroller.current
+        if (!el || !following.current) {
+            return
+        }
+        el.scrollTop = newestFirst ? 0 : el.scrollHeight
+    }, [rows, newestFirst])
     // Derive columns from all loaded entries so searching doesn't change the chips.
     const available = useMemo(() => [
         ...columns,
@@ -59,6 +90,8 @@ const CourseLogTable = ({ entries, rows, controls }: CourseLogTableProps) => {
             })),
     ], [entries])
     const visible = available.filter(column => !hidden.has(column.id))
+    // Reversing only affects the view, not Copy or Download.
+    const ordered = newestFirst ? [...rows].reverse() : rows
     const toggleColumn = (id: string) => setHidden(previous => {
         const next = new Set(previous)
         if (next.has(id)) {
@@ -69,16 +102,40 @@ const CourseLogTable = ({ entries, rows, controls }: CourseLogTableProps) => {
         return next
     })
 
-    // Stay mounted through loading and empty results to preserve column choices.
+    const paging = (
+        <>
+            {onLoadOlder && <button type="button" className="btn btn-sm" onClick={onLoadOlder}>Load older</button>}
+            {onLoadNewer && <button type="button" className="btn btn-sm" onClick={onLoadNewer}>Load newer</button>}
+        </>
+    )
+
+    // Stay mounted through loading and empty results to preserve column
+    // choices, and keep paging reachable when nothing loaded matches.
     if (rows.length === 0) {
-        return null
+        return (onLoadOlder || onLoadNewer) && (
+            <div className="flex justify-center gap-2 shrink-0">{paging}</div>
+        )
     }
 
     return (
         <LogCard
             title="Course Logs"
             className="flex-1 min-h-48"
-            controls={<div className="flex items-center gap-2">{controls}</div>}
+            controls={
+                <div className="flex items-center gap-2">
+                    {paging}
+                    <button
+                        type="button"
+                        className="btn btn-sm"
+                        aria-pressed={newestFirst}
+                        onClick={() => setNewestFirst(!newestFirst)}
+                    >
+                        <i className={`fas ${newestFirst ? "fa-arrow-up-9-1" : "fa-arrow-down-1-9"}`} />
+                        {newestFirst ? "Newest first" : "Oldest first"}
+                    </button>
+                    {controls}
+                </div>
+            }
         >
             <div
                 role="group"
@@ -107,7 +164,7 @@ const CourseLogTable = ({ entries, rows, controls }: CourseLogTableProps) => {
                     </label>
                 ))}
             </div>
-            <div className="flex-1 min-h-0 overflow-auto rounded-b-2xl">
+            <div ref={scroller} onScroll={handleScroll} className="flex-1 min-h-0 overflow-auto rounded-b-2xl">
                 <table className="table table-zebra table-xs">
                     <thead className="sticky top-0 z-10 bg-base-300">
                         <tr>
@@ -117,7 +174,7 @@ const CourseLogTable = ({ entries, rows, controls }: CourseLogTableProps) => {
                         </tr>
                     </thead>
                     <tbody>
-                        {rows.map((entry, idx) => (
+                        {ordered.map((entry, idx) => (
                             // eslint-disable-next-line react/no-array-index-key
                             <tr key={idx}>
                                 {visible.map(column => (

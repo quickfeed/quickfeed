@@ -53,7 +53,7 @@ const App = () => {
             <div className="app wrapper" hidden={state.isLoading}>
                 <div className={`
                         transition-[margin] duration-200 ease-in-out
-                        mt-8 mr-8 w-full
+                        mt-8 mr-8 flex-1 min-w-0
                         ${state.showFavorites ? "ml-64 md:ml-72" : "ml-8"}
                     `}>
                     {routes}

@@ -77,7 +77,7 @@ func WithLogger(logger *slog.Logger) MockClientOption {
 	}
 }
 
-// WithCourseLogStore sets the course log store GetCourseLog queries. When not
+// WithCourseLogStore sets the course log store CourseLogStream reads. When not
 // set, NewMockClient creates one rooted at t.TempDir() and closes it during
 // test cleanup; pass this to seed records for a test to query.
 func WithCourseLogStore(store *courselog.Store) MockClientOption {
