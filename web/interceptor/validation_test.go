@@ -43,6 +43,8 @@ func TestImplementsValidation(t *testing.T) {
 		"qf.Group":               {cleaner: T, validator: T},
 		"qf.GroupRequest":        {cleaner: F, validator: T},
 		"qf.Groups":              {cleaner: T, validator: F},
+		"qf.LogCursor":           {cleaner: F, validator: T},
+		"qf.LogPosition":         {cleaner: F, validator: T},
 		"qf.Note":                {cleaner: F, validator: T},
 		"qf.Notes":               {cleaner: F, validator: F},
 		"qf.NotesRequest":        {cleaner: F, validator: T},
