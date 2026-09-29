@@ -5,6 +5,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"io"
+	"iter"
 	"log/slog"
 	"maps"
 	"os"
@@ -19,11 +20,11 @@ import (
 // Query returns org's course log entries that match req, in the order they
 // were written, each carrying its cursor.
 //
-// The result lists every repository with an entry in req's time range, also
-// those that req's repository and level filters leave out, so the client can
-// offer them all as filter options. If more entries match than req's limit,
-// the result is marked truncated and holds the oldest matches, or the newest
-// if req.Newest is set.
+// The result lists every repository with an entry in req's time range,
+// including those excluded by req's repository and level filters, so the
+// client can offer them all as filter options. If more entries match than
+// req's limit, the result is marked truncated and holds the oldest matches,
+// or the newest if req.Newest is set.
 //
 // The time range ends no later than now and starts no earlier than the
 // oldest date the store retains. A From or To cursor leaves out the entry it
@@ -51,9 +52,10 @@ func (s *Store) Query(org string, req *qf.CourseLogRequest, until *qf.LogCursor)
 		repos:      make(map[string]bool),
 	}
 	org = sanitize(org)
-	for _, day := range daysBetween(r.start.Day(), r.end.Day()) {
+	for day := range r.days() {
+		span := r.span(day)
 		path := s.path(org, day)
-		if err := sc.file(path, day, r.span(day)); err != nil {
+		if err := sc.file(path, span); err != nil {
 			return nil, fmt.Errorf("reading course log %s: %w", path, err)
 		}
 	}
@@ -65,9 +67,8 @@ func (s *Store) Query(org string, req *qf.CourseLogRequest, until *qf.LogCursor)
 	}, nil
 }
 
-// readRange is the part of the log a query reads, from start up to end, and
-// the time range its entries must fall within. If excludeEnd is set, the
-// entry ending at end is left out.
+// readRange holds the file positions and timestamp bounds for a query.
+// If excludeEnd is set, the entry ending at end is left out.
 type readRange struct {
 	from, to   time.Time
 	start, end *qf.LogCursor
@@ -89,7 +90,7 @@ func (r *readRange) empty() bool {
 
 // span returns the part of day's file that r covers.
 func (r *readRange) span(day time.Time) span {
-	sp := span{start: 0, end: qf.EndOfLogFile}
+	sp := span{day: day, start: 0, end: qf.EndOfLogFile}
 	if day.Equal(r.start.Day()) {
 		sp.start = r.start.Position()
 	}
@@ -99,15 +100,16 @@ func (r *readRange) span(day time.Time) span {
 	return sp
 }
 
-// span is the byte range of one date file a query reads: from start up to
-// end. If exclusive is set, the record ending at end is left out.
+// span holds the day and byte range of one log file read by a query.
+// If exclusive is set, the record ending at end is left out.
 type span struct {
+	day        time.Time
 	start, end int64
 	exclusive  bool
 }
 
 // oldestRetainedDate returns the UTC midnight of the oldest date
-// cleanupCourseDir still guarantees to keep, as of now.
+// cleanupCourseDir guarantees to keep.
 func oldestRetainedDate(now time.Time) time.Time {
 	cutoff := now.Add(-Retention).UTC()
 	midnight := qf.LogDay(cutoff)
@@ -117,18 +119,18 @@ func oldestRetainedDate(now time.Time) time.Time {
 	return midnight
 }
 
-// daysBetween returns the UTC midnights of the days from from's through to's,
-// inclusive.
-func daysBetween(from, to time.Time) []time.Time {
-	var days []time.Time
-	for d := qf.LogDay(from); !d.After(to); d = d.AddDate(0, 0, 1) {
-		days = append(days, d)
+// days yields each UTC day from r's start through its end, inclusive.
+func (r *readRange) days() iter.Seq[time.Time] {
+	return func(yield func(time.Time) bool) {
+		for day := r.start.Day(); !day.After(r.end.Day()); day = day.AddDate(0, 0, 1) {
+			if !yield(day) {
+				return
+			}
+		}
 	}
-	return days
 }
 
-// scan holds a query's filters and what it has collected so far, across the
-// date files it reads.
+// scan holds a query's filters and entries collected across date files.
 type scan struct {
 	from, to   time.Time
 	repository string
@@ -137,11 +139,10 @@ type scan struct {
 	repos      map[string]bool
 }
 
-// file decodes the part of path that sp covers line by line, adding entries
-// matching the query's interval, repository, and level to kept, and
-// every repository with an entry timestamped within the interval to repos.
-// A missing file means the course had no activity that day, not a failure.
-func (sc *scan) file(path string, day time.Time, sp span) error {
+// file reads sp's part of path, adding matching entries to kept and all
+// repositories with entries in the time range to repos.
+// A missing file means the course had no activity that day.
+func (sc *scan) file(path string, sp span) error {
 	f, err := os.Open(path)
 	if err != nil {
 		if os.IsNotExist(err) {
@@ -171,17 +172,14 @@ func (sc *scan) file(path string, day time.Time, sp span) error {
 		return advance, token, err
 	})
 
-	// pending trails the scanner by one line, so a line is only ever applied
-	// once Scan() has confirmed whether a further line follows it; that is
-	// what lets the final line alone get apply's partial-write tolerance,
-	// without first holding the whole file (tens to hundreds of MiB for a
-	// busy course) in memory to find out which line that was.
+	// Keep one line pending until the next is scanned. Only the final line
+	// may be ignored if a partial write left it malformed.
 	var pending string
 	var pendingEnd int64
 	havePending := false
 	for scanner.Scan() {
 		if havePending {
-			if err := sc.apply(pending, day, sp, pendingEnd, false); err != nil {
+			if err := sc.apply(pending, sp, pendingEnd, false); err != nil {
 				return err
 			}
 		}
@@ -191,15 +189,14 @@ func (sc *scan) file(path string, day time.Time, sp span) error {
 		return err
 	}
 	if havePending {
-		return sc.apply(pending, day, sp, pendingEnd, true)
+		return sc.apply(pending, sp, pendingEnd, true)
 	}
 	return nil
 }
 
-// apply decodes line and folds it into kept and repos, giving the entry the
-// cursor end in day's file. A decode error is tolerated only if final is set,
-// on the theory that the process was killed mid-write.
-func (sc *scan) apply(line string, day time.Time, sp span, end int64, final bool) error {
+// apply decodes line into kept and repos, setting its cursor to end in sp's day.
+// A malformed final line is ignored because a write may have stopped midway.
+func (sc *scan) apply(line string, sp span, end int64, final bool) error {
 	if sp.exclusive && end == sp.end {
 		return nil
 	}
@@ -210,7 +207,7 @@ func (sc *scan) apply(line string, day time.Time, sp span, end int64, final bool
 		}
 		return err
 	}
-	entry.Cursor = qf.NewLogCursor(day, end)
+	entry.Cursor = qf.NewLogCursor(sp.day, end)
 	if entry.GetRepository() != "" && entry.InInterval(sc.from, sc.to) {
 		sc.repos[entry.GetRepository()] = true
 	}
@@ -236,8 +233,8 @@ func (sp span) reader(f *os.File) (io.Reader, error) {
 	return io.LimitReader(f, sp.end-sp.start), nil
 }
 
-// atRecordBoundary returns an error wrapping qf.ErrInvalidLogCursor unless offset
-// is zero or just past a newline in f.
+// atRecordBoundary returns an error wrapping qf.ErrInvalidLogCursor if offset
+// is neither zero nor immediately after a newline in f.
 func atRecordBoundary(f *os.File, offset int64) error {
 	if offset == 0 {
 		return nil
@@ -308,8 +305,8 @@ func decodeSource(raw json.RawMessage) (string, error) {
 	return fmt.Sprintf("%s:%d", source.File, source.Line), nil
 }
 
-// parseLevel maps the level text slog.JSONHandler writes to the coarser
-// CourseLogEntry_Level; anything unrecognized reads as INFO.
+// parseLevel maps slog.JSONHandler's level text to CourseLogEntry_Level.
+// Unrecognized levels map to INFO.
 func parseLevel(s string) qf.CourseLogEntry_Level {
 	switch s {
 	case "DEBUG":
@@ -334,8 +331,8 @@ func stringify(raw json.RawMessage) string {
 	return string(raw)
 }
 
-// entryLimit keeps limit of the entries added to it, in the order added: the
-// newest ones if newest is set, or else the oldest.
+// entryLimit retains up to limit entries, keeping the newest if newest is set
+// and the oldest otherwise.
 type entryLimit struct {
 	limit  int
 	newest bool
@@ -363,8 +360,8 @@ func (l *entryLimit) add(e *qf.CourseLogEntry) {
 	}
 }
 
-// ordered returns the kept entries in the order added, and whether any entry
-// was left out to stay within limit.
+// ordered returns the retained entries in insertion order and reports whether
+// any were discarded.
 func (l *entryLimit) ordered() ([]*qf.CourseLogEntry, bool) {
 	if l.total <= l.limit || l.start == 0 {
 		return l.buf, l.total > l.limit
