@@ -183,8 +183,7 @@ func (s *QuickFeedService) CreateEnrollment(ctx context.Context, in *qf.Enrollme
 // UpdateEnrollments changes status of all pending enrollments for the specified course to approved.
 // If the request contains a single enrollment, it will be updated to the specified status.
 func (s *QuickFeedService) UpdateEnrollments(ctx context.Context, in *qf.Enrollments) (*qf.Void, error) {
-	usr, err := s.db.GetUser(userID(ctx))
-	if err != nil {
+	if _, err := s.db.GetUser(userID(ctx)); err != nil {
 		qlog.FromContext(ctx).Error("failed to get current user", label.Error, err)
 		return nil, connect.NewError(connect.CodeNotFound, errors.New("unknown user"))
 	}
@@ -195,10 +194,10 @@ func (s *QuickFeedService) UpdateEnrollments(ctx context.Context, in *qf.Enrollm
 	}
 	for _, enrollment := range in.GetEnrollments() {
 		if s.isCourseCreator(enrollment.GetCourseID(), enrollment.GetUserID()) {
-			qlog.FromContext(ctx).Error("course creator demotion rejected", label.User, usr.GetLogin())
+			qlog.FromContext(ctx).Error("course creator demotion rejected")
 			return nil, connect.NewError(connect.CodePermissionDenied, errors.New("course creator cannot be demoted"))
 		}
-		if err = s.updateEnrollment(ctx, scmClient, usr.GetLogin(), enrollment); err != nil {
+		if err = s.updateEnrollment(ctx, scmClient, enrollment); err != nil {
 			qlog.FromContext(ctx).Error("failed to update enrollment", label.Error, err)
 			if ctxErr := logCtxErr(ctx); ctxErr != nil {
 				return nil, ctxErr
@@ -501,7 +500,7 @@ func (s *QuickFeedService) UpdateAssignments(ctx context.Context, in *qf.CourseR
 		return nil, connect.NewError(connect.CodeNotFound, errors.New("course not found"))
 	}
 	// Scope the remainder of the method to the course.
-	// The course ID comes from the request logger; see enrichRequestLogger.
+	// The course ID and code come from the request logger.
 	ctx, logger := qlog.WithCourseLog(ctx, course)
 	scmClient, err := s.getSCM(ctx, course.GetScmOrganizationName())
 	if err != nil {

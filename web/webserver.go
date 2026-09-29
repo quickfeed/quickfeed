@@ -33,7 +33,7 @@ func (s *QuickFeedService) NewQuickFeedHandler() (string, http.Handler) {
 		interceptor.NewTokenAuthInterceptor(s.tm, s.db),
 		interceptor.NewUserInterceptor(s.tm),
 		interceptor.NewAccessControlInterceptor(s.db),
-		interceptor.NewContextLoggingInterceptor(),
+		interceptor.NewContextLoggingInterceptor(s.db),
 		interceptor.NewTokenInterceptor(s.tm),
 		interceptor.NewDetachInterceptor(),
 	)
