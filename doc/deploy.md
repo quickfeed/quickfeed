@@ -143,7 +143,7 @@ This should also work while the application is running.
 ```
 
 Browsers pick up the new build without a hard refresh.
-Every script and stylesheet is linked from `index.html` by a URL that changes with its content, including `tailwind.css`, which gets a `?v=<hash>` query.
+Generated scripts and stylesheets under `/static` are linked from `index.html` by URLs that change with their content, including `tailwind.css`, which gets a `?v=<hash>` query.
 The server tells browsers to revalidate `index.html` on every load.
 
 Build and install the `quickfeed` server.
