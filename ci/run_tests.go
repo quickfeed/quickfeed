@@ -164,19 +164,9 @@ func (r *RunData) RunTests(ctx context.Context, sc scm.SCM, runner Runner) (*sco
 
 	testsSucceededCounter.WithLabelValues(r.JobOwner, r.Course.GetCode()).Inc()
 	logger.Debug("test results extracted", "score", results.Sum(), "tests", len(results.Scores),
-		"output", courseLogOutput(results, randomSecret))
+		"output", redactOutput(results.GetBuildInfo().GetBuildLog(), randomSecret))
 	// return the extracted score and filtered log output
 	return results, nil
-}
-
-// courseLogOutput returns what a successful run copies to the course log: the
-// build log, which is the run's output without the score lines and so what the
-// student sees too, redacted of the run's secret and shortened to its head and
-// tail. A teacher chasing "the tests pass on my machine" can then see what a
-// passing run produced here, without the log keeping every student's full
-// output for its whole retention.
-func courseLogOutput(results *score.Results, secret string) string {
-	return capOutput(redactOutput(results.GetBuildInfo().GetBuildLog(), secret))
 }
 
 // redactOutput replaces every occurrence of the given per-run secrets in the
