@@ -61,3 +61,35 @@ func TestRenderHtml(t *testing.T) {
 		t.Errorf("index.html links the source map:\n%s", html)
 	}
 }
+
+func TestWriteHtml(t *testing.T) {
+	dir := t.TempDir()
+	tailwindPath := filepath.Join(dir, "tailwind.css")
+	htmlPath := filepath.Join(dir, "index.html")
+	write := func() string {
+		t.Helper()
+		if err := writeHtml(public("index.tmpl.html"), htmlPath, tailwindPath, nil); err != nil {
+			t.Fatal(err)
+		}
+		html, err := os.ReadFile(htmlPath)
+		if err != nil {
+			t.Fatal(err)
+		}
+		return string(html)
+	}
+
+	if html, want := write(), `href="/static/tailwind.css"`; !strings.Contains(html, want) {
+		t.Errorf("index.html lacks %s when tailwind.css is missing:\n%s", want, html)
+	}
+
+	if err := os.WriteFile(tailwindPath, []byte(".grid{display:grid}"), 0o600); err != nil {
+		t.Fatal(err)
+	}
+	hash, err := fileHash(tailwindPath)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if html, want := write(), `href="/static/tailwind.css?v=`+hash+`"`; !strings.Contains(html, want) {
+		t.Errorf("index.html lacks %s:\n%s", want, html)
+	}
+}

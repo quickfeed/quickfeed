@@ -103,6 +103,7 @@ type htmlData struct {
 	// TailwindHash versions the Tailwind stylesheet's URL, since esbuild does not hash it.
 	// Without it, browsers may pair freshly deployed JS with a cached stylesheet
 	// that lacks the Tailwind classes the new JS uses.
+	// It is empty if the stylesheet could not be read, in which case the URL is left unversioned.
 	TailwindHash string
 	OutputFiles  []api.OutputFile
 }
@@ -110,17 +111,26 @@ type htmlData struct {
 // createHtml creates the index.html file from the index.tmpl.html template
 // Injects file links into the index template
 func createHtml(outputFiles []api.OutputFile) error {
+	return writeHtml(public("index.tmpl.html"), public("assets/index.html"), filepath.Join(distDir, "tailwind.css"), outputFiles)
+}
+
+// writeHtml renders the template at tmplPath to htmlPath,
+// versioning the Tailwind stylesheet at tailwindPath by its content.
+func writeHtml(tmplPath, htmlPath, tailwindPath string, outputFiles []api.OutputFile) error {
 	// The Tailwind step only warns when it fails; link the new bundles anyway
 	// rather than leave index.html pointing at the ones the rebuild removed.
-	tailwindHash, _ := fileHash(filepath.Join(distDir, "tailwind.css"))
-	html, err := renderHtml(public("index.tmpl.html"), htmlData{
+	tailwindHash, err := fileHash(tailwindPath)
+	if err != nil {
+		fmt.Printf("Tailwind stylesheet will not be versioned: %v\n", err)
+	}
+	html, err := renderHtml(tmplPath, htmlData{
 		TailwindHash: tailwindHash,
 		OutputFiles:  outputFiles,
 	})
 	if err != nil {
 		return err
 	}
-	return os.WriteFile(public("assets/index.html"), html, 0o644)
+	return os.WriteFile(htmlPath, html, 0o644)
 }
 
 // renderHtml executes the template at tmplPath with data.
