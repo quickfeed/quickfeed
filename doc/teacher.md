@@ -476,6 +476,9 @@ Two things make it better:
 Using `go test -json` instead of `go test -v` also works; QuickFeed reads either.
 On Go 1.27 and later, the JSON form additionally separates a failing test's `t.Errorf` messages from its ordinary logging, so only the failures are shown as the reason it failed.
 
+A skipped test is shown as skipped, and counts as neither passed nor failed in the summary above the list.
+The course-wide results tables do not load each test's output; it is fetched when you open a submission.
+
 Two limits are worth knowing.
 `go test` interleaves whatever parallel tests write to standard output themselves, so such writes are attributed on a best-effort basis; a test's failures and its score are always attributed correctly.
 A panic is printed after the test's own framing has ended, so its stack trace is kept in the build log.
