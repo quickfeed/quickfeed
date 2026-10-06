@@ -136,6 +136,13 @@ describe("SubmissionScores", () => {
         expect(toggle("TestQueue").getAttribute("aria-expanded")).toBe("false")
     })
 
+    it("ignores a link whose test name is malformed", () => {
+        // The address is anyone's to mangle; a bad escape must not stop the page.
+        window.history.replaceState(null, "", "#test=%E0%A4%A")
+        renderScores()
+        expect(toggle("TestQueue").getAttribute("aria-expanded")).toBe("true")
+    })
+
     it("names the open test in the address, so the view can be linked", () => {
         renderScores()
         fireEvent.click(toggle("TestStack"))
