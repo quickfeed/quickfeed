@@ -13,32 +13,11 @@ const truncateMsg = `
 
 `
 
-// logOutputHead and logOutputTail bound the output a successful run copies to
-// the course log. A failure logs its whole output, since that is what the
-// teacher is there to read; a success is logged so a teacher can see what a
-// passing run produced, which the head and the tail answer without keeping a
-// full run's output for every student for the log's whole retention.
-const (
-	logOutputHead = 2048 // bytes
-	logOutputTail = 2048 // bytes
-)
-
-// capOutput shortens out to its first logOutputHead and last logOutputTail
-// bytes, with truncateMsg marking what was left out. Output that already fits
-// is returned unchanged.
-func capOutput(out string) string {
-	if len(out) <= logOutputHead+logOutputTail {
-		return out
-	}
-	head, _, tail := splitOutput(out, logOutputHead, logOutputTail)
-	return head + truncateMsg + tail
-}
-
-// truncateLog shortens out to its first headLen and last tailLen bytes, as
-// capOutput does, but keeps the score lines found in the part left out, so
-// that a run printing too much still gets its score. The part left out is
-// scanned only if it is shorter than maxScan bytes. Output that already fits
-// is returned unchanged.
+// truncateLog shortens out to its first headLen and last tailLen bytes, with
+// truncateMsg marking what was left out, but keeps the score lines found in the
+// part left out, so that a run printing too much still gets its score. The part
+// left out is scanned only if it is shorter than maxScan bytes. Output that
+// already fits is returned unchanged.
 func truncateLog(out string, headLen, tailLen, maxScan int) string {
 	if len(out) <= headLen+tailLen {
 		return out
