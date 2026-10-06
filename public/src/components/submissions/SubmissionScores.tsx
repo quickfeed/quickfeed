@@ -2,7 +2,7 @@ import { clone } from "@bufbuild/protobuf"
 import React, { useCallback } from 'react'
 import { ScoreSchema } from "../../../proto/kit/score/score_pb"
 import type { Submission } from "../../../proto/qf/types_pb"
-import { testFailed } from "../../Helpers"
+import { testFailed, testSkipped } from "../../Helpers"
 import ResultsSummary from "./ResultsSummary"
 import SubmissionScore, { hasTestRun } from "./SubmissionScore"
 
@@ -90,10 +90,12 @@ const SubmissionScores = ({ submission }: { submission: Submission }) => {
 
     const totalWeight = sortedScores.reduce((acc, score) => acc + score.Weight, 0)
     const failed = sortedScores.filter(testFailed).length
+    const skipped = sortedScores.filter(testSkipped).length
     return (
         <div>
             <ResultsSummary
                 failed={failed}
+                skipped={skipped}
                 total={sortedScores.length}
                 filter={filter}
                 failuresOnly={failuresOnly}
