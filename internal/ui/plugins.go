@@ -29,31 +29,19 @@ var plugins = []api.Plugin{
 		},
 	},
 	{
-		Name: "Reset dist folder",
+		// esbuild runs OnStart callbacks concurrently, so the dist folder
+		// must be cleared and Tailwind generated within a single callback.
+		Name: "Prepare dist folder",
 		Setup: func(setup api.PluginBuild) {
 			setup.OnStart(func() (api.OnStartResult, error) {
+				var warnings []api.Message
 				if err := resetDistFolder(); err != nil {
-					return api.OnStartResult{
-						Warnings: createMessage("Reset dist folder", "Failed to clear the dist folder", err),
-					}, nil
+					warnings = append(warnings, createMessage("Reset dist folder", "Failed to clear the dist folder", err)...)
 				}
-				return api.OnStartResult{}, nil
-			})
-		},
-	},
-	{
-		// important to run tailwind after clearing the dist folder
-		Name: "Tailwind",
-		Setup: func(setup api.PluginBuild) {
-			setup.OnStart(func() (api.OnStartResult, error) {
-				cmd := exec.Command("npm", "run", "tailwind")
-				cmd.Dir = env.PublicDir()
-				if err := cmd.Run(); err != nil {
-					return api.OnStartResult{
-						Warnings: createMessage("Tailwind", "Failed to generate Tailwind CSS", err),
-					}, nil
+				if err := generateTailwind(); err != nil {
+					warnings = append(warnings, createMessage("Tailwind", "Failed to generate Tailwind CSS", err)...)
 				}
-				return api.OnStartResult{}, nil
+				return api.OnStartResult{Warnings: warnings}, nil
 			})
 		},
 	},
@@ -81,6 +69,13 @@ func createMessage(pluginName, text string, err error) []api.Message {
 		},
 	}
 	return []api.Message{msg}
+}
+
+// generateTailwind runs the Tailwind CLI, which writes dist/tailwind.css.
+func generateTailwind() error {
+	cmd := exec.Command("npm", "run", "tailwind")
+	cmd.Dir = env.PublicDir()
+	return cmd.Run()
 }
 
 // resetDistFolder removes the dist folder and creates a new one
