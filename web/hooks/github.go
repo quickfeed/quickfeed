@@ -66,6 +66,13 @@ func NewGitHubWebHook(logger *slog.Logger, db database.Database, mgr *scm.Manage
 	}
 }
 
+// Events returns the GitHub webhook event types that Handle dispatches on.
+// Subscribing to, or forwarding, any other event type only adds noise, since
+// Handle ignores it; keep this list in sync with the type switch in Handle.
+func Events() []string {
+	return []string{"push", "installation"}
+}
+
 // Handle take POST requests from GitHub, representing Push events
 // associated with course repositories, which then triggers various
 // actions on the QuickFeed backend.
