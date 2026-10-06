@@ -15,8 +15,17 @@ const autoExpandLimit = 3
 
 /** testHash names the test a link points at, e.g. "#test=TestStack/Push", so
  *  that a teacher can send a student straight to one failure. */
-const testHash = (hash: string): string =>
-    hash.startsWith("#test=") ? decodeURIComponent(hash.slice("#test=".length)) : ""
+const testHash = (hash: string): string => {
+    if (!hash.startsWith("#test=")) {
+        return ""
+    }
+    try {
+        return decodeURIComponent(hash.slice("#test=".length))
+    } catch {
+        // The address is anyone's to type or mangle; a malformed escape names no test.
+        return ""
+    }
+}
 
 const SubmissionScores = ({ submission }: { submission: Submission }) => {
     const [sortKey, setSortKey] = React.useState<ScoreSort>("name")
