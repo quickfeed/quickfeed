@@ -104,6 +104,9 @@ export const testPassed = (score: Score): boolean =>
 export const testFailed = (score: Score): boolean =>
     score.Status === TestStatus.NOT_RUN ? score.Score !== score.MaxScore : score.Status === TestStatus.FAILED
 
+/** testSkipped reports whether the run recorded this test as skipped. */
+export const testSkipped = (score: Score): boolean => score.Status === TestStatus.SKIPPED
+
 /** testStatusText names the outcome the run recorded for a test. It answers a
  *  different question than the score: a test may fail while holding partial
  *  credit, and may pass while scoring below its maximum. */

@@ -1,6 +1,6 @@
 import type { Score } from "../../../proto/kit/score/score_pb"
 import { TestStatus } from "../../../proto/kit/score/score_pb"
-import { testFailed, testStatusText } from "../../Helpers"
+import { testFailed, testSkipped, testStatusText } from "../../Helpers"
 import TestOutputPanel from "./TestOutputPanel"
 
 /** hasTestRun reports whether the run recorded anything about this test beyond
@@ -20,6 +20,15 @@ const badgeClass = (score: Score): string => {
     }
 }
 
+/** rowClass picks the indicator of a row. A skipped test neither passed nor
+ *  failed, so it gets the neutral indicator rather than either of the two. */
+const rowClass = (score: Score): string => {
+    if (testSkipped(score)) {
+        return "not-graded"
+    }
+    return testFailed(score) ? "failed" : "passed"
+}
+
 const SubmissionScore = ({
     score,
     totalWeight,
@@ -31,7 +40,6 @@ const SubmissionScore = ({
     expanded: boolean
     onToggle: (testName: string) => void
 }) => {
-    const rowClass = testFailed(score) ? "failed" : "passed"
     const percentage = (score.Score / score.MaxScore) * (score.Weight / totalWeight) * 100
     const maxPercentage = (score.MaxScore / score.MaxScore) * (score.Weight / totalWeight) * 100
     const cellColor = percentage === maxPercentage ? "text-success" : "text-error"
@@ -49,7 +57,7 @@ const SubmissionScore = ({
 
     return (
         <>
-            <tr className={rowClass}>
+            <tr className={rowClass(score)}>
                 <td className="pl-3! w-full">
                     {openable ? (
                         <button

@@ -46,6 +46,28 @@ describe("SubmissionScores", () => {
         expect(screen.getByText(/All 1 test passed/)).toBeDefined()
     })
 
+    it("does not claim that skipped tests passed", () => {
+        renderScores([scores[0], scores[2]])
+        expect(screen.getByText("1 of 2 tests passed, 1 skipped")).toBeDefined()
+        cleanup()
+        renderScores([scores[2]])
+        expect(screen.getByText("All 1 test skipped")).toBeDefined()
+        expect(screen.queryByText(/passed/)).toBeNull()
+    })
+
+    it("counts skipped tests apart from the failed ones", () => {
+        renderScores()
+        expect(screen.getByText("1 of 3 tests failed, 1 skipped")).toBeDefined()
+    })
+
+    it("marks a skipped test with neither the passed nor the failed indicator", () => {
+        renderScores()
+        const row = (testName: string) => toggle(testName).closest("tr")
+        expect(row("TestHeap")?.className).toBe("not-graded")
+        expect(row("TestStack")?.className).toBe("passed")
+        expect(row("TestQueue")?.className).toBe("failed")
+    })
+
     it("opens a failing test and leaves the others closed", () => {
         renderScores()
         // A student opening a submission wants the failure, not a hunt for it.
