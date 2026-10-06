@@ -205,8 +205,10 @@ func ExtractResults(out, secret string, execTime time.Duration, zeroScoreTests [
 
 // attach records on the score what the run of its test produced. A test that
 // reported its own details keeps them: they are the teacher's own words, and
-// the diagnostics scraped from the output would only repeat them.
+// the diagnostics scraped from the output would only repeat them. Those details
+// are redacted too, since the score object is free to put anything in them.
 func (s *Score) attach(run *testlog.TestRun, secret string) {
+	s.TestDetails = Redact(s.GetTestDetails(), secret)
 	if run == nil {
 		return
 	}

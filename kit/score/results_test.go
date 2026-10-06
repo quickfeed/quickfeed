@@ -502,3 +502,25 @@ func TestExtractResultsPrefersDetailsReportedByTheTest(t *testing.T) {
 		t.Errorf("TestQueue details = %q, want %q", got, want)
 	}
 }
+
+func TestExtractResultsRedactsDetailsReportedByTheTest(t *testing.T) {
+	tests := []struct {
+		name string
+		out  string
+	}{
+		{"attributed to a test", fmt.Sprintf("=== RUN   TestQueue\n=== ATTR  TestQueue score {\"Secret\":\"%[1]s\",\"TestName\":\"TestQueue\",\"Score\":0,\"MaxScore\":5,\"Weight\":1,\"TestDetails\":\"leaked %[1]s\"}\n--- FAIL: TestQueue (0.01s)\n", secret)},
+		{"printed outside a test", fmt.Sprintf("{\"Secret\":\"%[1]s\",\"TestName\":\"TestQueue\",\"Score\":0,\"MaxScore\":5,\"Weight\":1,\"TestDetails\":\"leaked %[1]s\"}\n", secret)},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			expectedTests := []*score.Score{{TestName: "TestQueue", MaxScore: 5, Weight: 1}}
+			res, err := score.ExtractResults(tt.out, secret, 10, expectedTests)
+			if err != nil {
+				t.Fatal(err)
+			}
+			if got, want := res.Scores[0].GetTestDetails(), "leaked [REDACTED]"; got != want {
+				t.Errorf("TestQueue details = %q, want %q", got, want)
+			}
+		})
+	}
+}
