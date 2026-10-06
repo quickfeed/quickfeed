@@ -37,9 +37,14 @@ const ProfileForm = ({ children, setEditing }: { children: React.ReactNode, setE
 
 
     // Sends the updated user object to the server on submit.
-    const submitHandler = (e: React.FormEvent<HTMLFormElement>) => {
+    const submitHandler = async (e: React.FormEvent<HTMLFormElement>) => {
         e.preventDefault()
-        actions.updateUser(user)
+        if (!await actions.updateUser(user)) {
+            // The server rejected the update, e.g., because another account already
+            // uses the student ID or email. The error handler alerts the user, so
+            // keep the form open to let the user correct the input.
+            return
+        }
         // Disable editing after submission
         setEditing(false)
         if (!hasEnrollment(state.enrollments)) {
@@ -50,7 +55,7 @@ const ProfileForm = ({ children, setEditing }: { children: React.ReactNode, setE
     return (
         <div className="w-full">
             {!isValid ? children : null}
-            <form className="space-y-4" onSubmit={submitHandler}>
+            <form className="space-y-4" onSubmit={async e => await submitHandler(e)}>
                 <FormInput prepend="Name" name="name" defaultValue={user.Name} onChange={handleChange} />
                 <FormInput prepend="Email" name="email" defaultValue={user.Email} onChange={handleChange} type="email" />
                 <FormInput prepend="Student ID" name="studentid" defaultValue={user.StudentID} onChange={handleChange} type="number" />
