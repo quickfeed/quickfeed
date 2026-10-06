@@ -4,6 +4,7 @@ import (
 	"sort"
 
 	"github.com/quickfeed/quickfeed/qf"
+	"gorm.io/gorm"
 )
 
 // GetCourseSubmissions returns all individual lab submissions by students enrolled in the specified course.
@@ -27,7 +28,11 @@ func (db *GormDB) GetCourseSubmissions(request *qf.SubmissionRequest) (*qf.Cours
 		Preload("Reviews").
 		Preload("Reviews.GradingBenchmarks").
 		Preload("Reviews.GradingBenchmarks.Criteria").
-		Preload("Scores")
+		Preload("Scores", func(db *gorm.DB) *gorm.DB {
+			// Each test's output is shown only for the submission being read, which
+			// fetches it in full; across a whole course it would dwarf the rest.
+			return db.Omit("TestOutput")
+		})
 	if err := m.Where("assignment_id IN ?", assignmentIDs).
 		Find(&submissions).Error; err != nil {
 		return nil, err
