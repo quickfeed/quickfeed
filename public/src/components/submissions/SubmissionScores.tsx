@@ -64,11 +64,12 @@ const SubmissionScores = ({ submission }: { submission: Submission }) => {
             }
             return next
         })
-        // Name the open test in the address so that the view can be linked.
+        // Name the open test in the address so that the view can be linked. The
+        // history state is the router's, and must survive the change.
         if (opening) {
-            window.history.replaceState(null, "", `#test=${encodeURIComponent(testName)}`)
+            window.history.replaceState(window.history.state, "", `#test=${encodeURIComponent(testName)}`)
         } else if (testHash(window.location.hash) === testName) {
-            window.history.replaceState(null, "", window.location.pathname + window.location.search)
+            window.history.replaceState(window.history.state, "", window.location.pathname + window.location.search)
         }
     }, [expanded])
 

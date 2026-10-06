@@ -152,6 +152,14 @@ describe("SubmissionScores", () => {
         expect(window.location.hash).toBe("")
     })
 
+    it("keeps the router's history state when it names the open test", () => {
+        const routerState = { usr: null, key: "abc", idx: 2 }
+        window.history.replaceState(routerState, "", window.location.pathname)
+        renderScores()
+        fireEvent.click(toggle("TestStack"))
+        expect(window.history.state).toEqual(routerState)
+    })
+
     it("shortens the container paths a run records", () => {
         // runtime.Caller records the path inside the container, which is noise
         // to a student and pushes the message itself off the line.
