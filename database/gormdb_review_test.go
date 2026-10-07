@@ -220,3 +220,62 @@ func TestCreateUpdateReview(t *testing.T) {
 		t.Errorf("Expected same review, but got (-got +want):\n%s", diff)
 	}
 }
+
+func TestReviewScoreCombinesWithTestScore(t *testing.T) {
+	db, cleanup := qtest.TestDB(t)
+	defer cleanup()
+
+	user, course, _ := qtest.SetupCourseAssignment(t, db)
+	assignment := &qf.Assignment{CourseID: course.GetID(), Order: 2, Reviewers: 2, ReviewWeight: 40, AutoApprove: true, ScoreLimit: 80}
+	qtest.CreateAssignment(t, db, assignment)
+	qtest.CreateBenchmark(t, db, &qf.GradingBenchmark{
+		AssignmentID: assignment.GetID(),
+		Heading:      "Design",
+		Criteria:     []*qf.GradingCriterion{{Description: "Structure", Points: 50}, {Description: "Naming", Points: 50}},
+	})
+	submission := &qf.Submission{AssignmentID: assignment.GetID(), UserID: user.GetID(), TestScore: 90, Score: 90}
+	qtest.CreateSubmission(t, db, submission)
+
+	// grade sets the grades of the review's two criteria and saves the review.
+	grade := func(review *qf.Review, structure, naming qf.GradingCriterion_Grade) {
+		t.Helper()
+		criteria := review.GetGradingBenchmarks()[0].GetCriteria()
+		criteria[0].Grade, criteria[1].Grade = structure, naming
+		if err := db.UpdateReview(review); err != nil {
+			t.Fatal(err)
+		}
+	}
+	// check verifies the submission's scores and its student's grade.
+	check := func(step string, wantReviewScore, wantScore uint32, wantStatus qf.Submission_Status) {
+		t.Helper()
+		got := qtest.GetSubmission(t, db, &qf.Submission{ID: submission.GetID()})
+		if got.GetTestScore() != 90 || got.GetReviewScore() != wantReviewScore || got.GetScore() != wantScore {
+			t.Errorf("%s: (TestScore, ReviewScore, Score) = (%d, %d, %d), want (90, %d, %d)",
+				step, got.GetTestScore(), got.GetReviewScore(), got.GetScore(), wantReviewScore, wantScore)
+		}
+		if status := got.GetStatusByUser(user.GetID()); status != wantStatus {
+			t.Errorf("%s: status = %v, want %v", step, status, wantStatus)
+		}
+	}
+
+	first := &qf.Review{SubmissionID: submission.GetID(), ReviewerID: 1}
+	if err := db.CreateReview(first); err != nil {
+		t.Fatal(err)
+	}
+	check("first review created", 0, 54, qf.Submission_NONE)
+
+	grade(first, qf.GradingCriterion_PASSED, qf.GradingCriterion_PASSED)
+	check("first review graded", 100, 94, qf.Submission_NONE)
+
+	second := &qf.Review{SubmissionID: submission.GetID(), ReviewerID: 2}
+	if err := db.CreateReview(second); err != nil {
+		t.Fatal(err)
+	}
+	check("second review created", 50, 74, qf.Submission_NONE)
+
+	grade(second, qf.GradingCriterion_PASSED, qf.GradingCriterion_NONE)
+	check("second review incomplete", 75, 84, qf.Submission_NONE)
+
+	grade(second, qf.GradingCriterion_PASSED, qf.GradingCriterion_FAILED)
+	check("second review graded", 75, 84, qf.Submission_APPROVED)
+}

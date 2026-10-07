@@ -256,7 +256,6 @@ func (db *GormDB) CreateReview(query *qf.Review) error {
 		return ErrAllReviewsCreated(submission.GetID(), assignment.GetName(), assignment.GetReviewers())
 	}
 	query.Edited = timestamppb.Now()
-	query.ComputeScore()
 	benchmarks, err := db.GetBenchmarks(&qf.Assignment{ID: submission.GetAssignmentID()})
 	if err != nil {
 		return err
@@ -270,7 +269,30 @@ func (db *GormDB) CreateReview(query *qf.Review) error {
 			c.ID = 0
 		}
 	}
-	return db.conn.Create(query).Error
+	query.ComputeScore()
+	return db.conn.Transaction(func(tx *gorm.DB) error {
+		if err := tx.Create(query).Error; err != nil {
+			return err
+		}
+		return updateReviewScore(tx, submission.GetID(), assignment)
+	})
+}
+
+// updateReviewScore recomputes the review score and score of the given
+// submission from its reviews, as stored in tx.
+func updateReviewScore(tx *gorm.DB, submissionID uint64, assignment *qf.Assignment) error {
+	var submission qf.Submission
+	if err := tx.Preload("Reviews").
+		Preload("Reviews.GradingBenchmarks").
+		Preload("Reviews.GradingBenchmarks.Criteria").
+		First(&submission, submissionID).Error; err != nil {
+		return err
+	}
+	submission.ComputeScore(assignment)
+	return tx.Model(&qf.Submission{ID: submissionID}).Updates(map[string]any{
+		"score":        submission.GetScore(),
+		"review_score": submission.GetReviewScore(),
+	}).Error
 }
 
 // UpdateReview updates a review.
@@ -293,7 +315,12 @@ func (db *GormDB) UpdateReview(query *qf.Review) error {
 		}
 	}
 
-	submission.Score = query.GetScore()
+	assignment, err := db.GetAssignment(&qf.Assignment{ID: submission.GetAssignmentID()})
+	if err != nil {
+		return err
+	}
+	submission.ComputeScore(assignment)
+	submission.SetGradesIfApproved(assignment, submission.GetScore())
 	// The review and its benchmarks and criteria are saved through the submission.
 	if err := db.UpdateSubmission(submission); err != nil {
 		return err

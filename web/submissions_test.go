@@ -787,8 +787,8 @@ func TestUpdateSubmissionRejectApproveFlow(t *testing.T) {
 	qtest.EnrollStudent(t, db, student3, course)
 
 	assignments := []*qf.Assignment{
-		{CourseID: course.GetID(), Name: "lab 1", Deadline: qtest.Timestamp(t, "2020-02-23T18:00:00"), Order: 1, Reviewers: 1},
-		{CourseID: course.GetID(), Name: "lab 2", Deadline: qtest.Timestamp(t, "2020-03-23T18:00:00"), Order: 2, Reviewers: 1},
+		{CourseID: course.GetID(), Name: "lab 1", Deadline: qtest.Timestamp(t, "2020-02-23T18:00:00"), Order: 1, Reviewers: 1, ReviewWeight: 100},
+		{CourseID: course.GetID(), Name: "lab 2", Deadline: qtest.Timestamp(t, "2020-03-23T18:00:00"), Order: 2, Reviewers: 1, ReviewWeight: 100},
 	}
 	for _, assignment := range assignments {
 		if err := db.CreateAssignment(assignment); err != nil {
@@ -858,9 +858,9 @@ func TestUpdateSubmissionRejectApproveFlow(t *testing.T) {
 		t.Fatal(err)
 	}
 	for _, submission := range gotSubmissions1 {
-		// All lab 1 submissions should have a score of 20
-		if submission.GetScore() != 20 {
-			t.Errorf("Expected score 20, got %d", submission.GetScore())
+		// All lab 1 submissions passed all 20 points, a score of 100
+		if submission.GetScore() != 100 {
+			t.Errorf("Expected score 100, got %d", submission.GetScore())
 		}
 	}
 
