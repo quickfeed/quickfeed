@@ -251,6 +251,9 @@ func syncGroupGrades(tx *gorm.DB, groupID uint64, userIDs []uint64) error {
 	var submissions []*qf.Submission
 	err := tx.Model(&qf.Submission{}).
 		Preload("Grades").
+		Preload("Reviews").
+		Preload("Reviews.GradingBenchmarks").
+		Preload("Reviews.GradingBenchmarks.Criteria").
 		Where(&qf.Submission{GroupID: groupID}).
 		Find(&submissions).Error
 	if err != nil {

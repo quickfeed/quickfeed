@@ -76,10 +76,45 @@ func (s *Submission) SetGradeAll(status Submission_Status) {
 // SetGradesIfApproved marks the submission approved for all group members
 // or a single user if the assignment is autoapprove and
 // the score is greater or equal to the assignment's score limit.
+// A submission to a reviewed assignment is approved only when its reviews are complete.
 func (s *Submission) SetGradesIfApproved(a *Assignment, score uint32) {
-	if a.GetAutoApprove() && score >= a.GetScoreLimit() {
+	if a.GetAutoApprove() && score >= a.GetScoreLimit() && (!a.GradedManually() || s.ReviewsComplete(a)) {
 		s.SetGradeAll(Submission_APPROVED)
 	}
+}
+
+// ReviewsComplete returns true if the submission has as many reviews as the
+// assignment has reviewers, and every review is complete.
+func (s *Submission) ReviewsComplete(a *Assignment) bool {
+	if len(s.GetReviews()) < int(a.GetReviewers()) {
+		return false
+	}
+	for _, review := range s.GetReviews() {
+		if !review.Complete() {
+			return false
+		}
+	}
+	return true
+}
+
+// ComputeScore sets the submission's review score to the average percentage
+// score of its reviews, and its score to the test and review scores weighted
+// by the assignment's review weight. Reviews count only if the assignment has reviewers.
+func (s *Submission) ComputeScore(a *Assignment) {
+	var sum uint64
+	for _, review := range s.GetReviews() {
+		sum += uint64(review.PercentScore())
+	}
+	s.ReviewScore = 0
+	if n := uint64(len(s.GetReviews())); n > 0 {
+		s.ReviewScore = uint32(sum / n)
+	}
+	var weight uint64
+	if a.GradedManually() {
+		weight = uint64(min(a.GetReviewWeight(), 100))
+	}
+	// Adding 50 rounds the weighted score to the nearest integer.
+	s.Score = uint32((uint64(s.GetTestScore())*(100-weight) + uint64(s.GetReviewScore())*weight + 50) / 100)
 }
 
 // NewestSubmissionDate returns the submission's submission date if newer than the provided date.

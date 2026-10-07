@@ -25,3 +25,40 @@ func (r *Review) ComputeScore() {
 		r.Score = uint32(scorePoints)
 	}
 }
+
+// PercentScore returns the review's score as a percentage: the share of the
+// criteria's points that passed, or the share of passed criteria if no
+// criterion has points.
+func (r *Review) PercentScore() uint32 {
+	var points, passedPoints, criteria, passed uint64
+	for _, bm := range r.GetGradingBenchmarks() {
+		for _, c := range bm.GetCriteria() {
+			criteria++
+			points += c.GetPoints()
+			if c.GetGrade() == GradingCriterion_PASSED {
+				passed++
+				passedPoints += c.GetPoints()
+			}
+		}
+	}
+	switch {
+	case points > 0:
+		return uint32(100 * passedPoints / points)
+	case criteria > 0:
+		return uint32(100 * passed / criteria)
+	default:
+		return 0
+	}
+}
+
+// Complete returns true if every criterion of the review is graded.
+func (r *Review) Complete() bool {
+	for _, bm := range r.GetGradingBenchmarks() {
+		for _, c := range bm.GetCriteria() {
+			if c.GetGrade() == GradingCriterion_NONE {
+				return false
+			}
+		}
+	}
+	return true
+}
