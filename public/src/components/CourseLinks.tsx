@@ -70,8 +70,6 @@ export const CourseLinks = () => {
     const enrollment = state.enrollmentsByCourseID[courseIDStr]
     const hasGroup = state.hasGroup(courseIDStr)
     const groupName = enrollment?.group ? `(${enrollment.group.name})` : ""
-    // Teachers create and view groups from the course's group list.
-    const groupPath = state.isTeacher ? "groups" : "group"
 
     const linksForGroup = (group: RepositoryLinkConfig["group"]) =>
         repositoryLinks
@@ -92,11 +90,14 @@ export const CourseLinks = () => {
         <div className="grid grid-cols-[auto_1fr] items-center gap-x-3 gap-y-2 sm:flex sm:flex-wrap sm:gap-x-6 mt-3 mb-4 px-3 py-2 bg-base-200 rounded-lg">
             <RepoLinkGroup title="Repos" links={repositoryGroupLinks} />
             <RepoLinkGroup title="Resources" links={resourcesGroupLinks} />
-            <StripGroup title="Group">
-                <Link to={`/course/${courseID}/${groupPath}`} className={stripButton}>
-                    {hasGroup ? `View ${groupName}` : "Create Group"}
-                </Link>
-            </StripGroup>
+            {/* Teachers reach the course's groups from the sidebar and the course page. */}
+            {!state.isTeacher && (
+                <StripGroup title="Group">
+                    <Link to={`/course/${courseID}/group`} className={stripButton}>
+                        {hasGroup ? `View ${groupName}` : "Create Group"}
+                    </Link>
+                </StripGroup>
+            )}
             {/* Help sits at the far right of the strip, but only while the strip is a
                 single flex row; when stacked in narrow viewports, it is just the last row of the grid. */}
             <StripGroup title="Help" className="sm:ml-auto">

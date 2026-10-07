@@ -6,6 +6,7 @@ import type { Group } from "../../proto/qf/types_pb"
 import { VoidSchema } from "../../proto/qf/requests_pb"
 import { Enrollment_UserStatus, EnrollmentSchema, Group_GroupStatus, GroupSchema, UserSchema } from "../../proto/qf/types_pb"
 import GroupForm from "../components/group/GroupForm"
+import { CourseLinks } from "../components/CourseLinks"
 import Groups from "../components/Groups"
 import { ApiClient } from "../overmind/namespaces/global/effects"
 import { MockData } from "./mock_data/mockData"
@@ -263,5 +264,47 @@ describe("Student group creation", () => {
         expect(screen.queryByRole("button", { name: `Remove ${student.Name}` })).toBeNull()
         expect(screen.queryByText("Cancel")).toBeNull()
         expect(checkbox(classmate).disabled).toBe(false)
+    })
+})
+
+describe("Course strip group link", () => {
+    const renderStrip = async (overmind: ReturnType<typeof setup>["overmind"]) => {
+        await act(async () => {
+            render(
+                <Provider value={overmind}>
+                    <MemoryRouter initialEntries={["/course/1"]}>
+                        <Routes>
+                            <Route path="/course/:id" element={<CourseLinks />} />
+                        </Routes>
+                    </MemoryRouter>
+                </Provider>
+            )
+        })
+    }
+
+    test.each([
+        { name: "in a group", teacherGroupID: BigInt(1) },
+        { name: "not in a group", teacherGroupID: BigInt(0) },
+    ])("a teacher $name gets no group link", async ({ teacherGroupID }) => {
+        const { overmind } = setup(teacherGroupID)
+        await renderStrip(overmind)
+
+        expect(screen.queryByText("Group")).toBeNull()
+        expect(screen.queryByRole("link", { name: /Create Group|View/ })).toBeNull()
+    })
+
+    test.each([
+        { name: "without a group", group: undefined, label: "Create Group" },
+        { name: "in a group", group: create(GroupSchema, { ID: BigInt(1), courseID, name: "group_1" }), label: "View (group_1)" },
+    ])("a student $name is linked to their group page", async ({ group, label }) => {
+        const enrollment = create(EnrollmentSchema, {
+            ID: BigInt(2), courseID, userID: student.ID, user: student,
+            status: Enrollment_UserStatus.STUDENT, groupID: group?.ID ?? BigInt(0), group,
+        })
+        const overmind = initializeOvermind({ self: student, activeCourse: courseID, enrollments: [enrollment] })
+        await renderStrip(overmind)
+
+        const link = screen.getByRole("link", { name: label })
+        expect(link.getAttribute("href")).toBe("/course/1/group")
     })
 })
