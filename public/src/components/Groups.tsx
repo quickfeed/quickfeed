@@ -45,7 +45,7 @@ const Groups = () => {
     const handleDeleteGroup = useCallback((group: Group) => () => actions.deleteGroup(group), [actions])
     const handleNewGroup = useCallback(() => actions.setActiveGroup(create(GroupSchema, { courseID })), [actions, courseID])
 
-    const GroupButtons = ({ group }: { group: Group }) => {
+    const groupButtons = (group: Group) => {
         const buttons: React.JSX.Element[] = []
         if (isPendingGroup(group)) {
             buttons.push(
@@ -80,7 +80,7 @@ const Groups = () => {
         return <td className="d-flex">{buttons}</td>
     }
 
-    const GroupMembers = ({ group }: { group: Group }) => {
+    const groupMembers = (group: Group) => {
         if (!hasUsers(group)) {
             return <td><span className="text-base-content/60 text-sm">No members</span></td>
         }
@@ -116,9 +116,9 @@ const Groups = () => {
         )
     }
 
-    const GroupRow = ({ group }: { group: Group }) => {
+    const groupRow = (group: Group) => {
         return (
-            <tr hidden={groupSearch(group)}>
+            <tr key={group.ID.toString()} hidden={groupSearch(group)}>
                 <td key={group.ID.toString()}>
                     <div className="flex items-center gap-2">
                         <a
@@ -134,21 +134,17 @@ const Groups = () => {
                         )}
                     </div>
                 </td>
-                <GroupMembers group={group} />
+                {groupMembers(group)}
                 <td>{group.slipDaysRemaining}</td>
-                <GroupButtons group={group} />
+                {groupButtons(group)}
             </tr>
         )
     }
 
     // Generates JSX.Element array containing all groups for the course
-    const PendingGroups = state.groups[courseID.toString()]?.filter(group => isPendingGroup(group)).map(group => {
-        return <GroupRow key={group.ID.toString()} group={group} />
-    })
+    const PendingGroups = state.groups[courseID.toString()]?.filter(group => isPendingGroup(group)).map(groupRow)
 
-    const ApprovedGroups = state.groups[courseID.toString()]?.filter(group => isApprovedGroup(group)).map(group => {
-        return <GroupRow key={group.ID.toString()} group={group} />
-    })
+    const ApprovedGroups = state.groups[courseID.toString()]?.filter(group => isApprovedGroup(group)).map(groupRow)
 
     // If a group is active (being edited), show the group form
     if (state.activeGroup) {

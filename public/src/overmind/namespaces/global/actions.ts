@@ -603,12 +603,13 @@ export const enroll = async ({ state, effects }: Context, courseID: bigint): Pro
 }
 
 export const updateGroupStatus = async ({ effects }: Context, { group, status }: { group: Group, status: Group_GroupStatus }): Promise<void> => {
-    const oldStatus = group.status
-    group.status = status
-    const response = await effects.global.api.client.updateGroup(group)
+    const clonedGroup = clone(GroupSchema, group)
+    clonedGroup.status = status
+    const response = await effects.global.api.client.updateGroup(clonedGroup)
     if (response.error) {
-        group.status = oldStatus
+        return
     }
+    group.status = status
 }
 
 export const deleteGroup = async ({ state, actions, effects }: Context, group: Group): Promise<void> => {
