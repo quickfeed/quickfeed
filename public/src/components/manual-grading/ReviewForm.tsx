@@ -1,6 +1,6 @@
 import React from "react"
 import type { Review } from "../../../proto/qf/types_pb"
-import { Color, isManuallyGraded } from "../../Helpers"
+import { Color, isManuallyGraded, runsTests } from "../../Helpers"
 import { useActions, useAppState } from "../../overmind"
 import Button from "../admin/Button"
 import { CenteredMessage, KnownMessage } from "../CenteredMessage"
@@ -68,7 +68,7 @@ const ReviewForm = () => {
                         <ReviewInfo
                             courseID={selectedAssignment.CourseID.toString()}
                             assignmentName={selectedAssignment.name}
-                            reviewers={selectedAssignment.reviewers}
+                            canRebuild={runsTests(selectedAssignment)}
                             submission={selectedSubmission}
                             review={state.review.currentReview}
                         />

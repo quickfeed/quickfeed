@@ -1,6 +1,7 @@
 import { RunStatus } from "../../../proto/kit/score/score_pb"
 import type { Assignment, Submission, UsedSlipDays } from "../../../proto/qf/types_pb"
-import { assignmentStatusText, getFormattedTime, getPassedTestsCount, getStatusByUser, isAllApproved, isManuallyGraded, runFailureScoreText, runFailureText } from "../../Helpers"
+import { Submission_Status } from "../../../proto/qf/types_pb"
+import { assignmentStatusText, getFormattedTime, getPassedTestsCount, getStatusByUser, isAllApproved, isManuallyGraded, runFailureScoreText, runFailureText, runsTests } from "../../Helpers"
 import { useAppState } from "../../overmind"
 
 type SubmissionInfoProps = {
@@ -68,11 +69,14 @@ const SubmissionInfo = ({ submission, assignment }: SubmissionInfoProps) => {
                     <td>{getFormattedTime(assignment.deadline, true)}</td>
                 </tr>
 
-                {!isManuallyGraded(assignment.reviewers) ? (
+                {runsTests(assignment) ? (
                     <tr>
                         <td colSpan={2}>Tests Passed</td>
                         <td>{getPassedTestsCount(submission.Scores)}</td>
                     </tr>
+                ) : null}
+                {runsTests(assignment) && isManuallyGraded(assignment.reviewers) ? (
+                    <ScoreRows submission={submission} assignment={assignment} status={status} isTeacher={state.isTeacher} />
                 ) : null}
                 <tr>
                     <td colSpan={2}>Execution time</td>
@@ -92,6 +96,34 @@ const SubmissionInfo = ({ submission, assignment }: SubmissionInfoProps) => {
                 </tr>
             </tbody>
         </table>
+    )
+}
+
+/** ScoreRows shows how the test and review scores of a tested and reviewed
+ *  assignment make up the submission's score. A student does not see the
+ *  review score until the submission is graded. */
+const ScoreRows = ({ submission, assignment, status, isTeacher }: { submission: Submission, assignment: Assignment, status: Submission_Status, isTeacher: boolean }) => {
+    const reviewWeight = assignment.reviewWeight
+    const reviewHidden = !isTeacher && status === Submission_Status.NONE
+    return (
+        <>
+            <tr>
+                <td colSpan={2}>Test score</td>
+                <td title={`Tests count for ${100 - reviewWeight}% of the score`}>{submission.testScore}% (weight {100 - reviewWeight}%)</td>
+            </tr>
+            <tr>
+                <td colSpan={2}>Review score</td>
+                <td title={`Reviews count for ${reviewWeight}% of the score`}>
+                    {reviewHidden ? "Not graded yet" : `${submission.reviewScore}% (weight ${reviewWeight}%)`}
+                </td>
+            </tr>
+            {reviewHidden ? null : (
+                <tr>
+                    <td colSpan={2}>Total score</td>
+                    <td>{submission.score}%</td>
+                </tr>
+            )}
+        </>
     )
 }
 

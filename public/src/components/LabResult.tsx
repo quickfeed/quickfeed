@@ -1,3 +1,4 @@
+import { runsTests } from "../Helpers"
 import { useAppState } from "../overmind"
 import { CenteredMessage, KnownMessage } from "./CenteredMessage"
 import Lab from "./Lab"
@@ -16,7 +17,7 @@ const LabResult = () => {
     return (
         <div className="lab-resize lab-sticky lab-sticky-col">
             <Notes />
-            <ManageSubmissionStatus courseID={assignment.CourseID.toString()} reviewers={assignment.reviewers} />
+            <ManageSubmissionStatus courseID={assignment.CourseID.toString()} canRebuild={runsTests(assignment)} />
             <div className="reviewLabResult lab-fill mt-2">
                 <Lab />
             </div>

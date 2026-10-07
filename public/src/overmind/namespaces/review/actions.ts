@@ -1,6 +1,6 @@
 import { clone, create } from "@bufbuild/protobuf"
 import type { Context } from '../..'
-import type { GradingBenchmark, GradingCriterion, GradingCriterion_Grade, Submission } from '../../../../proto/qf/types_pb'
+import type { GradingBenchmark, GradingCriterion, GradingCriterion_Grade } from '../../../../proto/qf/types_pb'
 import { ReviewSchema } from '../../../../proto/qf/types_pb'
 import { isAuthor } from '../../../Helpers'
 
@@ -17,7 +17,7 @@ export const setSelectedReview = ({ state }: Context, index: number): void => {
 }
 
 /* Update the selected review */
-export const updateReview = async ({ state, effects }: Context): Promise<boolean> => {
+export const updateReview = async ({ state, actions, effects }: Context): Promise<boolean> => {
     if (!(state.review.canUpdate && state.review.currentReview)) {
         // If canUpdate is false, the review cannot be updated
         return false
@@ -48,10 +48,17 @@ export const updateReview = async ({ state, effects }: Context): Promise<boolean
     // Copy the review map and update the review
     const reviewMap = new Map(state.review.reviews)
     reviewMap.set(submissionID, reviews)
-    state.review.reviews = reviewMap;
-
-    (state.selectedSubmission as Submission).score = response.message.score
+    state.review.reviews = reviewMap
+    await refreshSubmission(state, actions)
     return true
+}
+
+/* Fetch the selected submission, whose score changes with its reviews */
+const refreshSubmission = async (state: Context["state"], actions: Context["actions"]): Promise<void> => {
+    const submission = state.selectedSubmission
+    if (submission && state.activeCourse) {
+        await actions.global.getSubmission({ courseID: state.activeCourse, owner: state.submissionOwner, submission })
+    }
 }
 
 export const updateComment = async ({ actions }: Context, { grade, comment }: { grade: GradingBenchmark | GradingCriterion, comment: string }): Promise<void> => {
@@ -130,6 +137,7 @@ export const createReview = async ({ state, actions, effects }: Context): Promis
         const length = reviews.get(submission.ID)?.push(response.message) ?? 0
         state.review.reviews = reviews
         actions.review.setSelectedReview(length - 1)
+        await refreshSubmission(state, actions)
     }
 }
 
