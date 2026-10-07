@@ -130,8 +130,9 @@ func (s *Submission) ByGroup(groupID uint64) bool {
 	return s.GetUserID() == 0 && s.GetGroupID() > 0 && s.GetGroupID() == groupID
 }
 
-// Clean removes any score or reviews from the submission to prevent
+// Clean removes any review score or reviews from the submission to prevent
 // a student from seeing them before the submission has been graded.
+// The student still sees the test score.
 func (s *Submissions) Clean(userID uint64) {
 	for _, submission := range s.GetSubmissions() {
 		// Group submissions may have multiple grades, so we need to filter the grades by the user.
@@ -141,13 +142,14 @@ func (s *Submissions) Clean(userID uint64) {
 			Status:       submission.GetStatusByUser(userID),
 		}
 		submission.Grades = []*Grade{grade}
-		// Do not clean if the submission is not manually reviewed.
-		if len(submission.GetReviews()) == 0 {
+		if grade.GetStatus() != Submission_NONE {
 			continue
 		}
-		// Remove any score, grades, or reviews if the submission has not been graded.
-		if grade.GetStatus() == Submission_NONE {
-			submission.Score = 0
+		// Remove the review score if the submission has not been graded,
+		// and also the grades and reviews if it has been reviewed.
+		submission.Score = submission.GetTestScore()
+		submission.ReviewScore = 0
+		if len(submission.GetReviews()) > 0 {
 			submission.Grades = nil
 			submission.Reviews = nil
 		}
