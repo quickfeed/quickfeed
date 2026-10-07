@@ -79,7 +79,7 @@ const GroupForm = () => {
         if (isPending(enrollment)) {
             return null
         }
-        if (id !== state.self.ID && !userIds.includes(id)) {
+        if (!userIds.includes(id)) {
             return (
                 <div
                     hidden={search(enrollment)}
@@ -200,7 +200,7 @@ const GroupForm = () => {
                             ) : (
                                 <div className="text-center py-8 text-base-content/60">
                                     <i className="fas fa-user-plus text-3xl mb-2" />
-                                    <p>Add members to your group</p>
+                                    <p>{isTeacher ? "Add members to the group" : "Add members to your group"}</p>
                                 </div>
                             )}
                         </div>
@@ -220,6 +220,26 @@ const GroupForm = () => {
                                         onClick={() => actions.setActiveGroup(null)}
                                     />
                                 </div>
+                            ) : isTeacher ? (
+                                <>
+                                    <div className="flex gap-3">
+                                        <DynamicButton
+                                            text="Create Group"
+                                            color={Color.GREEN}
+                                            className="flex-1"
+                                            onClick={() => actions.createGroup({ courseID, users: userIds, name: group.name })}
+                                        />
+                                        <Button
+                                            text="Cancel"
+                                            color={Color.RED}
+                                            type={ButtonType.OUTLINE}
+                                            onClick={() => actions.setActiveGroup(null)}
+                                        />
+                                    </div>
+                                    <p className="text-sm text-base-content/60 mt-2">
+                                        The group starts as pending. Approve it in the group list to create its repository.
+                                    </p>
+                                </>
                             ) : (
                                 <DynamicButton
                                     text="Create Group"
