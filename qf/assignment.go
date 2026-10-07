@@ -42,6 +42,24 @@ func (a *Assignment) GradedManually() bool {
 	return a.GetReviewers() > 0
 }
 
+// HasTests returns true if submissions to the assignment are tested.
+func (a *Assignment) HasTests() bool {
+	return len(a.GetExpectedTests()) > 0
+}
+
+// DefaultReviewWeight returns the review weight for an assignment that does not
+// specify one: 0 without reviewers, 100 without tests, and 50 with both.
+func (a *Assignment) DefaultReviewWeight() uint32 {
+	switch {
+	case !a.GradedManually():
+		return 0
+	case !a.HasTests():
+		return 100
+	default:
+		return 50
+	}
+}
+
 // ZeroScoreTests returns a slice of score.Score objects with zero scores
 // for all expected tests in this assignment.
 func (a *Assignment) ZeroScoreTests() []*score.Score {

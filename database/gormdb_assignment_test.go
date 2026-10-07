@@ -117,6 +117,7 @@ func TestUpdateAssignments(t *testing.T) {
 		a.Deadline = &timestamppb.Timestamp{}
 		a.ScoreLimit = 0
 		a.Reviewers = 0
+		a.ReviewWeight = 40
 		a.AutoApprove = !a.GetAutoApprove()
 		a.IsGroupLab = !a.GetIsGroupLab()
 		wantAssignments[i] = proto.CloneOf(assignments[i])

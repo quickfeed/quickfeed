@@ -190,7 +190,7 @@ func ReadTestsRepository(dir string, courseID uint64) ([]*qf.Assignment, map[str
 	}
 
 	// Process assignment files first
-	assignmentsMap, broken, issues := processAssignmentFiles(files, courseID)
+	assignmentsMap, broken, unweighted, issues := processAssignmentFiles(files, courseID)
 
 	buildContext := make(map[string]string)
 
@@ -220,6 +220,11 @@ func ReadTestsRepository(dir string, courseID uint64) ([]*qf.Assignment, map[str
 		default:
 			// Files nested deeper than the assignment folders (internal packages,
 			// testdata, and similar) are not assignment configuration; ignore.
+		}
+	}
+	for name := range unweighted {
+		if assignment, ok := assignmentsMap[name]; ok {
+			assignment.ReviewWeight = assignment.DefaultReviewWeight()
 		}
 	}
 	issues = append(issues, missingTestsIssues(assignmentsMap)...)
@@ -329,11 +334,12 @@ func walkTestsRepository(dir string) (map[string][]byte, error) {
 
 // processAssignmentFiles processes assignment.json files and returns the
 // assignments map, the set of assignment folders whose assignment.json could
-// not be parsed, and the issues found.
-func processAssignmentFiles(files map[string][]byte, courseID uint64) (map[string]*qf.Assignment, map[string]bool, []RepoIssue) {
-	assignmentsMap := make(map[string]*qf.Assignment)
-	broken := make(map[string]bool)
-	var issues []RepoIssue
+// not be parsed, the set of assignment folders whose assignment.json leaves
+// out reviewweight, and the issues found.
+func processAssignmentFiles(files map[string][]byte, courseID uint64) (assignmentsMap map[string]*qf.Assignment, broken, unweighted map[string]bool, issues []RepoIssue) {
+	assignmentsMap = make(map[string]*qf.Assignment)
+	broken = make(map[string]bool)
+	unweighted = make(map[string]bool)
 	for _, path := range slices.Sorted(maps.Keys(files)) {
 		if filepath.Base(path) != assignmentFile {
 			continue
@@ -343,15 +349,18 @@ func processAssignmentFiles(files map[string][]byte, courseID uint64) (map[strin
 			continue // handled by the main loop in ReadTestsRepository
 		}
 		assignmentName := parts[0]
-		assignment, err := newAssignmentFromFile(files[path], assignmentName, courseID)
+		assignment, noWeight, err := newAssignmentFromFile(files[path], assignmentName, courseID)
 		if err != nil {
 			issues = append(issues, RepoIssue{Assignment: assignmentName, File: path, Problem: err.Error()})
 			broken[assignmentName] = true
 			continue
 		}
 		assignmentsMap[assignmentName] = assignment
+		if noWeight {
+			unweighted[assignmentName] = true
+		}
 	}
-	return assignmentsMap, broken, issues
+	return assignmentsMap, broken, unweighted, issues
 }
 
 // sortAssignments converts map to sorted slice.
