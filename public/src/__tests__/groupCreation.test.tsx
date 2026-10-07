@@ -1,8 +1,9 @@
-import { create } from "@bufbuild/protobuf"
+import { clone, create } from "@bufbuild/protobuf"
 import { act, fireEvent, render, screen } from "@testing-library/react"
 import { Provider } from "overmind-react"
 import { MemoryRouter, Route, Routes } from "react-router"
 import type { Group } from "../../proto/qf/types_pb"
+import { VoidSchema } from "../../proto/qf/requests_pb"
 import { Enrollment_UserStatus, EnrollmentSchema, Group_GroupStatus, GroupSchema, UserSchema } from "../../proto/qf/types_pb"
 import GroupForm from "../components/group/GroupForm"
 import Groups from "../components/Groups"
@@ -18,13 +19,22 @@ const student = create(UserSchema, { ID: BigInt(2), Name: "Sam Student", Login: 
 const teacherEnrollment = (groupID: bigint) => create(EnrollmentSchema, {
     ID: BigInt(1), courseID, userID: teacher.ID, user: teacher,
     status: Enrollment_UserStatus.TEACHER, groupID,
-    group: groupID ? create(GroupSchema, { ID: groupID, courseID, name: "Group 1" }) : undefined,
+    group: groupID ? create(GroupSchema, { ID: groupID, courseID, name: "group_1" }) : undefined,
 })
 
 const studentEnrollment = () => create(EnrollmentSchema, {
     ID: BigInt(2), courseID, userID: student.ID, user: student,
     status: Enrollment_UserStatus.STUDENT,
 })
+
+/** courseGroups returns an approved group_1, with the teacher as its member if teacherGroupID is 1, and a pending group_2. */
+const courseGroups = (teacherGroupID: bigint) => [
+    create(GroupSchema, {
+        ID: BigInt(1), courseID, name: "group_1", status: Group_GroupStatus.APPROVED,
+        users: teacherGroupID === BigInt(1) ? [clone(UserSchema, teacher)] : [],
+    }),
+    create(GroupSchema, { ID: BigInt(2), courseID, name: "group_2", status: Group_GroupStatus.PENDING }),
+]
 
 const setup = (teacherGroupID = BigInt(1)) => {
     const created: Group[] = []
@@ -36,6 +46,10 @@ const setup = (teacherGroupID = BigInt(1)) => {
             created.push(group)
             return { error: null, message: group }
         }),
+        // Copy the request, as it still belongs to the state tree.
+        updateGroup: mock("updateGroup", async req => ({ error: null, message: clone(GroupSchema, create(GroupSchema, req)) })),
+        deleteGroup: mock("deleteGroup", async () => ({ error: null, message: create(VoidSchema) })),
+        isEmptyRepo: mock("isEmptyRepo", async () => ({ error: null, message: create(VoidSchema) })),
     }
     const overmind = initializeOvermind({
         self: teacher,
@@ -44,7 +58,7 @@ const setup = (teacherGroupID = BigInt(1)) => {
         enrollments: [teacherEnrollment(teacherGroupID)],
         status: { "1": Enrollment_UserStatus.TEACHER },
         courseEnrollments: { "1": [teacherEnrollment(teacherGroupID), studentEnrollment()] },
-        groups: { "1": MockData.mockedGroups().groups },
+        groups: { "1": courseGroups(teacherGroupID) },
     }, api)
     return { overmind, created }
 }
@@ -121,7 +135,54 @@ describe("Teacher group creation", () => {
         fireEvent.click(screen.getByRole("tab", { name: /Teachers/ }))
 
         expect(checkbox(teacher).disabled).toBe(true)
-        expect(screen.getByText("In Group 1")).toBeDefined()
+        expect(screen.getByText("In group_1")).toBeDefined()
+    })
+})
+
+describe("Group membership in the member list", () => {
+    const openNewGroup = (tab: "Students" | "Teachers") => {
+        fireEvent.click(screen.getByText("New Group"))
+        fireEvent.click(screen.getByRole("tab", { name: new RegExp(tab) }))
+    }
+
+    test("a member removed from a group can join another", async () => {
+        const { overmind } = setup()
+        await renderGroups(overmind)
+
+        // group_2 is pending, so it is listed first.
+        fireEvent.click(screen.getAllByText("Edit")[1])
+        fireEvent.click(screen.getByRole("button", { name: `Remove ${teacher.Name}` }))
+        // A group needs at least one member.
+        fireEvent.click(checkbox(student))
+        await act(async () => { fireEvent.click(screen.getByRole("button", { name: "Save changes" })) })
+        openNewGroup("Teachers")
+
+        expect(checkbox(teacher).disabled).toBe(false)
+        expect(screen.queryByText("In group_1")).toBeNull()
+    })
+
+    test("members of a deleted group can join another", async () => {
+        window.confirm = vi.fn(() => true)
+        const { overmind } = setup()
+        await renderGroups(overmind)
+
+        await act(async () => { fireEvent.click(screen.getAllByText("Delete")[1]) })
+        openNewGroup("Teachers")
+
+        expect(checkbox(teacher).disabled).toBe(false)
+    })
+
+    test("a member added to a group cannot join another", async () => {
+        const { overmind } = setup()
+        await renderGroups(overmind)
+
+        fireEvent.click(screen.getAllByText("Edit")[0])
+        fireEvent.click(checkbox(student))
+        await act(async () => { fireEvent.click(screen.getByRole("button", { name: "Save changes" })) })
+        openNewGroup("Students")
+
+        expect(checkbox(student).disabled).toBe(true)
+        expect(screen.getByText("In group_2")).toBeDefined()
     })
 })
 
