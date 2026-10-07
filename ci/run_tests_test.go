@@ -832,3 +832,54 @@ func TestRecordResultsKeepsReviewScore(t *testing.T) {
 	recordResults(t, runData, db, failed, nil, false)
 	check("failed test run")
 }
+
+func TestSubmissionsForOwners(t *testing.T) {
+	db, cleanup := qtest.TestDB(t)
+	defer cleanup()
+
+	course := &qf.Course{Name: "Test", Code: "DAT320", ScmOrganizationID: 1}
+	admin := qtest.CreateFakeUser(t, db)
+	qtest.CreateCourse(t, db, admin, course)
+	group := qtest.CreateFakeGroup(t, db, course, 2)
+	graded, ungraded := group.UserIDs()[0], group.UserIDs()[1]
+	assignment := &qf.Assignment{CourseID: course.GetID(), Name: "lab1", Order: 1, IsGroupLab: true, Reviewers: 1, ReviewWeight: 40}
+	qtest.CreateAssignment(t, db, assignment)
+	submission := &qf.Submission{
+		AssignmentID: assignment.GetID(),
+		GroupID:      group.GetID(),
+		TestScore:    90,
+		ReviewScore:  70,
+		Score:        82,
+		Grades: []*qf.Grade{
+			{UserID: graded, Status: qf.Submission_APPROVED},
+			{UserID: ungraded, Status: qf.Submission_NONE},
+		},
+		Reviews: []*qf.Review{{ReviewerID: admin.GetID(), Score: 70}},
+	}
+	qtest.CreateSubmission(t, db, submission)
+	runData := &ci.RunData{
+		Course:     course,
+		Assignment: assignment,
+		Repo:       &qf.Repository{RepoType: qf.Repository_GROUP, GroupID: group.GetID()},
+	}
+
+	submissions, err := runData.SubmissionsForOwners(db, submission.GetID())
+	if err != nil {
+		t.Fatal(err)
+	}
+	if len(submissions) != 2 {
+		t.Fatalf("got submissions for %d owners, want 2", len(submissions))
+	}
+	got := submissions[graded]
+	if got.GetScore() != 82 || got.GetReviewScore() != 70 || len(got.GetReviews()) != 1 {
+		t.Errorf("graded owner: (Score, ReviewScore, reviews) = (%d, %d, %d), want (82, 70, 1)", got.GetScore(), got.GetReviewScore(), len(got.GetReviews()))
+	}
+	if len(got.GetGrades()) != 1 || got.GetGrades()[0].GetUserID() != graded {
+		t.Errorf("graded owner: grades = %v, want only the owner's grade", got.GetGrades())
+	}
+	got = submissions[ungraded]
+	if got.GetScore() != 90 || got.GetReviewScore() != 0 || len(got.GetReviews()) != 0 || len(got.GetGrades()) != 0 {
+		t.Errorf("ungraded owner: (Score, ReviewScore, reviews, grades) = (%d, %d, %d, %d), want (90, 0, 0, 0)",
+			got.GetScore(), got.GetReviewScore(), len(got.GetReviews()), len(got.GetGrades()))
+	}
+}

@@ -168,11 +168,11 @@ func (wh GitHubWebHook) runAssignmentTests(ctx context.Context, scmClient scm.SC
 		logger.Error("failed to record assignment result", label.Error, err)
 		return
 	}
-	// If we fail to get owners, we ignore sending on the stream.
-	if userIDs, err := runData.GetOwners(wh.db); err == nil {
-		// Note that streaming the submission as-is will send all grades
-		// to all participants for a given group submission.
-		wh.streams.Submission.SendTo(submission, userIDs...)
+	// If we fail to get the owners or the submission, we ignore sending on the stream.
+	if submissions, err := runData.SubmissionsForOwners(wh.db, submission.GetID()); err == nil {
+		for userID, submission := range submissions {
+			wh.streams.Submission.SendTo(submission, userID)
+		}
 	}
 }
 
