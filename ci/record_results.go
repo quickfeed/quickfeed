@@ -199,3 +199,21 @@ func (r *RunData) GetOwners(db database.Database) ([]uint64, error) {
 	}
 	return owners, nil
 }
+
+// SubmissionsForOwners returns the given submission, with its reviews, as each
+// owner of the run's repository may see it, keyed by the owner's user ID.
+func (r *RunData) SubmissionsForOwners(db database.Database, submissionID uint64) (map[uint64]*qf.Submission, error) {
+	owners, err := r.GetOwners(db)
+	if err != nil {
+		return nil, err
+	}
+	submission, err := db.GetSubmission(&qf.Submission{ID: submissionID})
+	if err != nil {
+		return nil, fmt.Errorf("getting submission %d for %s: %w", submissionID, r, err)
+	}
+	submissions := make(map[uint64]*qf.Submission, len(owners))
+	for _, userID := range owners {
+		submissions[userID] = submission.CleanCopy(userID)
+	}
+	return submissions, nil
+}

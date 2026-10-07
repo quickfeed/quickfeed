@@ -2,6 +2,8 @@ package qf
 
 import (
 	"time"
+
+	"google.golang.org/protobuf/proto"
 )
 
 // Failed reports whether the submission's latest test run failed.
@@ -135,23 +137,34 @@ func (s *Submission) ByGroup(groupID uint64) bool {
 // The student still sees the test score.
 func (s *Submissions) Clean(userID uint64) {
 	for _, submission := range s.GetSubmissions() {
-		// Group submissions may have multiple grades, so we need to filter the grades by the user.
-		grade := &Grade{
-			UserID:       userID,
-			SubmissionID: submission.GetID(),
-			Status:       submission.GetStatusByUser(userID),
-		}
-		submission.Grades = []*Grade{grade}
-		if grade.GetStatus() != Submission_NONE {
-			continue
-		}
-		// Remove the review score if the submission has not been graded,
-		// and also the grades and reviews if it has been reviewed.
-		submission.Score = submission.GetTestScore()
-		submission.ReviewScore = 0
-		if len(submission.GetReviews()) > 0 {
-			submission.Grades = nil
-			submission.Reviews = nil
-		}
+		submission.clean(userID)
+	}
+}
+
+// CleanCopy returns a copy of the submission as the given user may see it; see Submissions.Clean.
+func (s *Submission) CleanCopy(userID uint64) *Submission {
+	submission := proto.CloneOf(s)
+	submission.clean(userID)
+	return submission
+}
+
+func (s *Submission) clean(userID uint64) {
+	// Group submissions may have multiple grades, so we need to filter the grades by the user.
+	grade := &Grade{
+		UserID:       userID,
+		SubmissionID: s.GetID(),
+		Status:       s.GetStatusByUser(userID),
+	}
+	s.Grades = []*Grade{grade}
+	if grade.GetStatus() != Submission_NONE {
+		return
+	}
+	// Remove the review score if the submission has not been graded,
+	// and also the grades and reviews if it has been reviewed.
+	s.Score = s.GetTestScore()
+	s.ReviewScore = 0
+	if len(s.GetReviews()) > 0 {
+		s.Grades = nil
+		s.Reviews = nil
 	}
 }

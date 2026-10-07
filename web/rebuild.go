@@ -82,11 +82,11 @@ func (s *QuickFeedService) internalRebuildSubmission(ctx context.Context, reques
 	if err != nil {
 		return fmt.Errorf("recording results for assignment %s for course %s: %w", assignment.GetName(), course.GetName(), err)
 	}
-	// If we fail to get owners, we ignore sending on the stream.
-	if userIDs, err := runData.GetOwners(s.db); err == nil {
-		// Note that streaming the submission as-is sends all grades
-		// to all participants for a given group submission.
-		s.streams.Submission.SendTo(submission, userIDs...)
+	// If we fail to get the owners or the submission, we ignore sending on the stream.
+	if submissions, err := runData.SubmissionsForOwners(s.db, submission.GetID()); err == nil {
+		for userID, submission := range submissions {
+			s.streams.Submission.SendTo(submission, userID)
+		}
 	}
 	return nil
 }
