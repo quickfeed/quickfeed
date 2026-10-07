@@ -42,3 +42,29 @@ func dropRetired(conn *gorm.DB) error {
 	}
 	return nil
 }
+
+// needsScoreBackfill reports whether the database predates the separate test
+// and review scores, and must be backfilled by backfillScores after AutoMigrate.
+func needsScoreBackfill(conn *gorm.DB) bool {
+	m := conn.Migrator()
+	return m.HasTable("submissions") && !m.HasColumn("submissions", "review_score")
+}
+
+// backfillScores copies each submission's score into its test or review score,
+// and gives assignments with reviewers a review weight of 100. Tests were never
+// run for such assignments, so this keeps every submission's score unchanged
+// until the tests repository is read again.
+func backfillScores(conn *gorm.DB) error {
+	return conn.Transaction(func(tx *gorm.DB) error {
+		for _, stmt := range []string{
+			"UPDATE assignments SET review_weight = CASE WHEN reviewers > 0 THEN 100 ELSE 0 END",
+			"UPDATE submissions SET review_score = score WHERE assignment_id IN (SELECT id FROM assignments WHERE reviewers > 0)",
+			"UPDATE submissions SET test_score = score WHERE assignment_id IN (SELECT id FROM assignments WHERE reviewers = 0)",
+		} {
+			if err := tx.Exec(stmt).Error; err != nil {
+				return fmt.Errorf("backfilling scores: %w", err)
+			}
+		}
+		return nil
+	})
+}
