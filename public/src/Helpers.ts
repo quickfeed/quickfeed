@@ -398,20 +398,31 @@ export const getSubmissionCellColor = (submission: Submission, owner: Enrollment
 
 // pattern for group name validation. Only letters, numbers, underscores and dashes are allowed.
 const pattern = /^[a-zA-Z0-9_-]+$/
-export const validateGroup = (group: CourseGroup): { valid: boolean, message: string } => {
-    if (group.name.length === 0) {
-        return { valid: false, message: "Group name cannot be empty" }
+export const maxGroupNameLength = 20
+
+/** groupNameError returns why the group name is invalid, or an empty string if it is valid. */
+export const groupNameError = (name: string): string => {
+    if (name.length === 0) {
+        return "Group name cannot be empty"
     }
-    if (group.name.length > 20) {
-        return { valid: false, message: "Group name cannot be longer than 20 characters" }
+    if (name.length > maxGroupNameLength) {
+        return `Group name cannot be longer than ${maxGroupNameLength} characters`
     }
-    if (group.name.includes(" ")) {
+    if (name.includes(" ")) {
         // Explicitly warn the user that spaces are not allowed.
         // Common mistake is to use spaces instead of underscores.
-        return { valid: false, message: "Group name cannot contain spaces" }
+        return "Group name cannot contain spaces"
     }
-    if (!pattern.test(group.name)) {
-        return { valid: false, message: "Group name can only contain letters (a-z, A-Z), numbers, underscores and dashes" }
+    if (!pattern.test(name)) {
+        return "Group name can only contain letters (a-z, A-Z), numbers, underscores and dashes"
+    }
+    return ""
+}
+
+export const validateGroup = (group: CourseGroup): { valid: boolean, message: string } => {
+    const nameError = groupNameError(group.name)
+    if (nameError) {
+        return { valid: false, message: nameError }
     }
     if (group.users.length === 0) {
         return { valid: false, message: "Group must have at least one user" }
