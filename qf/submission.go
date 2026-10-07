@@ -109,12 +109,7 @@ func (s *Submission) ComputeScore(a *Assignment) {
 	if n := uint64(len(s.GetReviews())); n > 0 {
 		s.ReviewScore = uint32(sum / n)
 	}
-	var weight uint64
-	if a.GradedManually() {
-		weight = uint64(min(a.GetReviewWeight(), 100))
-	}
-	// Adding 50 rounds the weighted score to the nearest integer.
-	s.Score = uint32((uint64(s.GetTestScore())*(100-weight) + uint64(s.GetReviewScore())*weight + 50) / 100)
+	s.Score = a.WeightedScore(s.GetTestScore(), s.GetReviewScore())
 }
 
 // NewestSubmissionDate returns the submission's submission date if newer than the provided date.

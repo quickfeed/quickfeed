@@ -770,3 +770,65 @@ func TestRecordResultsFailedFirstRun(t *testing.T) {
 		t.Errorf("slip days after failed first run = %d, want %d", got, want)
 	}
 }
+
+// TestRecordResultsKeepsReviewScore checks that recording a test run, a push
+// to an assignment without tests, and a failed run each keep the review score
+// and reviews of a submission to an assignment with both tests and reviewers.
+func TestRecordResultsKeepsReviewScore(t *testing.T) {
+	db, cleanup := qtest.TestDB(t)
+	defer cleanup()
+
+	course := &qf.Course{Name: "Test", Code: "DAT320", ScmOrganizationID: 1, SlipDays: 5}
+	admin := qtest.CreateFakeUser(t, db)
+	qtest.CreateCourse(t, db, admin, course)
+	assignment := &qf.Assignment{
+		CourseID:     course.GetID(),
+		Name:         "lab1",
+		Deadline:     qtest.Timestamp(t, "2022-11-11T13:00:00"),
+		Order:        1,
+		Reviewers:    1,
+		ReviewWeight: 40,
+	}
+	qtest.CreateAssignment(t, db, assignment)
+	if err := db.CreateSubmission(&qf.Submission{
+		AssignmentID: assignment.GetID(),
+		UserID:       admin.GetID(),
+		ReviewScore:  70,
+		Score:        28,
+		Reviews:      []*qf.Review{{ReviewerID: admin.GetID(), Score: 70}},
+	}); err != nil {
+		t.Fatal(err)
+	}
+	runData := &ci.RunData{
+		Course:     course,
+		Assignment: assignment,
+		Repo:       &qf.Repository{RepoType: qf.Repository_USER, UserID: admin.GetID()},
+		JobOwner:   "test",
+		CommitID:   "deadbeef",
+	}
+	results := &score.Results{BuildInfo: createBuildInfo(t), Scores: createScores()}
+	testScore := results.Sum()
+	wantScore := assignment.WeightedScore(testScore, 70)
+
+	check := func(step string) {
+		t.Helper()
+		got := qtest.GetSubmission(t, db, &qf.Submission{AssignmentID: assignment.GetID(), UserID: admin.GetID()})
+		if got.GetTestScore() != testScore || got.GetReviewScore() != 70 || got.GetScore() != wantScore {
+			t.Errorf("%s: (TestScore, ReviewScore, Score) = (%d, %d, %d), want (%d, 70, %d)",
+				step, got.GetTestScore(), got.GetReviewScore(), got.GetScore(), testScore, wantScore)
+		}
+		if len(got.GetReviews()) != 1 {
+			t.Errorf("%s: got %d reviews, want 1", step, len(got.GetReviews()))
+		}
+	}
+
+	recordResults(t, runData, db, results, nil, false)
+	check("test run")
+
+	recordResults(t, runData, db, nil, nil, false)
+	check("push without test run")
+
+	failed := &score.Results{BuildInfo: &score.BuildInfo{Status: score.RunStatus_TIMEOUT}}
+	recordResults(t, runData, db, failed, nil, false)
+	check("failed test run")
+}
