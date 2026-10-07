@@ -47,6 +47,12 @@ func (a *Assignment) HasTests() bool {
 	return len(a.GetExpectedTests()) > 0
 }
 
+// RunsTests returns true if submissions to the assignment are tested: those
+// to an assignment without reviewers are, even if it has no expected tests.
+func (a *Assignment) RunsTests() bool {
+	return !a.GradedManually() || a.HasTests()
+}
+
 // DefaultReviewWeight returns the review weight for an assignment that does not
 // specify one: 0 without reviewers, 100 without tests, and 50 with both.
 func (a *Assignment) DefaultReviewWeight() uint32 {

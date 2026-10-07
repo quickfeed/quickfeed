@@ -8,6 +8,7 @@ import (
 	"log/slog"
 	"os"
 	"path/filepath"
+	"slices"
 	"strings"
 	"testing"
 	"time"
@@ -632,5 +633,27 @@ func TestRunCanarySkipsStaleClone(t *testing.T) {
 	}
 	if n := len(recordsWith(records, "test environment canary passed")); n != 1 {
 		t.Errorf("runCanary() logged %d passed records for lab1, want 1:\n%s", n, output.String())
+	}
+}
+
+// TestCanaryAssignments checks that the canary checks every assignment that
+// runs tests, including a reviewed one, and skips a reviewed one without tests.
+func TestCanaryAssignments(t *testing.T) {
+	tests := []*qf.TestInfo{{TestName: canaryTestName, MaxScore: 10, Weight: 1}}
+	courseAssignments := []*qf.Assignment{
+		{Name: "lab1", ExpectedTests: tests},
+		{Name: "lab2", Reviewers: 1},
+		{Name: "lab3", Reviewers: 1, ExpectedTests: tests},
+	}
+	selected, all := canaryAssignments(t.Context(), courseAssignments, map[string]bool{}, true)
+	if !all {
+		t.Error("canaryAssignments() all = false, want true")
+	}
+	var got []string
+	for _, assignment := range selected {
+		got = append(got, assignment.GetName())
+	}
+	if want := []string{"lab1", "lab3"}; !slices.Equal(got, want) {
+		t.Errorf("canaryAssignments() = %q, want %q", got, want)
 	}
 }

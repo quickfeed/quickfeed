@@ -138,7 +138,7 @@ func canaryAssignments(ctx context.Context, courseAssignments []*qf.Assignment, 
 		if !all && !names[assignment.GetName()] {
 			continue
 		}
-		if assignment.GradedManually() {
+		if !assignment.RunsTests() {
 			continue
 		}
 		selected = append(selected, assignment)

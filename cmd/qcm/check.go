@@ -345,10 +345,10 @@ func checkContent(c *commonFlags, parsed []*qf.Assignment, issues []assignments.
 }
 
 // checkSkeleton runs the course's tests against the handout code in the
-// assignments repository, once per auto-graded assignment, recording a result
+// assignments repository, once per tested assignment, recording a result
 // per assignment through ck; see ci.MaxSkeletonScore.
 func checkSkeleton(ctx context.Context, runner ci.Runner, course *qf.Course, parsed []*qf.Assignment, lab string, maxScore uint32, ck *checker) {
-	checkRuns(ctx, runner, "skeleton", autoGraded(parsed, lab), lab, ck,
+	checkRuns(ctx, runner, "skeleton", tested(parsed, lab), lab, ck,
 		func(assignment *qf.Assignment) *ci.RunData {
 			return ci.NewSkeletonRun(course, assignment, localCommitID)
 		},
@@ -358,11 +358,11 @@ func checkSkeleton(ctx context.Context, runner ci.Runner, course *qf.Course, par
 }
 
 // checkSolution runs the course's tests against the solution code in the given
-// directory, once per auto-graded assignment, recording a result per assignment
+// directory, once per tested assignment, recording a result per assignment
 // through ck. The solution must score 100%; a lower score means the tests
 // cannot be passed as written.
 func checkSolution(ctx context.Context, runner ci.Runner, course *qf.Course, parsed []*qf.Assignment, lab, solutionDir string, ck *checker) {
-	checkRuns(ctx, runner, "solution", autoGraded(parsed, lab), lab, ck,
+	checkRuns(ctx, runner, "solution", tested(parsed, lab), lab, ck,
 		func(assignment *qf.Assignment) *ci.RunData {
 			return ci.NewLocalRun(course, assignment, solutionOwner, solutionDir, localCommitID)
 		},
@@ -441,12 +441,12 @@ func solutionResult(name string, results *score.Results) checkResult {
 	return checkResult{name: name, result: fail, details: details}
 }
 
-// autoGraded returns the assignments to run tests for: the auto-graded ones, or
+// tested returns the assignments to run tests for: those that run tests, or
 // only the named assignment when lab is given.
-func autoGraded(parsed []*qf.Assignment, lab string) []*qf.Assignment {
+func tested(parsed []*qf.Assignment, lab string) []*qf.Assignment {
 	var selected []*qf.Assignment
 	for _, assignment := range parsed {
-		if assignment.GradedManually() || (lab != "" && assignment.GetName() != lab) {
+		if !assignment.RunsTests() || (lab != "" && assignment.GetName() != lab) {
 			continue
 		}
 		selected = append(selected, assignment)
@@ -456,9 +456,9 @@ func autoGraded(parsed []*qf.Assignment, lab string) []*qf.Assignment {
 
 func nothingToRun(lab string) string {
 	if lab != "" {
-		return fmt.Sprintf("assignment %q is not an auto-graded assignment of this course", lab)
+		return fmt.Sprintf("assignment %q of this course has no tests to run", lab)
 	}
-	return "the course has no auto-graded assignments"
+	return "the course has no assignments with tests to run"
 }
 
 // printChecks prints the summary table and returns an error if any check failed.

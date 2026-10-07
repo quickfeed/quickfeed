@@ -78,3 +78,24 @@ func TestAssignmentDefaultReviewWeight(t *testing.T) {
 		})
 	}
 }
+
+func TestAssignmentRunsTests(t *testing.T) {
+	tests := []*TestInfo{{TestName: "TestA", MaxScore: 1, Weight: 1}}
+	cases := []struct {
+		name       string
+		assignment *Assignment
+		want       bool
+	}{
+		{name: "TestsOnly", assignment: &Assignment{ExpectedTests: tests}, want: true},
+		{name: "NoReviewersNoTests", assignment: &Assignment{}, want: true},
+		{name: "ReviewsOnly", assignment: &Assignment{Reviewers: 1}, want: false},
+		{name: "TestsAndReviews", assignment: &Assignment{Reviewers: 1, ExpectedTests: tests}, want: true},
+	}
+	for _, tc := range cases {
+		t.Run(tc.name, func(t *testing.T) {
+			if got := tc.assignment.RunsTests(); got != tc.want {
+				t.Errorf("RunsTests() = %t, want %t", got, tc.want)
+			}
+		})
+	}
+}
