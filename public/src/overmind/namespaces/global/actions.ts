@@ -402,7 +402,19 @@ export const createGroup = async ({ state, actions, effects }: Context, group: C
         return
     }
 
-    state.userGroup[group.courseID.toString()] = response.message
+    const courseID = group.courseID.toString()
+    const created = response.message
+    if (group.users.includes(state.self.ID)) {
+        state.userGroup[courseID] = created
+    }
+    // A teacher may create groups for others; keep the course's group list
+    // and member enrollments in sync so the members cannot be added to another group.
+    state.groups[courseID]?.push(created)
+    for (const enrollment of state.courseEnrollments[courseID] ?? []) {
+        if (group.users.includes(enrollment.userID)) {
+            enrollment.groupID = created.ID
+        }
+    }
     state.activeGroup = null
 }
 

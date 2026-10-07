@@ -1,6 +1,7 @@
+import { create } from "@bufbuild/protobuf"
 import React, { useCallback } from "react"
 import type { Group } from "../../proto/qf/types_pb"
-import { Group_GroupStatus } from "../../proto/qf/types_pb"
+import { Group_GroupStatus, GroupSchema } from "../../proto/qf/types_pb"
 import { Color, groupRepoLink, hasUsers, isApprovedGroup, isPendingGroup } from "../Helpers"
 import { useCourseID } from "../hooks/useCourseID"
 import { useActions, useAppState } from "../overmind"
@@ -42,6 +43,7 @@ const Groups = () => {
     const approveGroup = useCallback((group: Group) => () => actions.updateGroupStatus({ group, status: Group_GroupStatus.APPROVED }), [actions])
     const handleEditGroup = useCallback((group: Group) => () => actions.setActiveGroup(group), [actions])
     const handleDeleteGroup = useCallback((group: Group) => () => actions.deleteGroup(group), [actions])
+    const handleNewGroup = useCallback(() => actions.setActiveGroup(create(GroupSchema, { courseID })), [actions, courseID])
 
     const GroupButtons = ({ group }: { group: Group }) => {
         const buttons: React.JSX.Element[] = []
@@ -173,7 +175,16 @@ const Groups = () => {
     return (
         <div className="">
             <div className="pb-2">
-                <Search />
+                <Search placeholder="Search groups or members...">
+                    <Button
+                        text="New Group"
+                        color={Color.GREEN}
+                        className="gap-2"
+                        onClick={handleNewGroup}
+                    >
+                        <i className="fas fa-plus" />
+                    </Button>
+                </Search>
             </div>
             {table}
         </div>
