@@ -368,8 +368,8 @@ func TestCourseDockerfile(t *testing.T) {
 	}
 }
 
-// TestCheckSkeletonManuallyGraded checks that a manually graded assignment is
-// skipped rather than run: it has no tests to score the handout code with.
+// TestCheckSkeletonManuallyGraded checks that a manually graded assignment
+// without tests is skipped rather than run.
 func TestCheckSkeletonManuallyGraded(t *testing.T) {
 	course := &qf.Course{Code: "DAT320", ScmOrganizationName: "dat320-2025"}
 	parsed := []*qf.Assignment{{Name: "lab1", Reviewers: 1}}
@@ -379,7 +379,7 @@ func TestCheckSkeletonManuallyGraded(t *testing.T) {
 	if len(got) != 1 || got[0].result != skip {
 		t.Fatalf("checkSkeleton(manually graded) = %+v, want a single %s", got, skip)
 	}
-	if !strings.Contains(strings.Join(got[0].details, "\n"), "not an auto-graded assignment") {
+	if !strings.Contains(strings.Join(got[0].details, "\n"), "has no tests to run") {
 		t.Errorf("checkSkeleton() details = %q, want it to say why the run was skipped", got[0].details)
 	}
 }
@@ -408,20 +408,24 @@ func TestCheckContent(t *testing.T) {
 	}
 }
 
-func TestAutoGraded(t *testing.T) {
+func TestTested(t *testing.T) {
 	parsed := []*qf.Assignment{
 		{Name: "lab1"},
 		{Name: "lab2", Reviewers: 1},
 		{Name: "lab3"},
+		{Name: "lab4", Reviewers: 1, ExpectedTests: []*qf.TestInfo{{TestName: "TestA"}}},
 	}
-	if got := names(autoGraded(parsed, "")); len(got) != 2 || got[0] != "lab1" || got[1] != "lab3" {
-		t.Errorf("autoGraded(all) = %q, want the auto-graded assignments", got)
+	if got := names(tested(parsed, "")); len(got) != 3 || got[0] != "lab1" || got[1] != "lab3" || got[2] != "lab4" {
+		t.Errorf("tested(all) = %q, want the assignments that run tests", got)
 	}
-	if got := names(autoGraded(parsed, "lab3")); len(got) != 1 || got[0] != "lab3" {
-		t.Errorf("autoGraded(lab3) = %q, want [lab3]", got)
+	if got := names(tested(parsed, "lab3")); len(got) != 1 || got[0] != "lab3" {
+		t.Errorf("tested(lab3) = %q, want [lab3]", got)
 	}
-	if got := autoGraded(parsed, "lab2"); len(got) != 0 {
-		t.Errorf("autoGraded(lab2) = %+v, want nothing for a manually graded assignment", got)
+	if got := tested(parsed, "lab2"); len(got) != 0 {
+		t.Errorf("tested(lab2) = %+v, want nothing for a manually graded assignment without tests", got)
+	}
+	if got := names(tested(parsed, "lab4")); len(got) != 1 || got[0] != "lab4" {
+		t.Errorf("tested(lab4) = %q, want [lab4] for a reviewed assignment with tests", got)
 	}
 }
 

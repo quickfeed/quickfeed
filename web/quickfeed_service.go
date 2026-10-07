@@ -420,6 +420,10 @@ func (s *QuickFeedService) UpdateSubmission(ctx context.Context, in *qf.Grade) (
 // A single submission is executed again if the request specifies a submission ID
 // or all submissions if no submission ID is specified.
 func (s *QuickFeedService) RebuildSubmissions(ctx context.Context, in *qf.RebuildRequest) (*qf.Void, error) {
+	// An assignment that does not exist is reported by the rebuild itself.
+	if assignment, err := s.db.GetAssignment(&qf.Assignment{ID: in.GetAssignmentID()}); err == nil && !assignment.RunsTests() {
+		return nil, connect.NewError(connect.CodeFailedPrecondition, errors.New("assignment has no tests to run"))
+	}
 	if in.GetSubmissionID() > 0 {
 		// Submission ID > 0 ==> rebuild single submission for given CourseID and AssignmentID
 		if err := s.internalRebuildSubmission(ctx, in); err != nil {

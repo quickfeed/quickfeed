@@ -149,8 +149,8 @@ func (wh GitHubWebHook) runAssignmentTests(ctx context.Context, scmClient scm.SC
 		CommitID:   payload.GetHeadCommit().GetID(),
 		JobOwner:   payload.GetSender().GetLogin(),
 	}
-	if assignment.GradedManually() {
-		logger.Debug("assignment is manually reviewed")
+	if !assignment.RunsTests() {
+		logger.Debug("assignment is manually reviewed without tests")
 		if _, err := runData.RecordResults(ctx, wh.db, nil); err != nil {
 			logger.Error("failed to record manual assignment result", label.Error, err)
 		}
