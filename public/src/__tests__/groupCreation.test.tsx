@@ -1,5 +1,6 @@
 import { clone, create } from "@bufbuild/protobuf"
-import { act, fireEvent, render, screen } from "@testing-library/react"
+import { ConnectError } from "@connectrpc/connect"
+import { act, fireEvent, render, screen, within } from "@testing-library/react"
 import { Provider } from "overmind-react"
 import { MemoryRouter, Route, Routes } from "react-router"
 import type { Group } from "../../proto/qf/types_pb"
@@ -37,7 +38,7 @@ const courseGroups = (teacherGroupID: bigint) => [
     create(GroupSchema, { ID: BigInt(2), courseID, name: "group_2", status: Group_GroupStatus.PENDING }),
 ]
 
-const setup = (teacherGroupID = BigInt(1)) => {
+const setup = (teacherGroupID = BigInt(1), overrides: Partial<ApiClient["client"]> = {}) => {
     const created: Group[] = []
     const api = new ApiClient()
     api.client = {
@@ -51,6 +52,7 @@ const setup = (teacherGroupID = BigInt(1)) => {
         updateGroup: mock("updateGroup", async req => ({ error: null, message: clone(GroupSchema, create(GroupSchema, req)) })),
         deleteGroup: mock("deleteGroup", async () => ({ error: null, message: create(VoidSchema) })),
         isEmptyRepo: mock("isEmptyRepo", async () => ({ error: null, message: create(VoidSchema) })),
+        ...overrides,
     }
     const overmind = initializeOvermind({
         self: teacher,
@@ -306,5 +308,42 @@ describe("Course strip group link", () => {
 
         const link = screen.getByRole("link", { name: label })
         expect(link.getAttribute("href")).toBe("/course/1/group")
+    })
+})
+
+describe("Approving and deleting a group", () => {
+    /** pendingFailure returns a response promise that fails when the returned function is called. */
+    const pendingFailure = <T,>(message: T) => {
+        let fail = () => {}
+        const response = new Promise<{ error: ConnectError, message: T }>(resolve => {
+            fail = () => resolve({ error: new ConnectError("failed"), message })
+        })
+        return { response, fail }
+    }
+
+    const row = (name: string) => screen.getByText(name).closest("tr") as HTMLTableRowElement
+
+    test.each([
+        { button: "Approve", method: "updateGroup" },
+        { button: "Delete", method: "deleteGroup" },
+    ])("$button shows a spinner and keeps the group until the server fails", async ({ button, method }) => {
+        window.confirm = vi.fn(() => true)
+        const updateGroup = pendingFailure(create(GroupSchema))
+        const deleteGroup = pendingFailure(create(VoidSchema))
+        const { fail } = method === "updateGroup" ? updateGroup : deleteGroup
+        const { overmind } = setup(BigInt(1), method === "updateGroup"
+            ? { updateGroup: mock("updateGroup", () => updateGroup.response) }
+            : { deleteGroup: mock("deleteGroup", () => deleteGroup.response) })
+        await renderGroups(overmind)
+
+        await act(async () => { fireEvent.click(within(row("group_2")).getByText(button)) })
+        expect(within(row("group_2")).getByRole("status", { hidden: true })).toBeDefined()
+        expect(overmind.state.groups["1"][1].status).toBe(Group_GroupStatus.PENDING)
+
+        await act(async () => { fail() })
+        expect(within(row("group_2")).queryByRole("status", { hidden: true })).toBeNull()
+        expect(within(row("group_2")).getByText(button)).toBeDefined()
+        expect(overmind.state.groups["1"]).toHaveLength(2)
+        expect(overmind.state.groups["1"][1].status).toBe(Group_GroupStatus.PENDING)
     })
 })
