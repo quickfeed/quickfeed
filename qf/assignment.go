@@ -60,6 +60,18 @@ func (a *Assignment) DefaultReviewWeight() uint32 {
 	}
 }
 
+// WeightedScore returns the submission score for the given test and review
+// scores, weighted by the assignment's review weight. Reviews count only if
+// the assignment has reviewers.
+func (a *Assignment) WeightedScore(testScore, reviewScore uint32) uint32 {
+	var weight uint64
+	if a.GradedManually() {
+		weight = uint64(min(a.GetReviewWeight(), 100))
+	}
+	// Adding 50 rounds the weighted score to the nearest integer.
+	return uint32((uint64(testScore)*(100-weight) + uint64(reviewScore)*weight + 50) / 100)
+}
+
 // ZeroScoreTests returns a slice of score.Score objects with zero scores
 // for all expected tests in this assignment.
 func (a *Assignment) ZeroScoreTests() []*score.Score {
