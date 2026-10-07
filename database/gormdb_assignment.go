@@ -42,6 +42,7 @@ func (db *GormDB) CreateAssignment(assignment *qf.Assignment) error {
 			"score_limit":       assignment.GetScoreLimit(),
 			"is_group_lab":      assignment.GetIsGroupLab(),
 			"reviewers":         assignment.GetReviewers(),
+			"review_weight":     assignment.GetReviewWeight(),
 			"container_timeout": assignment.GetContainerTimeout(),
 		}).FirstOrCreate(assignment).Error
 }
@@ -119,6 +120,7 @@ func (db *GormDB) UpdateAssignments(assignments []*qf.Assignment) error {
 				IsGroupLab:       v.GetIsGroupLab(),
 				ScoreLimit:       v.GetScoreLimit(),
 				Reviewers:        v.GetReviewers(),
+				ReviewWeight:     v.GetReviewWeight(),
 				ContainerTimeout: v.GetContainerTimeout(),
 				// Submissions:       v.GetSubmissions(),
 				GradingBenchmarks: v.GetGradingBenchmarks(),

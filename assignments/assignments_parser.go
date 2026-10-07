@@ -16,23 +16,30 @@ const defaultAutoApproveScoreLimit = 80
 // Note that the struct can be private, but the fields must be
 // public to allow parsing.
 type assignmentData struct {
-	Order            uint32 `json:"order"`
-	Deadline         string `json:"deadline"`
-	IsGroupLab       bool   `json:"isgrouplab"`
-	AutoApprove      bool   `json:"autoapprove"`
-	ScoreLimit       uint32 `json:"scorelimit"`
-	Reviewers        uint32 `json:"reviewers"`
-	ContainerTimeout uint32 `json:"containertimeout"`
+	Order            uint32  `json:"order"`
+	Deadline         string  `json:"deadline"`
+	IsGroupLab       bool    `json:"isgrouplab"`
+	AutoApprove      bool    `json:"autoapprove"`
+	ScoreLimit       uint32  `json:"scorelimit"`
+	Reviewers        uint32  `json:"reviewers"`
+	ReviewWeight     *uint32 `json:"reviewweight"`
+	ContainerTimeout uint32  `json:"containertimeout"`
 }
 
-func newAssignmentFromFile(contents []byte, assignmentName string, courseID uint64) (*qf.Assignment, error) {
+// newAssignmentFromFile returns the assignment described by contents, and
+// whether contents leave out reviewweight; the default review weight depends
+// on the assignment's tests, which are not known until tests.json is read.
+func newAssignmentFromFile(contents []byte, assignmentName string, courseID uint64) (*qf.Assignment, bool, error) {
 	var newAssignment assignmentData
 	err := json.Unmarshal(contents, &newAssignment)
 	if err != nil {
-		return nil, fmt.Errorf("unmarshaling assignment: %w", err)
+		return nil, false, fmt.Errorf("unmarshaling assignment: %w", err)
 	}
 	if newAssignment.Order < 1 {
-		return nil, fmt.Errorf("assignment order must be greater than 0")
+		return nil, false, fmt.Errorf("assignment order must be greater than 0")
+	}
+	if newAssignment.ReviewWeight != nil && *newAssignment.ReviewWeight > 100 {
+		return nil, false, fmt.Errorf("reviewweight must be at most 100, got %d", *newAssignment.ReviewWeight)
 	}
 	// if no auto approve score limit is defined; use the default
 	if newAssignment.ScoreLimit < 1 {
@@ -40,7 +47,7 @@ func newAssignmentFromFile(contents []byte, assignmentName string, courseID uint
 	}
 	deadline, err := FixDeadline(newAssignment.Deadline)
 	if err != nil {
-		return nil, fmt.Errorf("parsing deadline: %w", err)
+		return nil, false, fmt.Errorf("parsing deadline: %w", err)
 	}
 	// AssignmentID field from the parsed json is used to set Order, not assignment ID,
 	// or it will cause a database constraint violation (IDs must be unique)
@@ -56,7 +63,10 @@ func newAssignmentFromFile(contents []byte, assignmentName string, courseID uint
 		Reviewers:        newAssignment.Reviewers,
 		ContainerTimeout: newAssignment.ContainerTimeout,
 	}
-	return assignment, nil
+	if newAssignment.ReviewWeight != nil {
+		assignment.ReviewWeight = *newAssignment.ReviewWeight
+	}
+	return assignment, newAssignment.ReviewWeight == nil, nil
 }
 
 func FixDeadline(in string) (*timestamppb.Timestamp, error) {
