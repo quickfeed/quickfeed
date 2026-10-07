@@ -240,6 +240,7 @@ An example is shown below.
   "autoapprove": true,
   "scorelimit": 90,
   "reviewers": 2,
+  "reviewweight": 40,
   "containertimeout": 10
 }
 ```
@@ -247,15 +248,16 @@ An example is shown below.
 QuickFeed only use the fields in the table below.
 The `title` and `effort` are used by other tooling to create a README.md file for an assignment.
 
-| Field              | Description                                                                                    |
-| ------------------ | ---------------------------------------------------------------------------------------------- |
-| `order`            | Assignment's sequence number; used to order the assignments in the frontend.                   |
-| `deadline`         | Submission deadline for the assignment.                                                        |
-| `isgrouplab`       | Assignment is considered a group assignment if true; otherwise it is an individual assignment. |
-| `autoapprove`      | Automatically approve the assignment when `scorelimit` is achieved.                            |
-| `scorelimit`       | Minimal score needed for approval. Default is 80 %.                                            |
-| `reviewers`        | Number of teachers that must review a student submission for manual approval. Default is 1.    |
-| `containertimeout` | Timeout for CI container to finish building and testing submitted code. Default is 10 minutes. |
+| Field              | Description                                                                                                               |
+| ------------------ | ------------------------------------------------------------------------------------------------------------------------- |
+| `order`            | Assignment's sequence number; used to order the assignments in the frontend.                                              |
+| `deadline`         | Submission deadline for the assignment.                                                                                   |
+| `isgrouplab`       | Assignment is considered a group assignment if true; otherwise it is an individual assignment.                            |
+| `autoapprove`      | Automatically approve the assignment when `scorelimit` is achieved; with `reviewers`, only once all reviews are complete. |
+| `scorelimit`       | Minimal score needed for approval. Default is 80 %.                                                                       |
+| `reviewers`        | Number of teachers that must review a student submission. Default is 0: submissions are not reviewed.                     |
+| `reviewweight`     | Percentage of the score given by the reviews; the tests give the rest. Default is 50, or 100 without tests.               |
+| `containertimeout` | Timeout for CI container to finish building and testing submitted code. Default is 10 minutes.                            |
 
 ### Tests Information
 
@@ -459,6 +461,8 @@ For additional information about writing tests, please see the Go-based `score` 
 ## Reviewing student submissions
 
 An assignment can be reviewed manually if the number of reviewers in the assignment's JSON file is above zero.
+An assignment may have both a `tests.json` and a `criteria.json` file.
+Its tests then run on every push, and `reviewweight` sets how much the reviews count toward the submission's score.
 Grading criteria can be added in groups for a selected assignment on the course's main page.
 Criteria descriptions and group headers can be edited at any time by clicking on the criterion one wishes to edit.
 
