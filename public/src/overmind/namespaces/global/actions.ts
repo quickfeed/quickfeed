@@ -755,7 +755,8 @@ export const errorHandler = (context: Context, { method, error }: { method: stri
         }
         context.actions.global.alert({
             text: "Your session has expired. Please log in again.",
-            color: Color.RED
+            color: Color.RED,
+            delay: 5000
         })
         // Store an alert message in localStorage that will be displayed after reloading the page.
         localStorage.setItem("alert", "Your session has expired. Please log in again.")
@@ -770,7 +771,8 @@ export const errorHandler = (context: Context, { method, error }: { method: stri
         const message = context.state.self.IsAdmin ? `${method}: ${error.message}` : error.rawMessage
         context.actions.global.alert({
             text: message,
-            color: Color.RED
+            color: Color.RED,
+            delay: 5000
         })
     }
 }
