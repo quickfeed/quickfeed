@@ -147,6 +147,7 @@ const GroupForm = () => {
                         <i className="fas fa-magnifying-glass text-base-content/50" />
                         <input
                             type="search"
+                            aria-label="Search members"
                             // Students do not receive other users' GitHub usernames.
                             placeholder={isTeacher ? "Search by name or GitHub username" : "Search by name"}
                             value={query}

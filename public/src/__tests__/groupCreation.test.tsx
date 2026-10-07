@@ -222,7 +222,7 @@ describe("Group form validation", () => {
         await renderGroups(overmind)
         fireEvent.click(screen.getByText("New Group"))
 
-        const search = screen.getByPlaceholderText("Search by name or GitHub username")
+        const search = screen.getByRole("searchbox", { name: "Search members" })
         fireEvent.change(search, { target: { value: "sam" } })
         fireEvent.keyDown(search, { key: "Enter" })
 
