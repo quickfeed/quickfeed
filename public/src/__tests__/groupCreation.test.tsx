@@ -4,6 +4,7 @@ import { Provider } from "overmind-react"
 import { MemoryRouter, Route, Routes } from "react-router"
 import type { Group } from "../../proto/qf/types_pb"
 import { Enrollment_UserStatus, EnrollmentSchema, Group_GroupStatus, GroupSchema, UserSchema } from "../../proto/qf/types_pb"
+import GroupForm from "../components/group/GroupForm"
 import Groups from "../components/Groups"
 import { ApiClient } from "../overmind/namespaces/global/effects"
 import { MockData } from "./mock_data/mockData"
@@ -62,23 +63,25 @@ const renderGroups = async (overmind: ReturnType<typeof setup>["overmind"]) => {
     })
 }
 
+const nameInput = () => screen.getByPlaceholderText("e.g. team_rocket")
+const checkbox = (user: typeof teacher) => screen.getByRole("checkbox", { name: new RegExp(user.Name) }) as HTMLInputElement
+const createButton = () => screen.getByRole("button", { name: "Create group" }) as HTMLButtonElement
+
 describe("Teacher group creation", () => {
     test("teacher in a group can create a group for students from the group list", async () => {
         const { overmind, created } = setup()
         await renderGroups(overmind)
 
         fireEvent.click(screen.getByText("New Group"))
-        fireEvent.keyUp(screen.getByPlaceholderText("Enter group name..."), { target: { value: "new_group" } })
-        // The add button sits in the row with the student's name.
-        const row = screen.getByText(student.Name).parentElement as HTMLElement
-        fireEvent.click(row.querySelector("button") as HTMLButtonElement)
-        await act(async () => { fireEvent.click(screen.getByText("Create Group")) })
+        fireEvent.change(nameInput(), { target: { value: "new_group" } })
+        fireEvent.click(checkbox(student))
+        await act(async () => { fireEvent.click(createButton()) })
 
         expect(created).toHaveLength(1)
         expect(created[0].name).toBe("new_group")
         expect(created[0].users.map(u => u.ID)).toEqual([student.ID])
         // Back on the list, with the new group pending approval.
-        expect(screen.queryByText("Create Group")).toBeNull()
+        expect(screen.queryByRole("button", { name: "Create group" })).toBeNull()
         expect(screen.getByText("new_group")).toBeDefined()
         expect(overmind.state.groups["1"].map(g => g.ID)).toContain(BigInt(3))
         // The teacher is not a member, so their own group is unchanged.
@@ -104,8 +107,100 @@ describe("Teacher group creation", () => {
         await renderGroups(overmind)
 
         fireEvent.click(screen.getByText("New Group"))
-        fireEvent.click(screen.getByText("Students"))
+        fireEvent.click(screen.getByRole("tab", { name: /Teachers/ }))
+        fireEvent.click(checkbox(teacher))
 
-        expect(screen.getByText(teacher.Name)).toBeDefined()
+        expect(overmind.state.activeGroup?.users.map(u => u.ID)).toEqual([teacher.ID])
+    })
+
+    test("users in another group are shown but cannot be picked", async () => {
+        const { overmind } = setup()
+        await renderGroups(overmind)
+
+        fireEvent.click(screen.getByText("New Group"))
+        fireEvent.click(screen.getByRole("tab", { name: /Teachers/ }))
+
+        expect(checkbox(teacher).disabled).toBe(true)
+        expect(screen.getByText("In Group 1")).toBeDefined()
+    })
+})
+
+describe("Group form validation", () => {
+    test("create is disabled until the group has a valid name and a member", async () => {
+        const { overmind } = setup()
+        await renderGroups(overmind)
+        fireEvent.click(screen.getByText("New Group"))
+
+        expect(createButton().disabled).toBe(true)
+        expect(screen.getByText("Enter a group name to continue.")).toBeDefined()
+
+        fireEvent.change(nameInput(), { target: { value: "bad!" } })
+        expect(screen.getByText(/can only contain letters/)).toBeDefined()
+        expect(createButton().disabled).toBe(true)
+
+        fireEvent.change(nameInput(), { target: { value: "good" } })
+        expect(screen.getByText("Add at least one member to continue.")).toBeDefined()
+        expect(createButton().disabled).toBe(true)
+
+        fireEvent.click(checkbox(student))
+        expect(createButton().disabled).toBe(false)
+    })
+
+    test("spaces in the name become underscores", async () => {
+        const { overmind } = setup()
+        await renderGroups(overmind)
+        fireEvent.click(screen.getByText("New Group"))
+
+        fireEvent.change(nameInput(), { target: { value: "team rocket" } })
+
+        expect(overmind.state.activeGroup?.name).toBe("team_rocket")
+    })
+
+    test("enter in the search adds the only matching person", async () => {
+        const { overmind } = setup()
+        await renderGroups(overmind)
+        fireEvent.click(screen.getByText("New Group"))
+
+        const search = screen.getByPlaceholderText("Search by name or GitHub username")
+        fireEvent.change(search, { target: { value: "sam" } })
+        fireEvent.keyDown(search, { key: "Enter" })
+
+        expect(overmind.state.activeGroup?.users.map(u => u.ID)).toEqual([student.ID])
+        expect((search as HTMLInputElement).value).toBe("")
+    })
+})
+
+describe("Student group creation", () => {
+    test("the student is a member and cannot remove themselves", async () => {
+        const classmate = create(UserSchema, { ID: BigInt(4), Name: "Cal Classmate", Login: "cal" })
+        const overmind = initializeOvermind({
+            self: student,
+            activeCourse: courseID,
+            enrollments: [studentEnrollment()],
+            status: { "1": Enrollment_UserStatus.STUDENT },
+            courseEnrollments: {
+                "1": [studentEnrollment(), create(EnrollmentSchema, {
+                    ID: BigInt(4), courseID, userID: classmate.ID, user: classmate, status: Enrollment_UserStatus.STUDENT,
+                })],
+            },
+        })
+        await act(async () => {
+            render(
+                <Provider value={overmind}>
+                    <MemoryRouter initialEntries={["/course/1/group"]}>
+                        <Routes>
+                            <Route path="/course/:id/group" element={<GroupForm />} />
+                        </Routes>
+                    </MemoryRouter>
+                </Provider>
+            )
+        })
+
+        expect(screen.getByText("Create your group")).toBeDefined()
+        expect(checkbox(student).checked).toBe(true)
+        expect(checkbox(student).disabled).toBe(true)
+        expect(screen.queryByRole("button", { name: `Remove ${student.Name}` })).toBeNull()
+        expect(screen.queryByText("Cancel")).toBeNull()
+        expect(checkbox(classmate).disabled).toBe(false)
     })
 })
