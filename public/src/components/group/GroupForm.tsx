@@ -51,19 +51,35 @@ const GroupForm = () => {
     // Only members may create a group, so a student cannot leave the group they are creating.
     const isLocked = (userID: bigint) => !isTeacher && userID === state.self.ID
 
-    const groupName = (groupID: bigint, enrollment: Enrollment) =>
-        state.groups[courseID.toString()]?.find(g => g.ID === groupID)?.name ?? enrollment.group?.name ?? "another group"
+    // A teacher's group list stays current after groups are edited or deleted, unlike enrollments' group IDs.
+    // Students do not receive the group list, so for them the enrollments are all there is.
+    const courseGroups = isTeacher ? state.groups[courseID.toString()] : undefined
+    const groupByUser = new Map<bigint, Group>()
+    for (const g of courseGroups ?? []) {
+        for (const user of g.users) {
+            groupByUser.set(user.ID, g)
+        }
+    }
+    const otherGroupName = (enrollment: Enrollment): string => {
+        if (courseGroups) {
+            const g = groupByUser.get(enrollment.userID)
+            return g && g.ID !== group.ID ? g.name : ""
+        }
+        if (enrollment.groupID === 0n || enrollment.groupID === group.ID) {
+            return ""
+        }
+        return enrollment.group?.name ?? "another group"
+    }
 
     const enrollments = state.courseEnrollments[courseID.toString()] ?? []
     const toCandidate = (enrollment: Enrollment): Candidate | null => {
         if (!enrollment.user) {
             return null
         }
-        const inOtherGroup = enrollment.groupID !== 0n && enrollment.groupID !== group.ID
         return {
             user: enrollment.user,
             selected: memberIDs.includes(enrollment.userID),
-            otherGroup: inOtherGroup ? groupName(enrollment.groupID, enrollment) : "",
+            otherGroup: otherGroupName(enrollment),
             locked: isLocked(enrollment.userID),
         }
     }
