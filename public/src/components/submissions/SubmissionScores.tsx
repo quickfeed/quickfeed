@@ -47,7 +47,7 @@ const SubmissionScores = ({ submission }: { submission: Submission }) => {
                     <th colSpan={1} data-key="name" role="button" onClick={handleSort}>Test Name</th>
                     <th colSpan={1} className="fixed-width-percent text-right" data-key="score" role="button" onClick={handleSort}>Score</th>
                     <th colSpan={1} className="fixed-width-percent text-right" data-key="percentage" role="button" onClick={handleSort}>%</th>
-                    <th colSpan={1} className="fixed-width-percent text-right" data-key="weight" data-toggle="tooltip" title="Maximum % contribution to total score" role="button" onClick={handleSort}>Max</th>
+                    <th colSpan={1} className="fixed-width-percent text-right" data-key="weight" data-toggle="tooltip" title="Maximum % contribution to the test score" role="button" onClick={handleSort}>Max</th>
                 </tr>
             </thead>
             <tbody>
@@ -57,8 +57,8 @@ const SubmissionScores = ({ submission }: { submission: Submission }) => {
             </tbody>
             <tfoot>
                 <tr>
-                    <th colSpan={2}>Total Score</th>
-                    <th className="text-right">{submission.score}%</th>
+                    <th colSpan={2}>Test Score</th>
+                    <th className="text-right">{submission.testScore}%</th>
                     <th className="text-right">100%</th>
                 </tr>
             </tfoot>

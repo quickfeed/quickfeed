@@ -1,12 +1,12 @@
 import React, { useCallback, useEffect } from "react"
 import type { Grade } from "../../proto/qf/types_pb"
 import { Submission_Status } from "../../proto/qf/types_pb"
-import { Color, hasAllStatus, isManuallyGraded } from "../Helpers"
+import { Color, hasAllStatus } from "../Helpers"
 import { useActions, useAppState } from "../overmind"
 import { ButtonType } from "./admin/Button"
 import DynamicButton from "./DynamicButton"
 
-const ManageSubmissionStatus = ({ courseID, reviewers }: { courseID: string, reviewers: number }) => {
+const ManageSubmissionStatus = ({ courseID, canRebuild }: { courseID: string, canRebuild: boolean }) => {
     const actions = useActions().global
     const state = useAppState()
 
@@ -82,7 +82,7 @@ const ManageSubmissionStatus = ({ courseID, reviewers }: { courseID: string, rev
                         onClick={() => Promise.resolve(setViewIndividualGrades(!viewIndividualGrades))}
                     />
                 )}
-                {!isManuallyGraded(reviewers) && (
+                {canRebuild && (
                     <DynamicButton
                         text={rebuilding ? "Rebuilding..." : "Rebuild"}
                         color={Color.BLUE}

@@ -155,6 +155,12 @@ export const isManuallyGraded = (reviewers: number): boolean => {
     return reviewers > 0
 }
 
+/** runsTests returns true if submissions to the assignment are tested: those to
+ *  an assignment without reviewers are, even if it has no expected tests. */
+export const runsTests = (assignment: Assignment): boolean => {
+    return !isManuallyGraded(assignment.reviewers) || assignment.ExpectedTests.length > 0
+}
+
 export const isAllApproved = (submission: Submission): boolean => { return submission.Grades.every(grade => grade.Status === Submission_Status.APPROVED) }
 export const isAllRevision = (submission: Submission): boolean => { return submission.Grades.every(grade => grade.Status === Submission_Status.REVISION) }
 export const isAllRejected = (submission: Submission): boolean => { return submission.Grades.every(grade => grade.Status === Submission_Status.REJECTED) }

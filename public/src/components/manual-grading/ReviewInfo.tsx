@@ -9,7 +9,7 @@ import ManageSubmissionStatus from "../ManageSubmissionStatus"
 interface ReviewInfoProps {
     courseID: string
     assignmentName: string
-    reviewers: number
+    canRebuild: boolean
     submission: Submission
     review: Review
 }
@@ -24,7 +24,7 @@ const InfoRow = ({ label, value, badge }: { label: string, value: React.ReactNod
     </div>
 )
 
-const ReviewInfo = ({ courseID, assignmentName, reviewers, submission, review }: ReviewInfoProps) => {
+const ReviewInfo = ({ courseID, assignmentName, canRebuild, submission, review }: ReviewInfoProps) => {
     const state = useAppState()
 
     const user = state.selectedEnrollment?.user
@@ -56,7 +56,7 @@ const ReviewInfo = ({ courseID, assignmentName, reviewers, submission, review }:
 
                 <div className="px-4 pb-4 pt-2">
                     {state.review.graded === state.review.criteriaTotal && (
-                        <ManageSubmissionStatus courseID={courseID} reviewers={reviewers} />
+                        <ManageSubmissionStatus courseID={courseID} canRebuild={canRebuild} />
                     )}
                 </div>
             </div>
