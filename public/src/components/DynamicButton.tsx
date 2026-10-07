@@ -9,13 +9,14 @@ export type DynamicButtonProps = {
     color: Color,
     type?: ButtonType,
     className?: string,
+    disabled?: boolean,
 }
 
 /** DynamicButton will display a spinner while the onClick function is running.
  *  This is useful for buttons that perform an action that takes a while to complete.
  *  The button will be disabled while the onClick function is running.
  */
-const DynamicButton = ({ text, onClick, color, type, className }: DynamicButtonProps) => {
+const DynamicButton = ({ text, onClick, color, type, className, disabled }: DynamicButtonProps) => {
     const [isPending, setIsPending] = useState<boolean>(false)
 
     const handleClick = async () => {
@@ -34,7 +35,7 @@ const DynamicButton = ({ text, onClick, color, type, className }: DynamicButtonP
         : text
 
     return (
-        <button type="button" disabled={isPending} className={buttonClass} onClick={handleClick}>
+        <button type="button" disabled={isPending || disabled} className={buttonClass} onClick={handleClick}>
             {content}
         </button>
     )
