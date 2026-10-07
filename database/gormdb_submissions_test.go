@@ -4,6 +4,7 @@ import (
 	"testing"
 
 	"github.com/quickfeed/quickfeed/internal/qtest"
+	"github.com/quickfeed/quickfeed/kit/score"
 	"github.com/quickfeed/quickfeed/qf"
 	"google.golang.org/protobuf/testing/protocmp"
 )
@@ -89,5 +90,55 @@ func TestGetCourseSubmissions(t *testing.T) {
 			// Map 1 is empty, so we map with 2 and index the submissions array
 			qtest.Diff(t, "GetCourseSubmissions() mismatch", submissions.Submissions[test.submissionMapKey].Submissions, test.want, protocmp.Transform())
 		})
+	}
+}
+
+func TestGetCourseSubmissionsOmitsTestOutput(t *testing.T) {
+	db, cleanup := qtest.TestDB(t)
+	defer cleanup()
+
+	user, course, assignment := qtest.SetupCourseAssignment(t, db)
+	submission := &qf.Submission{
+		AssignmentID: assignment.GetID(),
+		UserID:       user.GetID(),
+		Grades:       []*qf.Grade{{SubmissionID: 1, UserID: user.GetID()}},
+		Scores: []*score.Score{{
+			TestName:    "TestStack",
+			MaxScore:    5,
+			Weight:      1,
+			TestDetails: "stack_test.go:12: Pop() = <nil>",
+			TestOutput:  "stack: pushing 3 elements",
+			Status:      score.TestStatus_FAILED,
+			Elapsed:     0.25,
+		}},
+	}
+	qtest.CreateSubmission(t, db, submission)
+
+	courseSubmissions, err := db.GetCourseSubmissions(&qf.SubmissionRequest{
+		CourseID:  course.GetID(),
+		FetchMode: &qf.SubmissionRequest_Type{Type: qf.SubmissionRequest_USER},
+	})
+	if err != nil {
+		t.Fatal(err)
+	}
+	// As in TestGetCourseSubmissions, the user's ID is also its enrollment ID.
+	submissions := courseSubmissions.GetSubmissions()[user.GetID()].GetSubmissions()
+	if len(submissions) != 1 || len(submissions[0].GetScores()) != 1 {
+		t.Fatalf("got %v, want one submission with one score", submissions)
+	}
+	got := submissions[0].GetScores()[0]
+	if got.GetTestOutput() != "" {
+		t.Errorf("course submissions carry test output %q, want none", got.GetTestOutput())
+	}
+	if got.GetTestDetails() == "" || got.GetStatus() != score.TestStatus_FAILED || got.GetElapsed() != 0.25 {
+		t.Errorf("course submissions lost what the results table shows: %v", got)
+	}
+
+	full, err := db.GetSubmission(&qf.Submission{ID: submission.GetID()})
+	if err != nil {
+		t.Fatal(err)
+	}
+	if got, want := full.GetScores()[0].GetTestOutput(), "stack: pushing 3 elements"; got != want {
+		t.Errorf("full submission test output = %q, want %q", got, want)
 	}
 }
