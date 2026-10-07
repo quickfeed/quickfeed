@@ -70,6 +70,8 @@ export const CourseLinks = () => {
     const enrollment = state.enrollmentsByCourseID[courseIDStr]
     const hasGroup = state.hasGroup(courseIDStr)
     const groupName = enrollment?.group ? `(${enrollment.group.name})` : ""
+    // Teachers create and view groups from the course's group list.
+    const groupPath = state.isTeacher ? "groups" : "group"
 
     const linksForGroup = (group: RepositoryLinkConfig["group"]) =>
         repositoryLinks
@@ -91,7 +93,7 @@ export const CourseLinks = () => {
             <RepoLinkGroup title="Repos" links={repositoryGroupLinks} />
             <RepoLinkGroup title="Resources" links={resourcesGroupLinks} />
             <StripGroup title="Group">
-                <Link to={`/course/${courseID}/group`} className={stripButton}>
+                <Link to={`/course/${courseID}/${groupPath}`} className={stripButton}>
                     {hasGroup ? `View ${groupName}` : "Create Group"}
                 </Link>
             </StripGroup>
