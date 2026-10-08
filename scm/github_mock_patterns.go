@@ -12,6 +12,7 @@ const (
 	patchUserMembershipsOrgsByOrg                   = "PATCH /user/memberships/orgs/{org}"                    // acceptOrgInvitation
 	deleteOrgsMembershipsByOrgByUsername            = "DELETE /orgs/{org}/memberships/{username}"             // RejectEnrollment
 	getReposByOwnerByRepo                           = "GET /repos/{owner}/{repo}"                             // CreateCourse, CreateGroup, getRepository, createCourseRepo, createForkedRepo, waitForRepository
+	patchReposByOwnerByRepo                         = "PATCH /repos/{owner}/{repo}"                           // createForkedRepo
 	deleteReposByOwnerByRepo                        = "DELETE /repos/{owner}/{repo}"                          // DeleteGroup, RejectEnrollment, deleteRepository
 	getRepositoriesByID                             = "GET /repositories/{repository_id}"                     // getRepository, deleteRepository
 	getReposCommitsByOwnerByRepoByRef               = "GET /repos/{owner}/{repo}/commits/{ref}"               // commitsAhead
