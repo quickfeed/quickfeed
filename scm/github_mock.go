@@ -314,6 +314,26 @@ func NewMockedGithubSCMClient(logger *slog.Logger, opts ...MockOption) *MockedGi
 			w.WriteHeader(http.StatusNotFound) // repo not found
 		}),
 	)
+	patchReposByOwnerByRepoHandler := WithRequestMatchHandler(
+		patchReposByOwnerByRepo,
+		http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+			owner := r.PathValue("owner")
+			repo := r.PathValue("repo")
+			logger.Debug("mock SCM request", routeLabel, replaceArgs(patchReposByOwnerByRepo, owner, repo))
+			edit := mustRead[github.Repository](r.Body)
+
+			re := s.findOrgRepo(owner, repo)
+			if re == nil {
+				w.WriteHeader(http.StatusNotFound) // repo not found
+				return
+			}
+			if edit.HasIssues != nil {
+				re.HasIssues = edit.HasIssues
+			}
+			re.Owner = &github.User{Login: new(owner)}
+			mustWrite(w, re)
+		}),
+	)
 	deleteReposByOwnerByRepoHandler := WithRequestMatchHandler(
 		deleteReposByOwnerByRepo,
 		http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
@@ -548,6 +568,7 @@ func NewMockedGithubSCMClient(logger *slog.Logger, opts ...MockOption) *MockedGi
 		patchUserMembershipsOrgsByOrgHandler,
 		deleteOrgsMembershipsByOrgByUsernameHandler,
 		getReposByOwnerByRepoHandler,
+		patchReposByOwnerByRepoHandler,
 		deleteReposByOwnerByRepoHandler,
 		getRepositoriesByIDHandler,
 		getReposCommitsByOwnerByRepoByRefHandler,

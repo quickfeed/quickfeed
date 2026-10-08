@@ -539,6 +539,9 @@ func TestMockCreateGroup(t *testing.T) {
 			if _, ok := s.groups[tt.opt.Organization][tt.opt.GroupName]; !ok {
 				t.Errorf("CreateGroup() group not created")
 			}
+			if !s.findOrgRepo(tt.opt.Organization, tt.opt.GroupName).GetHasIssues() {
+				t.Errorf("CreateGroup() issues not enabled for %s/%s", tt.opt.Organization, tt.opt.GroupName)
+			}
 		})
 	}
 }
