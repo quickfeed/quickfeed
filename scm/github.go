@@ -595,6 +595,15 @@ func (s *GithubSCM) createForkedRepo(ctx context.Context, opt *CreateRepositoryO
 	if err != nil {
 		return nil, E(op, M("fork %s/%s not ready", opt.Owner, opt.Repo), err)
 	}
+	// GitHub disables issues on forks. We try to enable issues on the forked
+	// repository, but if it fails we log a warning and continue.
+	if edited, _, err := s.client.Repositories.Edit(ctx, opt.Owner, opt.Repo, &github.Repository{
+		HasIssues: new(true),
+	}); err != nil {
+		logger.Warn("failed to enable issues on repository fork", label.Error, err)
+	} else {
+		repo = edited
+	}
 	logger.Debug("created repository fork")
 	return toRepository(repo), nil
 }
