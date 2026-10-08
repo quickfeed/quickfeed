@@ -1,6 +1,6 @@
 import type { Submission } from "../../proto/qf/types_pb"
 import { Submission_Status } from "../../proto/qf/types_pb"
-import { getEffectiveStatus } from "../Helpers"
+import { getEffectiveStatus, isTestedAndReviewed, reviewVisible, scoreParts } from "../Helpers"
 import { useAppState } from "../overmind"
 import SubmissionTypeIcon from "./student/SubmissionTypeIcon"
 
@@ -8,9 +8,11 @@ type ProgressBarProps = {
     courseID: string,
     submission: Submission,
     showText?: boolean
+    // split shows the parts of the score given by tests and by reviews
+    split?: boolean
 }
 
-const ProgressBar = ({ courseID, submission, showText = true }: ProgressBarProps) => {
+const ProgressBar = ({ courseID, submission, showText = true, split = false }: ProgressBarProps) => {
     const state = useAppState()
 
     const assignment = state.assignments[courseID]?.find(assignment => assignment.ID === submission.AssignmentID)
@@ -18,13 +20,18 @@ const ProgressBar = ({ courseID, submission, showText = true }: ProgressBarProps
     const score = submission.score ?? 0
     const scorelimit = assignment?.scoreLimit ?? 0
     const status = getEffectiveStatus(submission, state.self.ID)
-    const remainingToPass = Math.max(0, scorelimit - score)
+    const remainingToPass = status === Submission_Status.APPROVED ? 0 : Math.max(0, scorelimit - score)
+    const parts = split && assignment && isTestedAndReviewed(assignment) && reviewVisible(state.isTeacher, status)
+        ? scoreParts(submission, assignment)
+        : undefined
 
     let text = ""
     let secondaryText = ""
+    let reviewText = ""
     if (showText) {
-        text = `${score} %`
+        text = parts ? `Tests ${parts.tests} %` : `${score} %`
         secondaryText = `${remainingToPass} %`
+        reviewText = parts ? `Review ${parts.review} %` : ""
     }
 
     let color = ""
@@ -47,8 +54,10 @@ const ProgressBar = ({ courseID, submission, showText = true }: ProgressBarProps
         <ProgressBarView
             color={color}
             score={score}
+            reviewPart={parts?.review}
             remainingToPass={remainingToPass}
             text={text}
+            reviewText={reviewText}
             secondaryText={secondaryText}
         />
     )
@@ -58,9 +67,12 @@ export default ProgressBar
 
 type ProgressBarViewProps = {
     score: number
+    // reviewPart is the part of score given by reviews, shown as its own segment
+    reviewPart?: number
     remainingToPass: number
     color?: string
     text?: string
+    reviewText?: string
     secondaryText?: string
 }
 
@@ -68,9 +80,12 @@ type ProgressBarViewProps = {
 // the status color and the pass threshold from application state and delegates
 // here, so callers without that state, such as the About page previews, can
 // render the same bar from plain values.
-export const ProgressBarView = ({ score, remainingToPass, color, text = "", secondaryText = "" }: ProgressBarViewProps) => (
+export const ProgressBarView = ({ score, reviewPart = 0, remainingToPass, color, text = "", reviewText = "", secondaryText = "" }: ProgressBarViewProps) => (
     <div className="relative w-full h-8 bg-base-300 rounded-lg overflow-hidden">
-        <PrimaryProgressBar color={color} score={score} text={text} />
+        <PrimaryProgressBar color={color} width={score - reviewPart} score={score} text={text} />
+        {reviewPart > 0 &&
+            <ReviewProgressBar color={color} startPosition={score - reviewPart} width={reviewPart} text={reviewText} />
+        }
         {remainingToPass > 0 &&
             <SecondaryProgressBar startPosition={score} width={remainingToPass} text={secondaryText} />
         }
@@ -95,17 +110,30 @@ export const DefaultProgressBar = ({ scoreLimit, isGroupLab }: { scoreLimit: num
 }
 
 
-const PrimaryProgressBar = ({ color, score, text }: { color?: string, score: number, text: string }) => {
+// PrimaryProgressBar is width wide and reports score, which is larger when a review segment follows it.
+const PrimaryProgressBar = ({ color, width, score, text }: { color?: string, width: number, score: number, text: string }) => {
     return (
         <div
             className={`absolute top-0 left-0 h-full ${color || 'bg-primary'} flex items-center justify-center text-xs font-semibold text-primary-content transition-all duration-500`}
             role="progressbar"
-            style={{ width: `${score}%` }}
+            style={{ width: `${width}%` }}
             aria-valuenow={score}
             aria-valuemin={0}
             aria-valuemax={100}
         >
-            {score > 10 && text}
+            {width > 10 && text}
+        </div>
+    )
+}
+
+const ReviewProgressBar = ({ color, startPosition, width, text }: { color?: string, startPosition: number, width: number, text: string }) => {
+    return (
+        <div
+            className={`absolute top-0 h-full ${color || 'bg-primary'} opacity-70 border-l-2 border-base-100 flex items-center justify-center text-xs font-semibold text-primary-content transition-all duration-500`}
+            style={{ left: `${startPosition}%`, width: `${width}%` }}
+            title={text}
+        >
+            {width > 15 && text}
         </div>
     )
 }

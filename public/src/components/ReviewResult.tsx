@@ -20,11 +20,12 @@ const ReviewResult = ({ review }: { review: Review }) => {
     return (
         <table className="table">
             <thead>
-                <tr>
+                {/* Students see the review's part of the score on the lab information instead. */}
+                {state.isTeacher ? <tr>
                     <th>Score:</th>
                     <th>{review.score}</th>
                     <th />
-                </tr>
+                </tr> : null}
                 <tr>
                     <th scope="col">Criteria</th>
                     <th scope="col">Status</th>

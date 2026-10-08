@@ -72,25 +72,20 @@ describe("SubmissionInfo", () => {
             )
         }
 
-        it("shows the test, review, and total scores with their weights", () => {
+        it("explains the score from its tests and review to a teacher", () => {
             renderInfo(Enrollment_UserStatus.TEACHER, Submission_Status.NONE)
-            expect(screen.getByText("Tests Passed")).toBeDefined()
-            expect(screen.getByText("90% (weight 60%)")).toBeDefined()
-            expect(screen.getByText("70% (weight 40%)")).toBeDefined()
-            expect(screen.getByText("82%")).toBeDefined()
+            expect(screen.getByText("82 % = tests 90 % × 60 % + review 70 % × 40 %")).toBeDefined()
+            expect(screen.queryByText("Tests Passed")).toBeNull()
         })
 
         it("hides the review score from a student until the submission is graded", () => {
             renderInfo(Enrollment_UserStatus.STUDENT, Submission_Status.NONE)
-            expect(screen.getByText("90% (weight 60%)")).toBeDefined()
-            expect(screen.getByText("Not graded yet")).toBeDefined()
-            expect(screen.queryByText("Total score")).toBeNull()
+            expect(screen.getByText("90 % from tests; review not graded yet")).toBeDefined()
         })
 
-        it("shows a student the review score once the submission is graded", () => {
+        it("explains the score to a student once the submission is graded", () => {
             renderInfo(Enrollment_UserStatus.STUDENT, Submission_Status.APPROVED)
-            expect(screen.getByText("70% (weight 40%)")).toBeDefined()
-            expect(screen.getByText("82%")).toBeDefined()
+            expect(screen.getByText("82 % = tests 90 % × 60 % + review 70 % × 40 %")).toBeDefined()
         })
     })
 })

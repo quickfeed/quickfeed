@@ -123,14 +123,6 @@ export const testStatusText = (score: Score): string => {
     }
 }
 
-/** getPassedTestCount returns a string with the number of passed tests and the total number of tests */
-export const getPassedTestsCount = (score: Score[]): string => {
-    if (score.length === 0) {
-        return ""
-    }
-    return `${score.filter(testPassed).length}/${score.length}`
-}
-
 /** hasEnrollment returns true if any of the provided has been approved */
 export const hasEnrollment = (enrollments: Enrollment[]): boolean => {
     return enrollments.some(enrollment => enrollment.status > Enrollment_UserStatus.PENDING)
@@ -180,6 +172,24 @@ export const isManuallyGraded = (reviewers: number): boolean => {
  *  an assignment without reviewers are, even if it has no expected tests. */
 export const runsTests = (assignment: Assignment): boolean => {
     return !isManuallyGraded(assignment.reviewers) || assignment.ExpectedTests.length > 0
+}
+
+/** isTestedAndReviewed returns true if the assignment's score combines its tests and reviews. */
+export const isTestedAndReviewed = (assignment: Assignment): boolean => {
+    return isManuallyGraded(assignment.reviewers) && runsTests(assignment)
+}
+
+/** reviewVisible returns true if the viewer sees the review score of a submission
+ *  with the given status: teachers always, students once it is graded. */
+export const reviewVisible = (isTeacher: boolean, status: Submission_Status): boolean => {
+    return isTeacher || status !== Submission_Status.NONE
+}
+
+/** scoreParts returns the parts of the submission's score given by its tests
+ *  and by its reviews; the parts sum to the score. */
+export const scoreParts = (submission: Submission, assignment: Assignment): { tests: number, review: number } => {
+    const review = Math.min(submission.score, Math.round(submission.reviewScore * assignment.reviewWeight / 100))
+    return { tests: submission.score - review, review }
 }
 
 export const isAllApproved = (submission: Submission): boolean => { return submission.Grades.every(grade => grade.Status === Submission_Status.APPROVED) }

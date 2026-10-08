@@ -1,7 +1,6 @@
 import { RunStatus } from "../../../proto/kit/score/score_pb"
 import type { Assignment, Submission, UsedSlipDays } from "../../../proto/qf/types_pb"
-import { Submission_Status } from "../../../proto/qf/types_pb"
-import { assignmentStatusText, getFormattedTime, getPassedTestsCount, getStatusByUser, isAllApproved, isManuallyGraded, runFailureScoreText, runFailureText, runsTests } from "../../Helpers"
+import { assignmentStatusText, getFormattedTime, getStatusByUser, isAllApproved, isTestedAndReviewed, reviewVisible, runFailureScoreText, runFailureText } from "../../Helpers"
 import { useAppState } from "../../overmind"
 
 type SubmissionInfoProps = {
@@ -69,14 +68,11 @@ const SubmissionInfo = ({ submission, assignment }: SubmissionInfoProps) => {
                     <td>{getFormattedTime(assignment.deadline, true)}</td>
                 </tr>
 
-                {runsTests(assignment) ? (
+                {isTestedAndReviewed(assignment) ? (
                     <tr>
-                        <td colSpan={2}>Tests Passed</td>
-                        <td>{getPassedTestsCount(submission.Scores)}</td>
+                        <td colSpan={2}>Score</td>
+                        <td>{scoreText(submission, assignment, reviewVisible(state.isTeacher, status))}</td>
                     </tr>
-                ) : null}
-                {runsTests(assignment) && isManuallyGraded(assignment.reviewers) ? (
-                    <ScoreRows submission={submission} assignment={assignment} status={status} isTeacher={state.isTeacher} />
                 ) : null}
                 <tr>
                     <td colSpan={2}>Execution time</td>
@@ -99,32 +95,14 @@ const SubmissionInfo = ({ submission, assignment }: SubmissionInfoProps) => {
     )
 }
 
-/** ScoreRows shows how the test and review scores of a tested and reviewed
- *  assignment make up the submission's score. A student does not see the
- *  review score until the submission is graded. */
-const ScoreRows = ({ submission, assignment, status, isTeacher }: { submission: Submission, assignment: Assignment, status: Submission_Status, isTeacher: boolean }) => {
+/** scoreText explains how the tests and reviews of a tested and reviewed
+ *  assignment make up the submission's score. */
+const scoreText = (submission: Submission, assignment: Assignment, showReview: boolean): string => {
     const reviewWeight = assignment.reviewWeight
-    const reviewHidden = !isTeacher && status === Submission_Status.NONE
-    return (
-        <>
-            <tr>
-                <td colSpan={2}>Test score</td>
-                <td title={`Tests count for ${100 - reviewWeight}% of the score`}>{submission.testScore}% (weight {100 - reviewWeight}%)</td>
-            </tr>
-            <tr>
-                <td colSpan={2}>Review score</td>
-                <td title={`Reviews count for ${reviewWeight}% of the score`}>
-                    {reviewHidden ? "Not graded yet" : `${submission.reviewScore}% (weight ${reviewWeight}%)`}
-                </td>
-            </tr>
-            {reviewHidden ? null : (
-                <tr>
-                    <td colSpan={2}>Total score</td>
-                    <td>{submission.score}%</td>
-                </tr>
-            )}
-        </>
-    )
+    if (!showReview) {
+        return `${submission.testScore} % from tests; review not graded yet`
+    }
+    return `${submission.score} % = tests ${submission.testScore} % × ${100 - reviewWeight} % + review ${submission.reviewScore} % × ${reviewWeight} %`
 }
 
 function usedSlipdaysRows(assignment: Assignment, usedSlipDays: UsedSlipDays[]): React.ReactNode {
