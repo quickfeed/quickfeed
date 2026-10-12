@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"os"
 	"sort"
+	"testing"
 
 	"github.com/quickfeed/quickfeed/kit/internal/test"
 	"github.com/quickfeed/quickfeed/kit/sh"
@@ -88,44 +89,24 @@ func (s *registry) AddSub(testFn any, subTestName string, maxScore, weight int) 
 	s.internalAdd(tstName, maxScore, weight)
 }
 
-// Max returns a score object with Score equal to MaxScore.
-// The returned score object should be used with score.Dec() and score.DecBy().
-//
-// Will panic with unknown score test, if the test hasn't been added.
-func (s *registry) Max() *Score {
-	testName := test.CallerName()
-	sc := s.get(testName)
-	sc.Score = sc.GetMaxScore()
-	return sc
+// Max wraps a registered test with its score initially at MaxScore.
+func (s *registry) Max(t *testing.T) *T {
+	return s.wrap(t, true)
 }
 
-// Min returns a score object with Score equal to zero.
-// The returned score object should be used with score.Inc() and score.IncBy().
-//
-// Will panic with unknown score test, if the test hasn't been added.
-func (s *registry) Min() *Score {
-	testName := test.CallerName()
-	return s.get(testName)
+// Min wraps a registered test with its score initially at zero.
+func (s *registry) Min(t *testing.T) *T {
+	return s.wrap(t, false)
 }
 
-// MaxByName returns score object for the given test name with Score equal to MaxScore.
-// This function is meant to be used from within subtests, and in conjunction with AddSub.
-// The returned score object should be used with score.Dec() and score.DecBy().
-//
-// Will panic with unknown score test, if the test hasn't been added.
-func (s *registry) MaxByName(testName string) *Score {
-	sc := s.get(testName)
-	sc.Score = sc.GetMaxScore()
-	return sc
+// MaxByName wraps a registered subtest with its score initially at MaxScore.
+func (s *registry) MaxByName(t *testing.T) *T {
+	return s.wrap(t, true)
 }
 
-// MinByName returns a score object for the given test name with Score equal to zero.
-// This function is meant to be used from within subtests, and in conjunction with AddSub.
-// The returned score object should be used with score.Inc() and score.IncBy().
-//
-// Will panic with unknown score test, if the test hasn't been added.
-func (s *registry) MinByName(testName string) *Score {
-	return s.get(testName)
+// MinByName wraps a registered subtest with its score initially at zero.
+func (s *registry) MinByName(t *testing.T) *T {
+	return s.wrap(t, false)
 }
 
 var (
@@ -155,13 +136,16 @@ func (s *registry) internalAdd(testName string, maxScore, weight int) {
 	s.scores[testName] = sc
 }
 
-func (s *registry) get(testName string) *Score {
-	if !test.IsCaller(testName) {
-		// Only the registered Test function can call the lookup functions
-		panic(test.ErrMsg(testName, ErrUnauthorizedLookup.Error()))
+func (s *registry) wrap(t *testing.T, maxScore bool) *T {
+	t.Helper()
+	sc, ok := s.scores[t.Name()]
+	if !ok {
+		t.Fatalf("score: test %q is not registered; call Add or AddSub before running it", t.Name())
 	}
-	if sc, ok := s.scores[testName]; ok {
-		return sc
+	if maxScore {
+		sc.Score = sc.GetMaxScore()
 	}
-	panic(test.ErrMsg(testName, ErrUnknownScoreTest.Error()))
+	wrapped := &T{T: t, st: &state{sc: sc}}
+	t.Cleanup(wrapped.print)
+	return wrapped
 }
