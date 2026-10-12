@@ -81,7 +81,7 @@ func (s *Score) RelativeScore() string {
 func (s *Score) Print(t *testing.T, msg ...string) {
 	if r := recover(); r != nil {
 		s.internalFail(t)
-		printPanicMessage(s.GetTestName(), msg[0], r)
+		printPanicMessage(s.GetTestName(), firstMessage(msg), r)
 	}
 	s.emit(t, testing.Verbose())
 }
@@ -121,7 +121,7 @@ func (s *Score) emit(t interface{ Attr(key, value string) }, chatty bool) {
 func (s *Score) PanicHandler(t *testing.T, msg ...string) {
 	if r := recover(); r != nil {
 		s.internalFail(t)
-		printPanicMessage(t.Name(), msg[0], r)
+		printPanicMessage(t.Name(), firstMessage(msg), r)
 	}
 }
 
@@ -203,4 +203,11 @@ func printPanicMessage(testName, msg string, recoverVal any) {
 	s.WriteString(string(debug.Stack()))
 	s.WriteString("******************\n")
 	fmt.Println(s.String())
+}
+
+func firstMessage(messages []string) string {
+	if len(messages) > 0 {
+		return messages[0]
+	}
+	return ""
 }
