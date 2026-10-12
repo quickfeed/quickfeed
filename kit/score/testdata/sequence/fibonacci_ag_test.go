@@ -32,13 +32,13 @@ var fibonacciTestsAG = []struct {
 }
 
 func TestFibonacciAG(t *testing.T) {
-	sc := scores.Max()
-	defer sc.Print(t)
+	sc := scores.Max(t)
+	defer sc.Recover()
 
 	for _, ft := range fibonacciTestsAG {
 		got := fibonacci(ft.in)
 		if got != ft.want {
-			t.Errorf("fibonacci(%d) = %d, want %d", ft.in, got, ft.want)
+			sc.Errorf("fibonacci(%d) = %d, want %d", ft.in, got, ft.want)
 			sc.Dec()
 		}
 	}
@@ -61,8 +61,8 @@ func TestFibonacciAttackAG(t *testing.T) {
 		t.Skipf("Skipping; expected to fail. Run with: %s=1 go test -v -run %s", panicTestEnvName, t.Name())
 	}
 
-	sc := scores.Max()
-	defer sc.Print(t)
+	sc := scores.Max(t)
+	defer sc.Recover()
 	for _, ft := range fibonacciTestsAG {
 		fibonacciAttack(ft.in)
 	}
@@ -77,8 +77,8 @@ func TestFibonacciAttack2AG(t *testing.T) {
 		t.Skipf("Skipping; expected to fail. Run with: %s=1 go test -v -run %s", panicTestEnvName, t.Name())
 	}
 
-	sc := scores.Max()
-	defer sc.Print(t)
+	sc := scores.Max(t)
+	defer sc.Recover()
 	for _, ft := range fibonacciTestsAG {
 		fibonacciAttack2(ft.in)
 	}

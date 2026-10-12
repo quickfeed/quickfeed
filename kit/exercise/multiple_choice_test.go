@@ -124,16 +124,16 @@ func TestMultipleChoice0(t *testing.T) {
 	}
 
 	test := tests[0]
-	sc := scores.Max()
-	defer sc.Print(t)
+	sc := scores.Max(t)
+	defer sc.Recover()
 	answerFile := filepath.Join("..", "testdata", test.file)
 	answers, err := exercise.ParseMarkdownAnswers(answerFile)
 	if err != nil {
-		t.Error(err)
+		sc.Error(err)
 	}
 	_, gotIncorrect := exercise.CheckMultipleChoice(answers, test.correct)
 	for _, incorrect := range gotIncorrect {
-		t.Errorf("%v: Question %d: Answer not found or incorrect.\n", sc.TestName, incorrect)
+		sc.Errorf("%v: Question %d: Answer not found or incorrect.\n", sc.Score().TestName, incorrect)
 		sc.Dec()
 	}
 }
@@ -148,16 +148,16 @@ func TestMultipleChoice1(t *testing.T) {
 	}
 
 	test := tests[1]
-	sc := scores.Max()
-	defer sc.Print(t)
+	sc := scores.Max(t)
+	defer sc.Recover()
 	answerFile := filepath.Join("..", "testdata", test.file)
 	answers, err := exercise.ParseMarkdownAnswers(answerFile)
 	if err != nil {
-		t.Error(err)
+		sc.Error(err)
 	}
 	_, gotIncorrect := exercise.CheckMultipleChoice(answers, test.correct)
 	for _, incorrect := range gotIncorrect {
-		t.Errorf("%v: Question %d: Answer not found or incorrect.\n", sc.TestName, incorrect)
+		sc.Errorf("%v: Question %d: Answer not found or incorrect.\n", sc.Score().TestName, incorrect)
 		sc.Dec()
 	}
 }
@@ -172,16 +172,16 @@ func TestMultipleChoice2(t *testing.T) {
 	}
 
 	test := tests[2]
-	sc := scores.Max()
-	defer sc.Print(t)
+	sc := scores.Max(t)
+	defer sc.Recover()
 	answerFile := filepath.Join("..", "testdata", test.file)
 	answers, err := exercise.ParseMarkdownAnswers(answerFile)
 	if err != nil {
-		t.Error(err)
+		sc.Error(err)
 	}
 	_, gotIncorrect := exercise.CheckMultipleChoice(answers, test.correct)
 	for _, incorrect := range gotIncorrect {
-		t.Errorf("%v: Question %d: Answer not found or incorrect.\n", sc.TestName, incorrect)
+		sc.Errorf("%v: Question %d: Answer not found or incorrect.\n", sc.Score().TestName, incorrect)
 		sc.Dec()
 	}
 }
@@ -196,16 +196,16 @@ func TestMultipleChoice3(t *testing.T) {
 	}
 
 	test := tests[3]
-	sc := scores.Max()
-	defer sc.Print(t)
+	sc := scores.Max(t)
+	defer sc.Recover()
 	answerFile := filepath.Join("..", "testdata", test.file)
 	answers, err := exercise.ParseMarkdownAnswers(answerFile)
 	if err != nil {
-		t.Error(err)
+		sc.Error(err)
 	}
 	_, gotIncorrect := exercise.CheckMultipleChoice(answers, test.correct)
 	for _, incorrect := range gotIncorrect {
-		t.Errorf("%v: Question %d: Answer not found or incorrect.\n", sc.TestName, incorrect)
+		sc.Errorf("%v: Question %d: Answer not found or incorrect.\n", sc.Score().TestName, incorrect)
 		sc.Dec()
 	}
 }
@@ -221,16 +221,16 @@ func TestMultipleChoiceWithFail(t *testing.T) {
 
 	for _, test := range tests {
 		t.Run(test.name, func(t *testing.T) {
-			sc := scores.MaxByName(t.Name())
-			defer sc.Print(t)
+			sc := scores.MaxByName(t)
+			defer sc.Recover()
 			answerFile := filepath.Join("..", "testdata", test.file)
 			answers, err := exercise.ParseMarkdownAnswers(answerFile)
 			if err != nil {
-				t.Error(err)
+				sc.Error(err)
 			}
 			_, gotIncorrect := exercise.CheckMultipleChoice(answers, test.correct)
 			for _, incorrect := range gotIncorrect {
-				t.Errorf("%v: Question %d: Answer not found or incorrect.\n", sc.TestName, incorrect)
+				sc.Errorf("%v: Question %d: Answer not found or incorrect.\n", sc.Score().TestName, incorrect)
 				sc.Dec()
 			}
 		})

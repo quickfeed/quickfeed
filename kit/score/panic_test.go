@@ -6,6 +6,7 @@ import (
 	"testing"
 
 	"github.com/google/go-cmp/cmp"
+	"github.com/quickfeed/quickfeed/kit/score"
 )
 
 // To run all these tests, to show stack trace and panic output, use:
@@ -41,8 +42,8 @@ func init() {
 // TestPanicTriangularBefore is meant to run before TestPanicTriangularPanic.
 // This test should pass and give max score.
 func TestPanicTriangularBefore(t *testing.T) {
-	sc := scores.Max()
-	defer sc.Print(t)
+	sc := scores.Max(t)
+	defer sc.Recover()
 	for _, test := range triangularTests {
 		if diff := cmp.Diff(test.want, triangular(test.in)); diff != "" {
 			sc.Dec()
@@ -63,8 +64,8 @@ func TestPanicTriangularPanic(t *testing.T) {
 		t.Skipf("Skipping; expected to fail. Run with: %s=1 go test -v -run %s", panicTestEnvName, t.Name())
 	}
 
-	sc := scores.Max()
-	defer sc.Print(t)
+	sc := scores.Max(t)
+	defer sc.Recover()
 	for _, test := range triangularTests {
 		if diff := cmp.Diff(test.want, triangularPanic(test.in)); diff != "" {
 			sc.Dec()
@@ -77,8 +78,8 @@ func TestPanicTriangularPanic(t *testing.T) {
 // This test will not run since TestPanicTriangularPanic panicks, and will give zero score
 // since test scores are printed by TestMain() before test execution.
 func TestPanicTriangularAfter(t *testing.T) {
-	sc := scores.Max()
-	defer sc.Print(t)
+	sc := scores.Max(t)
+	defer sc.Recover()
 	for _, test := range triangularTests {
 		if diff := cmp.Diff(test.want, triangular(test.in)); diff != "" {
 			sc.Dec()
@@ -96,13 +97,12 @@ func TestPanicHandler(t *testing.T) {
 		t.Skipf("Skipping; expected to fail. Run with: %s=1 go test -v -run %s", panicTestEnvName, t.Name())
 	}
 
-	sc := scores.Max()
-	defer sc.Print(t)
+	sc := scores.Max(t)
+	defer sc.Recover()
 	for _, test := range triangularTests {
-		t.Run(fmt.Sprintf("triangular(%d)=%d", test.in, test.want), func(t *testing.T) {
-			defer sc.PanicHandler(t)
+		sc.Run(fmt.Sprintf("triangular(%d)=%d", test.in, test.want), func(t *score.T) {
 			if diff := cmp.Diff(test.want, triangularPanic(test.in)); diff != "" {
-				sc.Dec()
+				t.Dec()
 				t.Errorf("triangular(%d): (-want +got):\n%s", test.in, diff)
 			}
 		})
@@ -118,8 +118,8 @@ func TestPanicTriangularPanicWithMsg(t *testing.T) {
 		t.Skipf("Skipping; expected to fail. Run with: %s=1 go test -v -run %s", panicTestEnvName, t.Name())
 	}
 
-	sc := scores.Max()
-	defer sc.Print(t, "This could be a helpful message to explain why something might panic.")
+	sc := scores.Max(t)
+	defer sc.Recover("This could be a helpful message to explain why something might panic.")
 	for _, test := range triangularTests {
 		if diff := cmp.Diff(test.want, triangularPanic(test.in)); diff != "" {
 			sc.Dec()
@@ -137,13 +137,13 @@ func TestPanicHandlerWithMsg(t *testing.T) {
 		t.Skipf("Skipping; expected to fail. Run with: %s=1 go test -v -run %s", panicTestEnvName, t.Name())
 	}
 
-	sc := scores.Max()
-	defer sc.Print(t)
+	sc := scores.Max(t)
+	defer sc.Recover()
 	for _, test := range triangularTests {
-		t.Run(fmt.Sprintf("triangular(%d)=%d", test.in, test.want), func(t *testing.T) {
-			defer sc.PanicHandler(t, "This could be a helpful message to explain why something might panic.")
+		sc.Run(fmt.Sprintf("triangular(%d)=%d", test.in, test.want), func(t *score.T) {
+			defer t.Recover("This could be a helpful message to explain why something might panic.")
 			if diff := cmp.Diff(test.want, triangularPanic(test.in)); diff != "" {
-				sc.Dec()
+				t.Dec()
 				t.Errorf("triangular(%d): (-want +got):\n%s", test.in, diff)
 			}
 		})

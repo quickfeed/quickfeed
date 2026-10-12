@@ -29,13 +29,13 @@ var fibonacciTestsAG = []struct {
 }
 
 func TestFibonacciAG(t *testing.T) {
-	sc := scores.Max()
-	defer sc.Print(t)
+	sc := scores.Max(t)
+	defer sc.Recover()
 
 	for _, ft := range fibonacciTestsAG {
 		got := fibonacci(ft.in)
 		if got != ft.want {
-			t.Errorf("fibonacci(%d) = %d, want %d", ft.in, got, ft.want)
+			sc.Errorf("fibonacci(%d) = %d, want %d", ft.in, got, ft.want)
 			sc.Dec()
 		}
 	}
