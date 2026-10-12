@@ -7,10 +7,7 @@ import (
 )
 
 func fibonacciAttack(n uint) uint {
-	sc := scores.Max()
-	// Should not reach here
-	fmt.Println(sc)
-	return 0
+	panic("student code panicked")
 }
 
 func fibonacciAttack2(n uint) uint {

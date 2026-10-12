@@ -47,37 +47,37 @@ var triangularTestsAG = []struct {
 }
 
 func TestTriangularAG(t *testing.T) {
-	sc := scores.Max()
-	defer sc.Print(t)
+	sc := scores.Max(t)
+	defer sc.Recover()
 
 	for _, test := range triangularTestsAG {
 		if diff := cmp.Diff(test.want, triangular(test.in)); diff != "" {
 			sc.Dec()
-			t.Errorf("triangular(%d): (-want +got):\n%s", test.in, diff)
+			sc.Errorf("triangular(%d): (-want +got):\n%s", test.in, diff)
 		}
 	}
 }
 
 func TestTriangularRecurrenceAG(t *testing.T) {
-	sc := scores.Max()
-	defer sc.Print(t)
+	sc := scores.Max(t)
+	defer sc.Recover()
 
 	for _, test := range triangularTestsAG {
 		if diff := cmp.Diff(test.want, triangularRecurrence(test.in)); diff != "" {
 			sc.Dec()
-			t.Errorf("triangularRecurrence(%d): (-want +got):\n%s", test.in, diff)
+			sc.Errorf("triangularRecurrence(%d): (-want +got):\n%s", test.in, diff)
 		}
 	}
 }
 
 func TestTriangularFormulaAG(t *testing.T) {
-	sc := scores.Max()
-	defer sc.Print(t)
+	sc := scores.Max(t)
+	defer sc.Recover()
 
 	for _, test := range triangularTestsAG {
 		if diff := cmp.Diff(test.want, triangularFormula(test.in)); diff != "" {
 			sc.Dec()
-			t.Errorf("triangularFormula(%d): (-want +got):\n%s", test.in, diff)
+			sc.Errorf("triangularFormula(%d): (-want +got):\n%s", test.in, diff)
 		}
 	}
 }
@@ -85,12 +85,12 @@ func TestTriangularFormulaAG(t *testing.T) {
 func TestTriangularSubTestAG(t *testing.T) {
 	for name, fn := range funcs {
 		t.Run(name, func(t *testing.T) {
-			sc := scores.MaxByName(t.Name())
-			defer sc.Print(t)
+			sc := scores.MaxByName(t)
+			defer sc.Recover()
 			for _, test := range triangularTestsAG {
 				if diff := cmp.Diff(test.want, fn(test.in)); diff != "" {
 					sc.Dec()
-					t.Errorf("%s(%d): (-want +got):\n%s", name, test.in, diff)
+					sc.Errorf("%s(%d): (-want +got):\n%s", name, test.in, diff)
 				}
 			}
 		})

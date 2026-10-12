@@ -45,34 +45,33 @@
 //	    os.Exit(exitCode)
 //	}
 //
-// To implement a test with scoring, you may use score.Max() to obtain a score object
-// with Score equals to MaxScore, which may be decremented for each test failure.
-// Note that sc.Print(t) should be called with a defer to ensure that it gets executed
-// even if the test panics.
+// A graded test obtains a T from the registry. Its score is printed by Cleanup
+// after its subtests finish. Defer Recover to isolate a panic in the top-level test.
 //
 //	func TestFibonacciMax(t *testing.T) {
-//	    sc := score.Max()
-//	    defer sc.Print(t)
+//	    sc := scores.Max(t)
+//	    defer sc.Recover()
 //	    for _, ft := range fibonacciTests {
 //	        out := fibonacci(ft.in)
 //	        if out != ft.want {
 //	            sc.Dec()
+//	            sc.Errorf("fibonacci(%d) = %d, want %d", ft.in, out, ft.want)
 //	        }
 //	    }
 //	}
 //
-// Similarly, it is also possible to use score.Min() to obtain a score object with
-// Score equals to zero, which may be incremented for each test success.
+// A helper can take *T and use its testing and scoring methods directly.
+// NewUnscored runs the same helper without printing a QuickFeed score.
 //
-//	func TestFibonacciMin(t *testing.T) {
-//	    sc := score.Min()
-//	    defer sc.Print(t)
-//	    for _, ft := range fibonacciTests {
-//	        out := fibonacci(ft.in)
-//	        if out == ft.want {
-//	            sc.Inc()
-//	        }
+//	func checkFibonacci(t *score.T) {
+//	    if got := fibonacci(5); got != 5 {
+//	        t.Errorf("fibonacci(5) = %d, want 5", got)
+//	    } else {
+//	        t.Inc()
 //	    }
+//	}
+//	func TestFibonacciPlain(t *testing.T) {
+//	    checkFibonacci(score.NewUnscored(t))
 //	}
 //
 // A test that reports its failures through the score object rather than through

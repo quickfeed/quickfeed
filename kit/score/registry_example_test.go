@@ -24,6 +24,7 @@ var scoreRegistry = score.NewRegistry()
 func init() {
 	scoreRegistry.Add(TestFibonacciMax, len(fibonacciTests), 20)
 	scoreRegistry.Add(TestFibonacciMin, len(fibonacciTests), 20)
+	scoreRegistry.Add(TestFibonacciWrapper, 1, 1)
 	for _, ft := range fibonacciTests {
 		scoreRegistry.AddSub(TestFibonacciSubTest, subTestName("Max", ft.in), 1, 1)
 	}
@@ -56,18 +57,19 @@ var fibonacciTests = []struct {
 }
 
 func TestFibonacciMax(t *testing.T) {
-	sc := scoreRegistry.Max()
+	sc := scoreRegistry.Max(t)
+	defer sc.Recover()
 	for _, ft := range fibonacciTests {
 		out := fibonacci(ft.in)
 		if out != ft.want {
 			sc.Dec()
 		}
 	}
-	if sc.GetScore() != numCorrect {
-		t.Errorf("Score=%d, expected %d", sc.GetScore(), numCorrect)
+	if sc.Score().GetScore() != numCorrect {
+		t.Errorf("Score=%d, expected %d", sc.Score().GetScore(), numCorrect)
 	}
-	if sc.GetTestName() != t.Name() {
-		t.Errorf("TestName=%s, expected %s", sc.GetTestName(), t.Name())
+	if sc.Score().GetTestName() != t.Name() {
+		t.Errorf("TestName=%s, expected %s", sc.Score().GetTestName(), t.Name())
 	}
 }
 
@@ -81,18 +83,19 @@ func TestFibonacciMin(t *testing.T) {
 		// This test cannot be run more than once
 		t.SkipNow()
 	}
-	sc := scoreRegistry.Min()
+	sc := scoreRegistry.Min(t)
+	defer sc.Recover()
 	for _, ft := range fibonacciTests {
 		out := fibonacci(ft.in)
 		if out == ft.want {
 			sc.Inc()
 		}
 	}
-	if sc.GetScore() != numCorrect {
-		t.Errorf("Score=%d, expected %d", sc.GetScore(), numCorrect)
+	if sc.Score().GetScore() != numCorrect {
+		t.Errorf("Score=%d, expected %d", sc.Score().GetScore(), numCorrect)
 	}
-	if sc.GetTestName() != t.Name() {
-		t.Errorf("TestName=%s, expected %s", sc.GetTestName(), t.Name())
+	if sc.Score().GetTestName() != t.Name() {
+		t.Errorf("TestName=%s, expected %s", sc.Score().GetTestName(), t.Name())
 	}
 	once.Do(func() { ran = true })
 }
@@ -100,7 +103,8 @@ func TestFibonacciMin(t *testing.T) {
 func TestFibonacciSubTest(t *testing.T) {
 	for _, ft := range fibonacciTests {
 		t.Run(subTestName("Max", ft.in), func(t *testing.T) {
-			sc := scoreRegistry.MaxByName(t.Name())
+			sc := scoreRegistry.MaxByName(t)
+			defer sc.Recover()
 			out := fibonacci(ft.in)
 			if out != ft.want {
 				sc.Dec()
@@ -109,15 +113,16 @@ func TestFibonacciSubTest(t *testing.T) {
 			if ft.in < numCorrect {
 				expectedScore = 1
 			}
-			if sc.GetScore() != expectedScore {
-				t.Errorf("Score=%d, expected %d", sc.GetScore(), expectedScore)
+			if sc.Score().GetScore() != expectedScore {
+				t.Errorf("Score=%d, expected %d", sc.Score().GetScore(), expectedScore)
 			}
-			if sc.GetTestName() != t.Name() {
-				t.Errorf("TestName=%s, expected %s", sc.GetTestName(), t.Name())
+			if sc.Score().GetTestName() != t.Name() {
+				t.Errorf("TestName=%s, expected %s", sc.Score().GetTestName(), t.Name())
 			}
 		})
 		t.Run(subTestName("Min", ft.in), func(t *testing.T) {
-			sc := scoreRegistry.MinByName(t.Name())
+			sc := scoreRegistry.MinByName(t)
+			defer sc.Recover()
 			out := fibonacci(ft.in)
 			if out == ft.want {
 				sc.Inc()
@@ -126,55 +131,37 @@ func TestFibonacciSubTest(t *testing.T) {
 			if ft.in < numCorrect {
 				expectedScore = 1
 			}
-			if sc.GetScore() != expectedScore {
-				t.Errorf("Score=%d, expected %d", sc.GetScore(), expectedScore)
+			if sc.Score().GetScore() != expectedScore {
+				t.Errorf("Score=%d, expected %d", sc.Score().GetScore(), expectedScore)
 			}
-			if sc.GetTestName() != t.Name() {
-				t.Errorf("TestName=%s, expected %s", sc.GetTestName(), t.Name())
+			if sc.Score().GetTestName() != t.Name() {
+				t.Errorf("TestName=%s, expected %s", sc.Score().GetTestName(), t.Name())
 			}
 		})
 	}
+}
+
+func checkFibonacci(t *score.T) {
+	t.Helper()
+	if got := fibonacci(5); got != 5 {
+		t.Errorf("fibonacci(5) = %d, want 5", got)
+	} else {
+		t.Inc()
+	}
+}
+
+func TestFibonacciWrapper(t *testing.T) {
+	sc := scoreRegistry.Min(t)
+	defer sc.Recover()
+	checkFibonacci(sc)
+}
+
+func TestFibonacciPlain(t *testing.T) {
+	checkFibonacci(score.NewUnscored(t))
 }
 
 func subTestName(prefix string, i uint) string {
 	return fmt.Sprintf("%s/%d", prefix, i)
-}
-
-func TestStudentAttackCode(t *testing.T) {
-	tests := []struct {
-		id, name, test string
-		fn             func(string) *score.Score
-		want           string
-	}{
-		{id: "1", name: "MaxByName", test: "TestFibonacciMax", fn: scoreRegistry.MaxByName, want: "unauthorized lookup: TestFibonacciMax"},
-		{id: "2", name: "MaxByName", test: "TestFibonacciMin", fn: scoreRegistry.MaxByName, want: "unauthorized lookup: TestFibonacciMin"},
-		{id: "3", name: "MaxByName", test: "TestFibonacciSubTest", fn: scoreRegistry.MaxByName, want: "unauthorized lookup: TestFibonacciSubTest"},
-		{id: "4", name: "MaxByName", test: "TestStudentAttackCode", fn: scoreRegistry.MaxByName, want: "unknown score test: TestStudentAttackCode"},
-		{id: "1", name: "MinByName", test: "TestFibonacciMax", fn: scoreRegistry.MinByName, want: "unauthorized lookup: TestFibonacciMax"},
-		{id: "2", name: "MinByName", test: "TestFibonacciMin", fn: scoreRegistry.MinByName, want: "unauthorized lookup: TestFibonacciMin"},
-		{id: "3", name: "MinByName", test: "TestFibonacciSubTest", fn: scoreRegistry.MinByName, want: "unauthorized lookup: TestFibonacciSubTest"},
-		{id: "4", name: "MinByName", test: "TestStudentAttackCode", fn: scoreRegistry.MinByName, want: "unknown score test: TestStudentAttackCode"},
-	}
-	for _, tc := range tests {
-		t.Run(tc.name+"/"+tc.id, func(t *testing.T) {
-			defer func() {
-				if r := recover(); r != nil {
-					out := strings.TrimSpace(fmt.Sprintln(r))
-					// ignore the file name and line number in the prefix of out
-					if !strings.HasSuffix(out, tc.want) {
-						t.Errorf("%s('%s')='%s', expected '%s'", tc.name, tc.test, out, tc.want)
-					}
-					if tc.want == "" {
-						t.Errorf("%s('%s')='%s', not expected to fail", tc.name, tc.test, out)
-					}
-				} else {
-					t.Errorf("%s('%s') did not panic", tc.name, tc.test)
-				}
-			}()
-			sc := tc.fn(tc.test)
-			t.Fatalf("Should never be reached: %v", sc)
-		})
-	}
 }
 
 func TestDuplicateAdd(t *testing.T) {
