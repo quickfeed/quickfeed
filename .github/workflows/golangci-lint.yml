@@ -4,9 +4,21 @@ on:
     branches: [master]
     paths:
       - "**.go"
+      - "go.mod"
+      - "go.sum"
+      - "go.work"
+      - "go.work.sum"
+      - ".golangci.yml"
+      - ".github/workflows/golangci-lint.yml"
   pull_request:
     paths:
       - "**.go"
+      - "go.mod"
+      - "go.sum"
+      - "go.work"
+      - "go.work.sum"
+      - ".golangci.yml"
+      - ".github/workflows/golangci-lint.yml"
 permissions:
   contents: read
   # Optional: allow read access to pull request. Use with `only-new-issues` option.
