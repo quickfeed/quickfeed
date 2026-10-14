@@ -3,7 +3,6 @@ package score
 import (
 	"fmt"
 	"math"
-	"slices"
 	"strings"
 	"time"
 
@@ -17,15 +16,17 @@ type Results struct {
 	ParsedScores int        // number of valid score lines parsed from the test output
 	testNames    []string   // defines the order
 	scoreMap     map[string]*Score
+	source       map[string]*testRun
 }
 
 func newResults(scores ...*Score) *Results {
 	r := &Results{
 		testNames: make([]string, 0),
 		scoreMap:  make(map[string]*Score),
+		source:    make(map[string]*testRun),
 	}
 	for _, sc := range scores {
-		r.addScore(sc)
+		r.addScore(sc, nil)
 	}
 	r.Scores = r.toScoreSlice()
 	return r
@@ -42,7 +43,8 @@ func (r *Results) toScoreSlice() []*Score {
 
 // addScore adds the given score to the set of scores.
 // This method assumes that the provided score object is valid.
-func (r *Results) addScore(sc *Score) {
+// run identifies the emitting test, or is nil for a score without test markers.
+func (r *Results) addScore(sc *Score, run *testRun) {
 	testName := sc.GetTestName()
 	if current, found := r.scoreMap[testName]; found {
 		if current.GetScore() != 0 {
@@ -60,6 +62,9 @@ func (r *Results) addScore(sc *Score) {
 	// - current score is nil or zero, or
 	// - the first score was zero.
 	r.scoreMap[testName] = sc
+	if run != nil {
+		r.source[testName] = run
+	}
 }
 
 // validate returns an error if one of the recorded score objects are invalid.
@@ -134,83 +139,62 @@ func (pe parseErrors) Error() string {
 // the run script's own output, the compilation phase, and anything printed
 // after the tests finished.
 func ExtractResults(out, secret string, execTime time.Duration, zeroScoreTests []*Score) (*Results, error) {
-	errs := make(parseErrors, 0)
-	results := newResults()
-	parsedScores := 0
-
-	// first, add all expected tests (assumed to already have zero scores)
-	for _, expectedTest := range zeroScoreTests {
-		results.addScore(expectedTest)
+	// add all expected tests (assumed to already have zero scores)
+	results := newResults(zeroScoreTests...)
+	log := scanTestLog(out)
+	errs := results.parseScores(log.Scores, nil, secret)
+	for _, run := range log.Tests {
+		errs = append(errs, results.parseScores(run.Scores, run, secret)...)
 	}
 
-	log := scanTestLog(out)
-	// A test's name in the score object need not be the name of the Go test
-	// that emitted it, so the emitting test is recorded as the score's source.
-	source := make(map[string]*testRun)
-	addScore := func(line string, run *testRun) {
+	results.attach(log, secret)
+	results.BuildInfo = &BuildInfo{
+		BuildDate:      timestamppb.Now(),
+		SubmissionDate: timestamppb.Now(),
+		BuildLog:       Redact(strings.Join(log.Unattributed, "\n"), secret),
+		ExecTime:       execTime.Milliseconds(),
+	}
+	if len(errs) > 0 {
+		return results, errs
+	}
+	return results, nil
+}
+
+func (r *Results) parseScores(lines []string, run *testRun, secret string) parseErrors {
+	var errs parseErrors
+	for _, line := range lines {
 		sc, err := parse(line, secret)
 		if err != nil {
 			errs = append(errs, fmt.Errorf("parsing line '%s': %w", line, err))
-			return
+			continue
 		}
-		// only add the score if it's in the expected tests
-		if !slices.ContainsFunc(zeroScoreTests, func(expected *Score) bool {
-			return expected.GetTestName() == sc.GetTestName()
-		}) {
-			return
+		if _, expected := r.scoreMap[sc.GetTestName()]; !expected {
+			continue
 		}
-		parsedScores++
-		results.addScore(sc)
-		if run != nil {
-			source[sc.GetTestName()] = run
-		}
+		r.ParsedScores++
+		r.addScore(sc, run)
 	}
-	for _, line := range log.Scores {
-		addScore(line, nil)
-	}
-	for _, run := range log.Tests {
-		for _, line := range run.Scores {
-			addScore(line, run)
-		}
-	}
-
-	scores := results.attach(log, source, secret)
-	res := &Results{
-		BuildInfo: &BuildInfo{
-			BuildDate:      timestamppb.Now(),
-			SubmissionDate: timestamppb.Now(),
-			BuildLog:       Redact(strings.Join(log.Unattributed, "\n"), secret),
-			ExecTime:       execTime.Milliseconds(),
-		},
-		Scores:       scores,
-		ParsedScores: parsedScores,
-	}
-	if len(errs) > 0 {
-		return res, errs
-	}
-	return res, nil
+	return errs
 }
 
-func (r *Results) attach(log *testLog, source map[string]*testRun, secret string) []*Score {
-	scores := r.toScoreSlice()
+func (r *Results) attach(log *testLog, secret string) {
+	r.Scores = r.toScoreSlice()
 	scoredRuns := make(map[string]*testRun)
-	for _, sc := range scores {
-		run, ok := source[sc.GetTestName()]
-		if !ok {
-			// A score printed outside a test, or an expected test without a
-			// parsed score, falls back to the test with the same name.
+	for _, sc := range r.Scores {
+		run := r.source[sc.GetTestName()]
+		if run == nil {
+			// Without an emitting test, match the registered test name.
 			run = log.Test(sc.GetTestName())
+			r.source[sc.GetTestName()] = run
 		}
-		source[sc.GetTestName()] = run
 		if run != nil {
 			scoredRuns[run.Name] = run
 		}
 	}
 	log.retainOutput(scoredRuns)
-	for _, sc := range scores {
-		sc.attach(source[sc.GetTestName()], secret)
+	for _, sc := range r.Scores {
+		sc.attach(r.source[sc.GetTestName()], secret)
 	}
-	return scores
 }
 
 // attach records on the score what the run of its test produced. A test that

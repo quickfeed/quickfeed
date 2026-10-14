@@ -1,9 +1,6 @@
 package score
 
-import (
-	"encoding/json"
-	"strings"
-)
+import "strings"
 
 // testRun is one test's output, as the test framework attributed it.
 type testRun struct {
@@ -18,7 +15,25 @@ type testRun struct {
 	indent  int // width of the indentation the testing package adds to messages
 }
 
-// testLog is a run's output, attributed to the tests that produced it.
+// testLog collects output from a course run script and its Go tests.
+// Output is handled according to its format:
+//
+//   - go test -v: test markers such as === RUN and --- FAIL identify tests
+//     and their outcomes (testlog_verbose.go).
+//   - go test -json: test2json events name the test for each event
+//     (testlog_json.go).
+//   - Both formats, plain go test, and surrounding run-script output share
+//     message classification and score-line extraction (testlog_output.go).
+//
+// scanTestLog selects the reader for each captured line.
+//
+// Score lines are kept separate from student-visible output because they carry
+// the session secret. Results validates the scores, attaches diagnostics and
+// output, and redacts the secret before the result is stored or shown.
+//
+// Test markers and events identify scores, outcomes, and testing messages.
+// Raw stdout from parallel tests can interleave without identifying its source,
+// so attributing those writes to a test remains best effort.
 type testLog struct {
 	Tests        []*testRun // in the order the tests started
 	Unattributed []string   // setup, compile, and package-level output
@@ -82,133 +97,26 @@ func scanTestLog(out string) *testLog {
 	return s.log
 }
 
-// entryKind distinguishes a test's own writes from the messages the testing
-// package printed on its behalf.
-type entryKind int
-
-const (
-	plain      entryKind = iota // the test wrote this itself
-	diagnostic                  // the testing package printed this for Log, Error, Fatal or Skip
-	reported                    // go test -json tagged this as Error or Fatal output
-)
-
-type entry struct {
-	text string
-	kind entryKind
-}
-
+// testLogScanner attributes scores and output while reading a run.
+// It tracks the current test from verbose markers and avoids recording attributes
+// twice when JSON reports them as both attribute events and text output.
 type testLogScanner struct {
 	log     *testLog
-	current *testRun // the test the text framing is inside of
+	current *testRun // the test named by the most recent text marker
 	// structuredAttrs records that this run reported attributes as events. Such
 	// a run also prints each attribute as an "=== ATTR" line in an output event,
 	// which would otherwise record the same score a second time.
 	structuredAttrs bool
 }
 
-// event is the subset of a test2json event that attribution needs.
-type event struct {
-	Action     string
-	Test       string
-	Elapsed    float64
-	Output     string
-	OutputType string
-	Key        string
-	Value      string
-}
-
+// line processes each captured line from scanTestLog as a JSON event or text.
+// It handles go test with or without -v/-json, plus surrounding run-script output.
 func (s *testLogScanner) line(line string) {
 	if ev, ok := decodeEvent(line); ok {
-		s.event(ev)
+		s.jsonEvent(ev)
 		return
 	}
 	s.output(line, s.current, "")
-}
-
-// event records a test2json event. The event names the test it belongs to, so
-// it does not rely on the framing that the text form tracks.
-func (s *testLogScanner) event(ev event) {
-	switch ev.Action {
-	case "attr":
-		s.structuredAttrs = true
-		// Only score attributes are kept; any other attribute is metadata about
-		// the test rather than output from it.
-		if HasPrefix(ev.Value) {
-			s.test(ev.Test).Scores = append(s.test(ev.Test).Scores, ev.Value)
-		}
-	case "run":
-		s.test(ev.Test)
-	case "pass", "fail", "skip":
-		if ev.Test == "" {
-			return // the package's own result, not a test's
-		}
-		run := s.test(ev.Test)
-		run.Status = testStatusOf(ev.Action)
-		run.Elapsed = ev.Elapsed
-	case "output":
-		var run *testRun
-		if ev.Test != "" {
-			run = s.test(ev.Test)
-		}
-		for line := range strings.SplitSeq(strings.TrimSuffix(ev.Output, "\n"), "\n") {
-			s.output(line, run, ev.OutputType)
-		}
-	}
-}
-
-// output records one line of a run's output. Framing is recognized here rather
-// than by the caller, because the events of Go 1.25 and 1.26 carry the framing
-// in their Output field with no OutputType to tell it apart.
-func (s *testLogScanner) output(line string, run *testRun, outputType string) {
-	if outputType == "frame" {
-		return
-	}
-	if s.framing(line) {
-		return
-	}
-	if strings.TrimSpace(line) == "" {
-		return
-	}
-	if HasPrefix(line) {
-		if run == nil {
-			s.log.Scores = append(s.log.Scores, line)
-		} else {
-			run.Scores = append(run.Scores, line)
-		}
-		return
-	}
-	if run == nil {
-		s.log.Unattributed = append(s.log.Unattributed, line)
-		return
-	}
-	text, kind := classify(line, outputType, run)
-	run.entries = append(run.entries, entry{text: text, kind: kind})
-}
-
-// finish sorts each test's entries into its failures and its output. A failing
-// test's diagnostics explain the failure, which is what a student needs first;
-// the same lines under a passing or skipped test are ordinary output.
-func (s *testLogScanner) finish() {
-	for _, run := range s.log.Tests {
-		tagged := false
-		for _, e := range run.entries {
-			if e.kind == reported {
-				tagged = true
-				break
-			}
-		}
-		for _, e := range run.entries {
-			switch {
-			case e.kind == reported:
-				run.Failures = append(run.Failures, e.text)
-			case e.kind == diagnostic && !tagged && run.Status == TestStatus_FAILED:
-				run.Failures = append(run.Failures, e.text)
-			default:
-				run.Output = append(run.Output, e.text)
-			}
-		}
-		run.entries = nil
-	}
 }
 
 // test returns the named test's run, recording it in start order if new.
@@ -232,16 +140,4 @@ func testStatusOf(action string) TestStatus {
 		return TestStatus_SKIPPED
 	}
 	return TestStatus_NOT_RUN
-}
-
-// decodeEvent reports whether line is a test2json event, and decodes it.
-func decodeEvent(line string) (event, bool) {
-	if !strings.HasPrefix(line, `{"Time":`) && !strings.HasPrefix(line, `{"Action":`) {
-		return event{}, false
-	}
-	var ev event
-	if err := json.Unmarshal([]byte(line), &ev); err != nil || ev.Action == "" {
-		return event{}, false
-	}
-	return ev, true
 }
