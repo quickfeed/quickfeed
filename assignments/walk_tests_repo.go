@@ -222,13 +222,43 @@ func ReadTestsRepository(dir string, courseID uint64) ([]*qf.Assignment, map[str
 			// testdata, and similar) are not assignment configuration; ignore.
 		}
 	}
-	for name := range unweighted {
-		if assignment, ok := assignmentsMap[name]; ok {
+	issues = append(issues, setReviewWeights(assignmentsMap, unweighted)...)
+	issues = append(issues, missingTestsIssues(assignmentsMap)...)
+	return sortAssignments(assignmentsMap), buildContext, issues, nil
+}
+
+// setReviewWeights gives the assignments in unweighted their default review
+// weight, and reports and replaces any other review weight that cannot apply.
+func setReviewWeights(assignmentsMap map[string]*qf.Assignment, unweighted map[string]bool) []RepoIssue {
+	var issues []RepoIssue
+	for _, name := range slices.Sorted(maps.Keys(assignmentsMap)) {
+		assignment := assignmentsMap[name]
+		if unweighted[name] {
+			assignment.ReviewWeight = assignment.DefaultReviewWeight()
+			continue
+		}
+		if problem := reviewWeightProblem(assignment); problem != "" {
+			issues = append(issues, RepoIssue{Assignment: name, File: filepath.Join(name, assignmentFile), Problem: problem})
 			assignment.ReviewWeight = assignment.DefaultReviewWeight()
 		}
 	}
-	issues = append(issues, missingTestsIssues(assignmentsMap)...)
-	return sortAssignments(assignmentsMap), buildContext, issues, nil
+	return issues
+}
+
+// reviewWeightProblem returns why the assignment's review weight cannot apply,
+// or the empty string if it can: the score of an assignment without reviewers
+// is its test score, and that of an assignment without tests is its review score.
+func reviewWeightProblem(assignment *qf.Assignment) string {
+	if assignment.GetReviewWeight() == assignment.DefaultReviewWeight() {
+		return ""
+	}
+	if !assignment.GradedManually() {
+		return "reviewweight has no effect without reviewers: tests count for 100 %"
+	}
+	if !assignment.HasTests() {
+		return "reviewweight has no effect without tests: reviews count for 100 %"
+	}
+	return ""
 }
 
 // processAssignmentFolderFile handles a file in an assignment folder, updating
