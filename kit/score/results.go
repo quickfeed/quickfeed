@@ -7,7 +7,6 @@ import (
 	"strings"
 	"time"
 
-	"github.com/quickfeed/quickfeed/kit/score/testlog"
 	"google.golang.org/protobuf/types/known/timestamppb"
 )
 
@@ -144,11 +143,11 @@ func ExtractResults(out, secret string, execTime time.Duration, zeroScoreTests [
 		results.addScore(expectedTest)
 	}
 
-	log := testlog.Scan(out, HasPrefix)
+	log := scanTestLog(out)
 	// A test's name in the score object need not be the name of the Go test
 	// that emitted it, so the emitting test is recorded as the score's source.
-	source := make(map[string]*testlog.TestRun)
-	addScore := func(line string, run *testlog.TestRun) {
+	source := make(map[string]*testRun)
+	addScore := func(line string, run *testRun) {
 		sc, err := parse(line, secret)
 		if err != nil {
 			errs = append(errs, fmt.Errorf("parsing line '%s': %w", line, err))
@@ -175,18 +174,7 @@ func ExtractResults(out, secret string, execTime time.Duration, zeroScoreTests [
 		}
 	}
 
-	scores := results.toScoreSlice()
-	for _, sc := range scores {
-		run, ok := source[sc.GetTestName()]
-		if !ok {
-			// The score line was not attributed to a test, either because it
-			// was printed outside one or because no score line was parsed for
-			// this expected test at all. Fall back to the test of that name.
-			run = log.Test(sc.GetTestName())
-		}
-		sc.attach(run, secret)
-	}
-
+	scores := results.attach(log, source, secret)
 	res := &Results{
 		BuildInfo: &BuildInfo{
 			BuildDate:      timestamppb.Now(),
@@ -203,33 +191,43 @@ func ExtractResults(out, secret string, execTime time.Duration, zeroScoreTests [
 	return res, nil
 }
 
+func (r *Results) attach(log *testLog, source map[string]*testRun, secret string) []*Score {
+	scores := r.toScoreSlice()
+	scoredRuns := make(map[string]*testRun)
+	for _, sc := range scores {
+		run, ok := source[sc.GetTestName()]
+		if !ok {
+			// A score printed outside a test, or an expected test without a
+			// parsed score, falls back to the test with the same name.
+			run = log.Test(sc.GetTestName())
+		}
+		source[sc.GetTestName()] = run
+		if run != nil {
+			scoredRuns[run.Name] = run
+		}
+	}
+	log.retainOutput(scoredRuns)
+	for _, sc := range scores {
+		sc.attach(source[sc.GetTestName()], secret)
+	}
+	return scores
+}
+
 // attach records on the score what the run of its test produced. A test that
 // reported its own details keeps them: they are the teacher's own words, and
 // the diagnostics scraped from the output would only repeat them. Those details
 // are redacted too, since the score object is free to put anything in them.
-func (s *Score) attach(run *testlog.TestRun, secret string) {
+func (s *Score) attach(run *testRun, secret string) {
 	s.TestDetails = Redact(s.GetTestDetails(), secret)
+	s.TestOutput = Redact(s.GetTestOutput(), secret)
 	if run == nil {
 		return
 	}
-	s.Status = statusOf(run.Status)
+	s.Status = run.Status
 	s.Elapsed = run.Elapsed
 	s.TestOutput = Redact(strings.Join(run.Output, "\n"), secret)
 	if s.GetTestDetails() == "" {
 		s.TestDetails = Redact(strings.Join(run.Failures, "\n"), secret)
-	}
-}
-
-func statusOf(status testlog.Status) TestStatus {
-	switch status {
-	case testlog.StatusPassed:
-		return TestStatus_PASSED
-	case testlog.StatusFailed:
-		return TestStatus_FAILED
-	case testlog.StatusSkipped:
-		return TestStatus_SKIPPED
-	default:
-		return TestStatus_NOT_RUN
 	}
 }
 

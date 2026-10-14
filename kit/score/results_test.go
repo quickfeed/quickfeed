@@ -524,3 +524,80 @@ func TestExtractResultsRedactsDetailsReportedByTheTest(t *testing.T) {
 		})
 	}
 }
+
+func TestExtractResultsRedactsOutputReportedByTheTest(t *testing.T) {
+	out := fmt.Sprintf(`{"Secret":"%[1]s","TestName":"TestQueue","Score":0,"MaxScore":5,"Weight":1,"TestOutput":"leaked %[1]s"}`, secret)
+	res, err := score.ExtractResults(out, secret, 0, []*score.Score{{TestName: "TestQueue", MaxScore: 5, Weight: 1}})
+	if err != nil {
+		t.Fatal(err)
+	}
+	if got, want := res.Scores[0].GetTestOutput(), "leaked [REDACTED]"; got != want {
+		t.Errorf("TestQueue output = %q, want %q", got, want)
+	}
+}
+
+func TestExtractResultsKeepsUnscoredTestOutput(t *testing.T) {
+	out := `=== RUN   TestParent
+=== RUN   TestParent/child
+child raw output
+=== RUN   TestParent/child/grandchild
+    child_test.go:10: child failure
+--- FAIL: TestParent/child/grandchild (0.01s)
+--- FAIL: TestParent/child (0.01s)
+=== RUN   TestParent/separate
+separate output
+=== RUN   TestParent/separate/child
+nested output
+--- PASS: TestParent/separate/child (0.01s)
+=== ATTR  TestParent/separate score {"Secret":"` + secret + `","TestName":"SeparateScore","Score":1,"MaxScore":1,"Weight":1}
+--- PASS: TestParent/separate (0.02s)
+=== NAME  TestParent
+=== ATTR  TestParent score {"Secret":"` + secret + `","TestName":"TestParent","Score":0,"MaxScore":1,"Weight":1}
+--- FAIL: TestParent (0.03s)
+=== RUN   TestUnregistered
+unregistered raw output
+    extra_test.go:20: unregistered failure
+--- FAIL: TestUnregistered (0.01s)
+FAIL
+`
+	res, err := score.ExtractResults(out, secret, 0, []*score.Score{
+		{TestName: "TestParent", MaxScore: 1, Weight: 1},
+		{TestName: "SeparateScore", MaxScore: 1, Weight: 1},
+	})
+	if err != nil {
+		t.Fatal(err)
+	}
+	parent, separate := res.Scores[0], res.Scores[1]
+	for _, want := range []string{"TestParent/child", "child raw output"} {
+		if !strings.Contains(parent.GetTestOutput(), want) {
+			t.Errorf("parent output = %q, want %q", parent.GetTestOutput(), want)
+		}
+	}
+	for _, want := range []string{"TestParent/child/grandchild", "child failure"} {
+		if !strings.Contains(parent.GetTestDetails(), want) {
+			t.Errorf("parent details = %q, want %q", parent.GetTestDetails(), want)
+		}
+	}
+	if parent.GetStatus() != score.TestStatus_FAILED || parent.GetElapsed() != 0.03 {
+		t.Errorf("parent lost its own outcome: %v", parent)
+	}
+	for _, want := range []string{"separate output", "TestParent/separate/child", "nested output"} {
+		if !strings.Contains(separate.GetTestOutput(), want) {
+			t.Errorf("separate output = %q, want %q", separate.GetTestOutput(), want)
+		}
+		if strings.Contains(parent.GetTestOutput(), want) {
+			t.Errorf("parent output includes separately scored subtest: %q", parent.GetTestOutput())
+		}
+	}
+	buildLog := res.GetBuildInfo().GetBuildLog()
+	for _, want := range []string{"TestUnregistered", "unregistered raw output", "unregistered failure"} {
+		if !strings.Contains(buildLog, want) {
+			t.Errorf("build log = %q, want %q", buildLog, want)
+		}
+	}
+	for _, unwanted := range []string{"child raw output", "child failure", "separate output", "nested output"} {
+		if strings.Contains(buildLog, unwanted) {
+			t.Errorf("build log duplicates attributed output: %q", buildLog)
+		}
+	}
+}
