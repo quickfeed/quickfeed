@@ -49,17 +49,6 @@ func (s *Submission) GetStatusByUser(userID uint64) Submission_Status {
 	return Submission_NONE
 }
 
-// SetGrade sets the submission's grade and score.
-// If UserID is 0, the grade is set for all users of a group submission.
-func (s *Submission) SetGrade(grade *Grade) {
-	if grade.GetUserID() == 0 {
-		// Set grade for all users if no specific user is provided.
-		s.SetGradeAll(grade.GetStatus())
-		return
-	}
-	s.SetGradeByUser(grade.GetUserID(), grade.GetStatus())
-}
-
 func (s *Submission) SetGradeByUser(userID uint64, status Submission_Status) {
 	for idx, grade := range s.GetGrades() {
 		if grade.GetUserID() == userID {

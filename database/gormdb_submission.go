@@ -250,6 +250,16 @@ func (db *GormDB) UpdateSubmission(query *qf.Submission) error {
 	return db.conn.Session(&gorm.Session{FullSaveAssociations: true}).Model(query).Select("*").Updates(query).Error
 }
 
+// UpdateGrade sets the status of the given grade of a submission, or of all
+// its grades if the grade has no user; the rest of the submission is left as it is.
+func (db *GormDB) UpdateGrade(grade *qf.Grade) error {
+	m := db.conn.Model(&qf.Grade{}).Where("submission_id = ?", grade.GetSubmissionID())
+	if grade.GetUserID() != 0 {
+		m = m.Where("user_id = ?", grade.GetUserID())
+	}
+	return m.Update("status", grade.GetStatus()).Error
+}
+
 // GetReview fetches a review
 func (db *GormDB) GetReview(query *qf.Review) (*qf.Review, error) {
 	var review qf.Review

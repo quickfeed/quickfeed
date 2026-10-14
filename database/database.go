@@ -111,6 +111,9 @@ type Database interface {
 	GetCourseSubmissions(request *qf.SubmissionRequest) (*qf.CourseSubmissions, error)
 	// UpdateSubmission updates the specified submission with approved or not approved.
 	UpdateSubmission(*qf.Submission) error
+	// UpdateGrade sets the status of the given grade of a submission, or of all
+	// its grades if the grade has no user; the rest of the submission is left as it is.
+	UpdateGrade(*qf.Grade) error
 	// GetReview returns a single review matching the given query.
 	GetReview(query *qf.Review) (*qf.Review, error)
 	// CreateReview adds a new submission review.

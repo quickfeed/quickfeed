@@ -407,14 +407,12 @@ func (s *QuickFeedService) GetSubmissionsByCourse(ctx context.Context, in *qf.Su
 // UpdateSubmission is called to approve the given submission or to undo approval.
 func (s *QuickFeedService) UpdateSubmission(ctx context.Context, in *qf.Grade) (*qf.Void, error) {
 	logger := qlog.FromContext(ctx).With(label.SubmissionID, in.GetSubmissionID())
-	submission, err := s.db.GetSubmission(&qf.Submission{ID: in.GetSubmissionID()})
-	if err != nil {
+	if _, err := s.db.GetSubmission(&qf.Submission{ID: in.GetSubmissionID()}); err != nil {
 		logger.Error("failed to get submission", label.Error, err)
 		return nil, connect.NewError(connect.CodeNotFound, errors.New("failed to update submission"))
 	}
-	submission.SetGrade(in)
-	err = s.db.UpdateSubmission(submission)
-	if err != nil {
+	// Only the grade is written, so a test run or review saved meanwhile is kept.
+	if err := s.db.UpdateGrade(in); err != nil {
 		logger.Error("failed to update submission grade", label.Error, err)
 		return nil, connect.NewError(connect.CodeInvalidArgument, errors.New("failed to approve submission"))
 	}

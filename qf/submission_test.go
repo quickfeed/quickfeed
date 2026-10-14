@@ -231,62 +231,6 @@ func TestUpdateTotalApproved(t *testing.T) {
 	}
 }
 
-func TestSetGrade(t *testing.T) {
-	approvedGrade := &qf.Grade{UserID: 1, Status: qf.Submission_APPROVED}
-	groupGrade := &qf.Grade{UserID: 0, Status: qf.Submission_APPROVED}
-	approveUser1Grade := &qf.Grade{UserID: 1, Status: qf.Submission_APPROVED}
-	rejectUser2Grade := &qf.Grade{UserID: 2, Status: qf.Submission_REJECTED}
-	tests := []struct {
-		name       string
-		submission *qf.Submission
-		newGrade   *qf.Grade
-		want       *qf.Submission
-	}{
-		{
-			name:       "UpdateSingleUserGradeApproved",
-			submission: &qf.Submission{Grades: []*qf.Grade{{UserID: 1}}},
-			newGrade:   approvedGrade,
-			want:       &qf.Submission{Grades: []*qf.Grade{approvedGrade}},
-		},
-		{
-			name:       "UpdateGroupGradeApproved",
-			submission: &qf.Submission{Grades: []*qf.Grade{{UserID: 1}, {UserID: 2}, {UserID: 3}}},
-			newGrade:   groupGrade,
-			want:       &qf.Submission{Grades: []*qf.Grade{{UserID: 1, Status: qf.Submission_APPROVED}, {UserID: 2, Status: qf.Submission_APPROVED}, {UserID: 3, Status: qf.Submission_APPROVED}}},
-		},
-		{
-			name:       "UpdateUser1GradeApproved",
-			submission: &qf.Submission{Grades: []*qf.Grade{{UserID: 1}, {UserID: 2}}},
-			newGrade:   approveUser1Grade,
-			want:       &qf.Submission{Grades: []*qf.Grade{{UserID: 1, Status: qf.Submission_APPROVED}, {UserID: 2}}},
-		},
-		{
-			name:       "UpdateUser2GradeRejected",
-			submission: &qf.Submission{Grades: []*qf.Grade{{UserID: 1}, {UserID: 2}}},
-			newGrade:   rejectUser2Grade,
-			want:       &qf.Submission{Grades: []*qf.Grade{{UserID: 1}, {UserID: 2, Status: qf.Submission_REJECTED}}},
-		},
-		{
-			name:       "UpdateUser1GradeApprovedUser2PreviouslyRejected",
-			submission: &qf.Submission{Grades: []*qf.Grade{{UserID: 1}, {UserID: 2, Status: qf.Submission_REJECTED}}},
-			newGrade:   approveUser1Grade,
-			want:       &qf.Submission{Grades: []*qf.Grade{{UserID: 1, Status: qf.Submission_APPROVED}, {UserID: 2, Status: qf.Submission_REJECTED}}},
-		},
-		{
-			name:       "UpdateUser2GradeRejectedUser1PreviouslyApproved",
-			submission: &qf.Submission{Grades: []*qf.Grade{{UserID: 1, Status: qf.Submission_APPROVED}, {UserID: 2}}},
-			newGrade:   rejectUser2Grade,
-			want:       &qf.Submission{Grades: []*qf.Grade{{UserID: 1, Status: qf.Submission_APPROVED}, {UserID: 2, Status: qf.Submission_REJECTED}}},
-		},
-	}
-	for _, test := range tests {
-		t.Run(test.name, func(t *testing.T) {
-			test.submission.SetGrade(test.newGrade)
-			qtest.Diff(t, "SetGradesAndRelease() mismatch", test.submission, test.want, protocmp.Transform())
-		})
-	}
-}
-
 func TestSetGradesIfApproved(t *testing.T) {
 	const (
 		T = true
