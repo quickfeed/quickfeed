@@ -440,7 +440,7 @@ An organization that enforces SAML single sign-on must also have authorized the 
 
 The test runner script will run the tests for the current assignment.
 However, the teacher must write the tests so that each test emits a `Score` JSON object.
-This `Score` object must be written to `stdout` and must contain the following fields:
+Emit each `Score` JSON object on its own line in standard output:
 
 ```json
 {"Secret":"59fd5fe1c4f741604c1beeab875b9c789d2a7c73","TestName":"Gradle","Score":100,"MaxScore":100,"Weight":1}
@@ -454,46 +454,33 @@ A compilation failure is recorded as a valid zero-score result because the test 
 If the test environment fails without producing a trustworthy result, QuickFeed records the failure and keeps the previous score.
 Every student push still uses its own submission date for slip-day accounting, including pushes whose test environment failed.
 
-For additional information about writing tests, please see the Go-based `score` package in the `kit` module.
-
 ### What the Student Sees for Each Test
 
 QuickFeed attributes a run's output to the tests that produced it, so a student opens one failing test rather than reading the whole build log.
 Each test's row expands to show why it failed and what it printed; the build log keeps only what belonged to no test, such as the run script's own output and the compilation phase.
 
-Attribution comes from the framing that `go test` prints, so it works without any change to a course's tests.
-Two things make it better:
+Test libraries in any language must emit the `Score` JSON format shown above, using these fields:
 
-- **Say why a test failed.**
-  With the `score.T` wrapper, use `sc.Errorf("Pop() = %v, want: %v", got, want)` to fail the test and record the message as its details.
-  Tests using the earlier `score.Score` API pass the test handle as the first argument: `sc.Errorf(t, "Pop() = %v, want: %v", got, want)`.
-  Those details are shown first, above the test's other output, and are what the student reads before anything else.
-  `sc.Error`, `sc.Fatal` and `sc.Fatalf` do the same.
+| Field | Type | Meaning |
+| --- | --- | --- |
+| `Secret` | string | Required session secret from `QUICKFEED_SESSION_SECRET`. |
+| `TestName` | string | Required name matching a registered test. |
+| `Score` | integer | Points earned, from zero to `MaxScore`. |
+| `MaxScore` | integer | Required maximum points, greater than zero. |
+| `Weight` | integer | Required relative weight in the assignment grade, greater than zero. |
+| `TestDetails` | string | Optional failure diagnostics, such as expected and actual values; shown first. |
+| `TestOutput` | string | Optional other output from the test or the student's implementation, such as logging and standard output. |
+| `Status` | integer | Optional test outcome: `0` = `NOT_RUN` (no recorded outcome), `1` = `PASSED`, `2` = `FAILED`, `3` = `SKIPPED`. |
+| `Elapsed` | number | Optional test duration in seconds. |
 
-- **Keep `-v` in the run script.**
-  The score is reported as a test attribute, which `go test` emits only in verbose mode.
-  A script that runs `go test` without `-v` or `-json` still works, because the score is then printed instead, but the run loses the exact attribution that attributes a score to its test when tests run in parallel.
+`Status` is independent of points earned: a failed test can receive partial credit, and a passed test need not earn full points.
+A skipped test counts as neither passed nor failed.
+If `Status` is omitted or zero, QuickFeed infers pass or fail by comparing `Score` with `MaxScore`.
+Omitted output fields are empty, and omitted `Score` and `Elapsed` values are zero.
+The protobuf fields `ID` and `SubmissionID` are assigned by QuickFeed and should be omitted from test output.
 
-Using `go test -json` instead of `go test -v` also works; QuickFeed reads either.
-On Go 1.27 and later, the JSON form additionally separates a failing test's `t.Errorf` messages from its ordinary logging, so only the failures are shown as the reason it failed.
-
-A skipped test is shown as skipped, and counts as neither passed nor failed in the summary above the list.
-The course-wide results tables do not load each test's output; it is fetched when you open a submission.
-
-Two limits are worth knowing.
-`go test` interleaves whatever parallel tests write to standard output themselves, so such writes are attributed on a best-effort basis; a test's failures and its score are always attributed correctly.
-A panic is printed after the test's own framing has ended, so its stack trace is kept in the build log.
-
-### Reporting Output from Other Languages
-
-A score producer in any language can include `TestDetails` and `TestOutput` in its `Score` JSON object.
-Use `TestDetails` for failure diagnostics, such as an assertion's expected and actual values.
-Use `TestOutput` for other output from the test or the student's implementation, such as logging and standard output.
-QuickFeed shows failure diagnostics first and makes the other output available separately.
-
-These fields describe the result, regardless of which test framework produced it.
-For Go tests, the score library records failure diagnostics and QuickFeed also reads the test framework's output.
-Other score producers must fill the fields themselves; QuickFeed does not parse their frameworks' event formats.
+The Go [`score` package](https://pkg.go.dev/github.com/quickfeed/quickfeed/kit/score) is the reference implementation; its API documentation covers writing and registering tests.
+Use `go test -v` or `go test -json` in the run script so QuickFeed can associate output and scores with their tests.
 
 ## Reviewing student submissions
 
