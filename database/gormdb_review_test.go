@@ -279,3 +279,33 @@ func TestReviewScoreCombinesWithTestScore(t *testing.T) {
 	grade(second, qf.GradingCriterion_PASSED, qf.GradingCriterion_FAILED)
 	check("second review graded", 75, 84, qf.Submission_APPROVED)
 }
+
+func TestUpdateReviewOwnership(t *testing.T) {
+	db, cleanup := qtest.TestDB(t)
+	defer cleanup()
+
+	user, course, _ := qtest.SetupCourseAssignment(t, db)
+	assignment := &qf.Assignment{CourseID: course.GetID(), Order: 2, Reviewers: 1, ReviewWeight: 100}
+	qtest.CreateAssignment(t, db, assignment)
+	reviewed := &qf.Submission{AssignmentID: assignment.GetID(), UserID: user.GetID()}
+	qtest.CreateSubmission(t, db, reviewed)
+	other := qtest.CreateFakeUser(t, db)
+	otherSubmission := &qf.Submission{AssignmentID: assignment.GetID(), UserID: other.GetID()}
+	qtest.CreateSubmission(t, db, otherSubmission)
+	review := &qf.Review{SubmissionID: reviewed.GetID(), ReviewerID: user.GetID()}
+	qtest.CreateReview(t, db, review)
+
+	// A review saved under another submission is not that submission's review.
+	moved := &qf.Review{ID: review.GetID(), SubmissionID: otherSubmission.GetID(), ReviewerID: user.GetID()}
+	qtest.CheckError(t, db.UpdateReview(moved), gorm.ErrRecordNotFound)
+
+	// The reviewer is kept, whoever the request names.
+	renamed := &qf.Review{ID: review.GetID(), SubmissionID: reviewed.GetID(), ReviewerID: other.GetID(), Feedback: "updated"}
+	if err := db.UpdateReview(renamed); err != nil {
+		t.Fatal(err)
+	}
+	got := qtest.GetReview(t, db, review.GetID())
+	if got.GetReviewerID() != user.GetID() || got.GetFeedback() != "updated" {
+		t.Errorf("(ReviewerID, Feedback) = (%d, %q), want (%d, %q)", got.GetReviewerID(), got.GetFeedback(), user.GetID(), "updated")
+	}
+}

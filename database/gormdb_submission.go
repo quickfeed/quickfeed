@@ -274,58 +274,66 @@ func (db *GormDB) CreateReview(query *qf.Review) error {
 		if err := tx.Create(query).Error; err != nil {
 			return err
 		}
-		return updateReviewScore(tx, submission.GetID(), assignment)
+		return updateReviewResult(tx, submission.GetID(), assignment)
 	})
 }
 
-// updateReviewScore recomputes the review score and score of the given
-// submission from its reviews, as stored in tx.
-func updateReviewScore(tx *gorm.DB, submissionID uint64, assignment *qf.Assignment) error {
+// updateReviewResult recomputes the review score and score of the given
+// submission from its reviews and test score as stored in tx, and approves the
+// submission if the assignment auto-approves it. Only the submission's scores
+// and its grades' statuses are written, so a test run recorded concurrently is kept.
+func updateReviewResult(tx *gorm.DB, submissionID uint64, assignment *qf.Assignment) error {
 	var submission qf.Submission
-	if err := tx.Preload("Reviews").
+	if err := tx.Preload("Grades").
+		Preload("Reviews").
 		Preload("Reviews.GradingBenchmarks").
 		Preload("Reviews.GradingBenchmarks.Criteria").
 		First(&submission, submissionID).Error; err != nil {
 		return err
 	}
 	submission.ComputeScore(assignment)
-	return tx.Model(&qf.Submission{ID: submissionID}).Updates(map[string]any{
+	if err := tx.Model(&qf.Submission{ID: submissionID}).Updates(map[string]any{
 		"score":        submission.GetScore(),
 		"review_score": submission.GetReviewScore(),
-	}).Error
+	}).Error; err != nil {
+		return err
+	}
+	wasApproved := submission.IsAllApproved()
+	submission.SetGradesIfApproved(assignment, submission.GetScore())
+	if wasApproved || !submission.IsAllApproved() {
+		return nil
+	}
+	return tx.Model(&qf.Grade{}).Where("submission_id = ?", submissionID).Update("status", qf.Submission_APPROVED).Error
 }
 
-// UpdateReview updates a review.
+// UpdateReview updates a review of a submission, and the submission's scores
+// and approval. The review must belong to the submission.
 func (db *GormDB) UpdateReview(query *qf.Review) error {
 	if query.GetID() == 0 {
 		return ErrEmptyReviewID
 	}
-	submission, err := db.GetSubmission(&qf.Submission{ID: query.GetSubmissionID()})
-	if err != nil {
+	var submission qf.Submission
+	if err := db.conn.First(&submission, query.GetSubmissionID()).Error; err != nil {
 		return err
 	}
-
-	query.Edited = timestamppb.Now()
-	query.ComputeScore()
-	for id, review := range submission.GetReviews() {
-		if review.GetID() == query.GetID() {
-			// replace the old review with the updated one
-			submission.Reviews[id] = query
-			break
-		}
-	}
-
 	assignment, err := db.GetAssignment(&qf.Assignment{ID: submission.GetAssignmentID()})
 	if err != nil {
 		return err
 	}
-	submission.ComputeScore(assignment)
-	submission.SetGradesIfApproved(assignment, submission.GetScore())
-	// The review and its benchmarks and criteria are saved through the submission.
-	if err := db.UpdateSubmission(submission); err != nil {
-		return err
-	}
-	return nil
+	return db.conn.Transaction(func(tx *gorm.DB) error {
+		var review qf.Review
+		if err := tx.Where(&qf.Review{ID: query.GetID(), SubmissionID: submission.GetID()}).First(&review).Error; err != nil {
+			return err
+		}
+		// The reviewer is not the client's to change.
+		query.ReviewerID = review.GetReviewerID()
+		query.Edited = timestamppb.Now()
+		query.ComputeScore()
+		if err := tx.Session(&gorm.Session{FullSaveAssociations: true}).Save(query).Error; err != nil {
+			return err
+		}
+		return updateReviewResult(tx, submission.GetID(), assignment)
+	})
 }
 
 // DeleteReview removes all reviews matching the query.
