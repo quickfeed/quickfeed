@@ -41,6 +41,32 @@ describe("SubmissionInfo", () => {
         expect(screen.queryByText(/last successful run/)).toBeNull()
     })
 
+    // The test results table below the lab information shows the tests passed
+    // and the test score, so the lab information repeats neither.
+    it("shows neither tests passed nor a score row for an assignment with tests only", () => {
+        const courseID = 1n
+        const userID = 2n
+        const overmind = initializeOvermind({
+            enrollments: [create(EnrollmentSchema, { courseID, userID })],
+        })
+        const assignment = create(AssignmentSchema, {
+            ID: 3n,
+            CourseID: courseID,
+            name: "lab1",
+            ExpectedTests: [create(TestInfoSchema, { TestName: "TestA", MaxScore: 1, Weight: 1 })],
+        })
+        const submission = create(SubmissionSchema, { AssignmentID: assignment.ID, userID, testScore: 85, score: 85 })
+
+        render(
+            <Provider value={overmind}>
+                <SubmissionInfo submission={submission} assignment={assignment} />
+            </Provider>
+        )
+
+        expect(screen.queryByText("Tests Passed")).toBeNull()
+        expect(screen.queryByText("Score")).toBeNull()
+    })
+
     describe("for an assignment with tests and reviews", () => {
         const courseID = 1n
         const userID = 2n
