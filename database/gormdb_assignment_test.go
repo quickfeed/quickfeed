@@ -567,3 +567,61 @@ func TestUpdateAssignmentsRemovedGradingBenchmarks(t *testing.T) {
 		t.Errorf("expected no benchmarks after removal, got %d", len(gotBenchmarks))
 	}
 }
+
+// TestUpdateAssignmentsRescoresSubmissions checks that changing how much an
+// assignment's reviews count recomputes its submissions' scores, while their
+// grades remain.
+func TestUpdateAssignmentsRescoresSubmissions(t *testing.T) {
+	db, cleanup := qtest.TestDB(t)
+	defer cleanup()
+
+	admin := qtest.CreateFakeUser(t, db)
+	course := &qf.Course{}
+	qtest.CreateCourse(t, db, admin, course)
+	assignment := &qf.Assignment{
+		CourseID:     course.GetID(),
+		Name:         "lab1",
+		Deadline:     qtest.Timestamp(t, "2022-11-11T23:59:00"),
+		Order:        1,
+		Reviewers:    1,
+		ReviewWeight: 40,
+	}
+	qtest.CreateAssignment(t, db, assignment)
+	approvedUser, ungradedUser := qtest.CreateFakeUser(t, db), qtest.CreateFakeUser(t, db)
+	approved := &qf.Submission{
+		AssignmentID: assignment.GetID(), UserID: approvedUser.GetID(), TestScore: 90, ReviewScore: 70, Score: 82,
+		Grades: []*qf.Grade{{UserID: approvedUser.GetID(), Status: qf.Submission_APPROVED}},
+	}
+	ungraded := &qf.Submission{AssignmentID: assignment.GetID(), UserID: ungradedUser.GetID(), TestScore: 50, Score: 30}
+	qtest.CreateSubmission(t, db, approved)
+	qtest.CreateSubmission(t, db, ungraded)
+
+	update := func(reviewers, reviewWeight uint32) {
+		t.Helper()
+		changed := proto.CloneOf(assignment)
+		changed.Reviewers, changed.ReviewWeight = reviewers, reviewWeight
+		if err := db.UpdateAssignments([]*qf.Assignment{changed}); err != nil {
+			t.Fatal(err)
+		}
+	}
+	check := func(step string, wantApproved, wantUngraded uint32) {
+		t.Helper()
+		got := qtest.GetSubmission(t, db, &qf.Submission{ID: approved.GetID()})
+		if got.GetScore() != wantApproved {
+			t.Errorf("%s: approved submission's score = %d, want %d", step, got.GetScore(), wantApproved)
+		}
+		if status := got.GetStatusByUser(approvedUser.GetID()); status != qf.Submission_APPROVED {
+			t.Errorf("%s: approved submission's status = %v, want %v", step, status, qf.Submission_APPROVED)
+		}
+		if got := qtest.GetSubmission(t, db, &qf.Submission{ID: ungraded.GetID()}).GetScore(); got != wantUngraded {
+			t.Errorf("%s: ungraded submission's score = %d, want %d", step, got, wantUngraded)
+		}
+	}
+
+	update(1, 50)
+	check("review weight 50", 80, 25)
+	update(0, 50)
+	check("no reviewers", 90, 50)
+	update(1, 100)
+	check("review weight 100", 70, 0)
+}

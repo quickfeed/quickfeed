@@ -66,14 +66,20 @@ func (a *Assignment) DefaultReviewWeight() uint32 {
 	}
 }
 
+// EffectiveReviewWeight returns the percentage of a submission's score given by
+// its review score: the review weight if the assignment has reviewers, and 0 otherwise.
+func (a *Assignment) EffectiveReviewWeight() uint32 {
+	if !a.GradedManually() {
+		return 0
+	}
+	return min(a.GetReviewWeight(), 100)
+}
+
 // WeightedScore returns the submission score for the given test and review
 // scores, weighted by the assignment's review weight. Reviews count only if
 // the assignment has reviewers.
 func (a *Assignment) WeightedScore(testScore, reviewScore uint32) uint32 {
-	var weight uint64
-	if a.GradedManually() {
-		weight = uint64(min(a.GetReviewWeight(), 100))
-	}
+	weight := uint64(a.EffectiveReviewWeight())
 	// Adding 50 rounds the weighted score to the nearest integer.
 	return uint32((uint64(testScore)*(100-weight) + uint64(reviewScore)*weight + 50) / 100)
 }

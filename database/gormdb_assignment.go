@@ -128,6 +128,9 @@ func (db *GormDB) UpdateAssignments(assignments []*qf.Assignment) error {
 			}).Error; err != nil {
 				return err
 			}
+			if assignment.EffectiveReviewWeight() != v.EffectiveReviewWeight() {
+				return rescoreSubmissions(tx, v)
+			}
 			return nil
 		})
 		if err != nil {
@@ -135,6 +138,27 @@ func (db *GormDB) UpdateAssignments(assignments []*qf.Assignment) error {
 		}
 	}
 	return errs
+}
+
+// rescoreSubmissions recomputes the score of the assignment's submissions from
+// their test and review scores. Their grades remain as they are.
+func rescoreSubmissions(tx *gorm.DB, assignment *qf.Assignment) error {
+	var submissions []*qf.Submission
+	if err := tx.Select("id", "score", "test_score", "review_score").
+		Where(&qf.Submission{AssignmentID: assignment.GetID()}).
+		Find(&submissions).Error; err != nil {
+		return err
+	}
+	for _, submission := range submissions {
+		score := assignment.WeightedScore(submission.GetTestScore(), submission.GetReviewScore())
+		if score == submission.GetScore() {
+			continue
+		}
+		if err := tx.Model(&qf.Submission{ID: submission.GetID()}).Update("score", score).Error; err != nil {
+			return err
+		}
+	}
+	return nil
 }
 
 func check(tx *gorm.DB, assignment *qf.Assignment) error {
