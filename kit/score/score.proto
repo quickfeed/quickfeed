@@ -35,9 +35,9 @@ message Score {
     int32 Score        = 5;  // the score obtained
     int32 MaxScore     = 6;  // max score possible to get on this specific test
     int32 Weight       = 7;  // the weight of this test; used to compute final grade
-    string TestDetails = 8;  // if populated, the frontend may display these details
+    string TestDetails = 8;  // failure diagnostics reported by the score library or test framework
 
-    string TestOutput = 9;      // the run's output attributed to this test
+    string TestOutput = 9;      // other output from the test or the implementation it exercises
     TestStatus Status = 10;     // outcome reported by the test framework
     double Elapsed    = 11;     // seconds the test took to run
 }
