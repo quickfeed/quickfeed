@@ -1,6 +1,6 @@
 import type { Submission } from "../../proto/qf/types_pb"
 import { Submission_Status } from "../../proto/qf/types_pb"
-import { getEffectiveStatus, isTestedAndReviewed, reviewVisible, scoreParts } from "../Helpers"
+import { getEffectiveStatus, isScoreHidden, isTestedAndReviewed, reviewVisible, scoreParts, testPart } from "../Helpers"
 import { useAppState } from "../overmind"
 import SubmissionTypeIcon from "./student/SubmissionTypeIcon"
 
@@ -17,10 +17,15 @@ const ProgressBar = ({ courseID, submission, showText = true, split = false }: P
 
     const assignment = state.assignments[courseID]?.find(assignment => assignment.ID === submission.AssignmentID)
 
-    const score = submission.score ?? 0
-    const scorelimit = assignment?.scoreLimit ?? 0
     const status = getEffectiveStatus(submission, state.self.ID)
-    const remainingToPass = status === Submission_Status.APPROVED ? 0 : Math.max(0, scorelimit - score)
+    const scorelimit = assignment?.scoreLimit ?? 0
+    // A hidden score shows the tests' part of it, followed by the review's part as pending.
+    const hidden = assignment !== undefined && isScoreHidden(assignment, state.isTeacher, status)
+    const score = hidden ? testPart(submission, assignment) : submission.score ?? 0
+    let remainingToPass = status === Submission_Status.APPROVED ? 0 : Math.max(0, scorelimit - score)
+    if (hidden) {
+        remainingToPass = assignment.reviewWeight
+    }
     const parts = split && assignment && isTestedAndReviewed(assignment) && reviewVisible(state.isTeacher, status)
         ? scoreParts(submission, assignment)
         : undefined
@@ -29,9 +34,15 @@ const ProgressBar = ({ courseID, submission, showText = true, split = false }: P
     let secondaryText = ""
     let reviewText = ""
     if (showText) {
-        text = parts ? `Tests ${parts.tests} %` : `${score} %`
-        secondaryText = `${remainingToPass} %`
-        reviewText = parts ? `Review ${parts.review} %` : ""
+        if (parts) {
+            text = `Tests ${parts.tests} %`
+            reviewText = `Review ${parts.review} %`
+        } else if (hidden) {
+            text = `Tests ${score} %`
+        } else {
+            text = `${score} %`
+        }
+        secondaryText = hidden ? "Review pending" : `${remainingToPass} %`
     }
 
     let color = ""

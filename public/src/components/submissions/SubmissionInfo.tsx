@@ -100,7 +100,7 @@ const SubmissionInfo = ({ submission, assignment }: SubmissionInfoProps) => {
 const scoreText = (submission: Submission, assignment: Assignment, showReview: boolean): string => {
     const reviewWeight = assignment.reviewWeight
     if (!showReview) {
-        return `${submission.testScore} % from tests; review not graded yet`
+        return `${submission.testScore} % from tests (weight ${100 - reviewWeight} %); review not graded yet`
     }
     return `${submission.score} % = tests ${submission.testScore} % × ${100 - reviewWeight} % + review ${submission.reviewScore} % × ${reviewWeight} %`
 }

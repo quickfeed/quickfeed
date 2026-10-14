@@ -80,7 +80,7 @@ describe("SubmissionInfo", () => {
 
         it("hides the review score from a student until the submission is graded", () => {
             renderInfo(Enrollment_UserStatus.STUDENT, Submission_Status.NONE)
-            expect(screen.getByText("90 % from tests; review not graded yet")).toBeDefined()
+            expect(screen.getByText("90 % from tests (weight 60 %); review not graded yet")).toBeDefined()
         })
 
         it("explains the score to a student once the submission is graded", () => {

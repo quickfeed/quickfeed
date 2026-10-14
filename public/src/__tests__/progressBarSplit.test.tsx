@@ -15,13 +15,13 @@ describe("ProgressBar for an assignment with tests and reviews", () => {
         reviewWeight: 20,
         ExpectedTests: [create(TestInfoSchema, { TestName: "TestA", MaxScore: 1, Weight: 1 })],
     })
-    const renderBar = (status: Submission_Status, split: boolean) => {
+    const renderBar = (status: Submission_Status, split: boolean, score = 52) => {
         const submission = create(SubmissionSchema, {
             AssignmentID: assignment.ID,
             userID,
             testScore: 40,
-            reviewScore: 100,
-            score: 52,
+            reviewScore: score > 0 ? 100 : 0,
+            score,
             Grades: [create(GradeSchema, { UserID: userID, Status: status })],
         })
         const submissions = new SubmissionsForUser()
@@ -52,9 +52,15 @@ describe("ProgressBar for an assignment with tests and reviews", () => {
         expect(segments(container)).toEqual([["32%", "Tests 32 %"], ["20%", "Review 20 %"], ["38%", "38 %"]])
     })
 
-    it("does not split a student's ungraded submission, whose review is hidden", () => {
-        const container = renderBar(Submission_Status.NONE, true)
-        expect(segments(container)).toEqual([["52%", "52 %"], ["38%", "38 %"]])
+    it("shows a student the tests' part of an ungraded submission, and the review's part as pending", () => {
+        // The server hides the score of such a submission as 0.
+        const container = renderBar(Submission_Status.NONE, true, 0)
+        expect(segments(container)).toEqual([["32%", "Tests 32 %"], ["20%", "Review pending"]])
+    })
+
+    it("shows a student the review's part as pending without splitting the bar", () => {
+        const container = renderBar(Submission_Status.NONE, false, 0)
+        expect(segments(container)).toEqual([["32%", "Tests 32 %"], ["20%", "Review pending"]])
     })
 
     it("does not split unless asked to", () => {
