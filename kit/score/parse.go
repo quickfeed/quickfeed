@@ -86,5 +86,19 @@ func HasPrefix(s string) bool {
 // run can print one. Use it to decide whether a line must be kept; use parse to
 // read the score itself, which the scanner has already separated from the output.
 func HasScore(s string) bool {
-	return carriesScore(s)
+	if HasPrefix(s) {
+		return true
+	}
+	if m := testAttrMarker.FindStringSubmatch(s); m != nil {
+		return HasPrefix(m[3])
+	}
+	if ev, ok := decodeEvent(s); ok {
+		switch ev.Action {
+		case "attr":
+			return HasPrefix(ev.Value)
+		case "output":
+			return HasPrefix(ev.Output)
+		}
+	}
+	return false
 }

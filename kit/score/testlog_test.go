@@ -272,3 +272,25 @@ func TestScanKeepsScoreLinesOutsideAnyTest(t *testing.T) {
 		t.Error("a score line reached the unattributed output, leaking the session secret")
 	}
 }
+
+func TestScanReadsEventsWithoutTimestamps(t *testing.T) {
+	// Cached go test results and test2json without -t omit Time.
+	out := `{"Action":"run","Test":"TestStack"}
+{"Action":"output","Test":"TestStack","Output":"stack output\n"}
+{"Action":"pass","Test":"TestStack","Elapsed":0.25}
+`
+	log := scanTestLog(out)
+	run := log.Test("TestStack")
+	if run == nil {
+		t.Fatal("TestStack not found")
+	}
+	if run.Status != TestStatus_PASSED || run.Elapsed != 0.25 {
+		t.Errorf("TestStack outcome = %v in %v seconds, want PASSED in 0.25 seconds", run.Status, run.Elapsed)
+	}
+	if got := strings.Join(run.Output, "\n"); got != "stack output" {
+		t.Errorf("TestStack output = %q, want %q", got, "stack output")
+	}
+	if len(log.Unattributed) != 0 {
+		t.Errorf("unattributed output = %q, want none", log.Unattributed)
+	}
+}
