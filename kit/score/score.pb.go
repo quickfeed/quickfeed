@@ -145,8 +145,8 @@ type Score struct {
 	Score         int32                  `protobuf:"varint,5,opt,name=Score,proto3" json:"Score,omitempty"`                          // the score obtained
 	MaxScore      int32                  `protobuf:"varint,6,opt,name=MaxScore,proto3" json:"MaxScore,omitempty"`                    // max score possible to get on this specific test
 	Weight        int32                  `protobuf:"varint,7,opt,name=Weight,proto3" json:"Weight,omitempty"`                        // the weight of this test; used to compute final grade
-	TestDetails   string                 `protobuf:"bytes,8,opt,name=TestDetails,proto3" json:"TestDetails,omitempty"`               // if populated, the frontend may display these details
-	TestOutput    string                 `protobuf:"bytes,9,opt,name=TestOutput,proto3" json:"TestOutput,omitempty"`                 // the run's output attributed to this test
+	TestDetails   string                 `protobuf:"bytes,8,opt,name=TestDetails,proto3" json:"TestDetails,omitempty"`               // failure diagnostics reported by the score library or test framework
+	TestOutput    string                 `protobuf:"bytes,9,opt,name=TestOutput,proto3" json:"TestOutput,omitempty"`                 // other output from the test or the implementation it exercises
 	Status        TestStatus             `protobuf:"varint,10,opt,name=Status,proto3,enum=score.TestStatus" json:"Status,omitempty"` // outcome reported by the test framework
 	Elapsed       float64                `protobuf:"fixed64,11,opt,name=Elapsed,proto3" json:"Elapsed,omitempty"`                    // seconds the test took to run
 	unknownFields protoimpl.UnknownFields

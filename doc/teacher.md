@@ -465,7 +465,8 @@ Attribution comes from the framing that `go test` prints, so it works without an
 Two things make it better:
 
 - **Say why a test failed.**
-  Report a failure through the score object rather than through `t` alone: `sc.Errorf(t, "Pop() = %v, want: %v", got, want)` fails the test exactly as `t.Errorf` does, and also records the message as the test's details.
+  With the `score.T` wrapper, use `sc.Errorf("Pop() = %v, want: %v", got, want)` to fail the test and record the message as its details.
+  Tests using the earlier `score.Score` API pass the test handle as the first argument: `sc.Errorf(t, "Pop() = %v, want: %v", got, want)`.
   Those details are shown first, above the test's other output, and are what the student reads before anything else.
   `sc.Error`, `sc.Fatal` and `sc.Fatalf` do the same.
 
@@ -482,6 +483,17 @@ The course-wide results tables do not load each test's output; it is fetched whe
 Two limits are worth knowing.
 `go test` interleaves whatever parallel tests write to standard output themselves, so such writes are attributed on a best-effort basis; a test's failures and its score are always attributed correctly.
 A panic is printed after the test's own framing has ended, so its stack trace is kept in the build log.
+
+### Reporting Output from Other Languages
+
+A score producer in any language can include `TestDetails` and `TestOutput` in its `Score` JSON object.
+Use `TestDetails` for failure diagnostics, such as an assertion's expected and actual values.
+Use `TestOutput` for other output from the test or the student's implementation, such as logging and standard output.
+QuickFeed shows failure diagnostics first and makes the other output available separately.
+
+These fields describe the result, regardless of which test framework produced it.
+For Go tests, the score library records failure diagnostics and QuickFeed also reads the test framework's output.
+Other score producers must fill the fields themselves; QuickFeed does not parse their frameworks' event formats.
 
 ## Reviewing student submissions
 
