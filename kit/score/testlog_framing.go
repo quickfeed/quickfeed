@@ -1,4 +1,4 @@
-package testlog
+package score
 
 import (
 	"regexp"
@@ -24,11 +24,11 @@ var (
 
 // framing reports whether line is the test framework describing a test rather
 // than output from one, recording what the line says.
-func (s *scanner) framing(line string) bool {
+func (s *testLogScanner) framing(line string) bool {
 	if m := frameAttr.FindStringSubmatch(line); m != nil {
 		// The attribute's own test name is authoritative even when the output
 		// of parallel tests is interleaved.
-		if !s.structuredAttrs && s.isScoreLine(m[3]) {
+		if !s.structuredAttrs && HasPrefix(m[3]) {
 			run := s.test(m[1])
 			run.Scores = append(run.Scores, m[3])
 		}
@@ -40,7 +40,7 @@ func (s *scanner) framing(line string) bool {
 	}
 	if m := frameResult.FindStringSubmatch(line); m != nil {
 		run := s.test(m[2])
-		run.Status = statusOf(strings.ToLower(m[1]))
+		run.Status = testStatusOf(strings.ToLower(m[1]))
 		if elapsed, err := strconv.ParseFloat(m[3], 64); err == nil {
 			run.Elapsed = elapsed
 		}
@@ -55,7 +55,7 @@ func (s *scanner) framing(line string) bool {
 // whether the testing package printed it on the test's behalf. The indentation
 // the testing package adds is framing, so it is stripped; indentation beyond it
 // is the message's own and is kept.
-func classify(line, outputType string, run *TestRun) (string, entryKind) {
+func classify(line, outputType string, run *testRun) (string, entryKind) {
 	if outputType == "error" || outputType == "error-continue" {
 		return trimIndent(line, run), reported
 	}
@@ -74,37 +74,36 @@ func classify(line, outputType string, run *TestRun) (string, entryKind) {
 }
 
 // trimIndent removes the indentation the testing package added to a message.
-func trimIndent(line string, run *TestRun) string {
+func trimIndent(line string, run *testRun) string {
 	if run.indent == 0 {
 		return strings.TrimLeft(line, " ")
 	}
 	return strings.TrimPrefix(line, strings.Repeat(" ", run.indent))
 }
 
-func lastKind(run *TestRun) entryKind {
+func lastKind(run *testRun) entryKind {
 	if len(run.entries) == 0 {
 		return plain
 	}
 	return run.entries[len(run.entries)-1].kind
 }
 
-// CarriesScore reports whether line carries a score object, in any of the forms
+// carriesScore reports whether line carries a score object, in any of the forms
 // a run can print one: on its own, as the "=== ATTR" line that testing.T.Attr
-// prints, or inside a go test -json event. The isScoreLine predicate recognizes
-// the score object itself, as it does for Scan.
-func CarriesScore(line string, isScoreLine func(string) bool) bool {
-	if isScoreLine(line) {
+// prints, or inside a go test -json event.
+func carriesScore(line string) bool {
+	if HasPrefix(line) {
 		return true
 	}
 	if m := frameAttr.FindStringSubmatch(line); m != nil {
-		return isScoreLine(m[3])
+		return HasPrefix(m[3])
 	}
 	if ev, ok := decodeEvent(line); ok {
 		switch ev.Action {
 		case "attr":
-			return isScoreLine(ev.Value)
+			return HasPrefix(ev.Value)
 		case "output":
-			return isScoreLine(ev.Output)
+			return HasPrefix(ev.Output)
 		}
 	}
 	return false

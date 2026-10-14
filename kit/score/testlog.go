@@ -1,52 +1,14 @@
-// Package testlog attributes a test run's output to the tests that produced it,
-// so that a student can read one failing test's output instead of the whole run.
-//
-// It reads both of the forms a course's run script can produce: the framing that
-// go test -v prints, and the event stream that go test -json prints. The two are
-// the same information, since go test -json is go test -v routed through
-// cmd/internal/test2json, and the choice is made per line, so that the output a
-// run script prints around the test command is handled either way.
-//
-// Attribution is exact for a test's scores, its status, and the messages it
-// reported through Error, Fatal, and Skip, because those pass through the
-// testing package's per-test framing. It is best effort for what a test writes
-// to stdout itself: go test interleaves the raw writes of parallel tests, and
-// neither form records which test made which write.
-package testlog
+package score
 
 import (
 	"encoding/json"
 	"strings"
 )
 
-// Status is the outcome a test framework reported for a single test.
-type Status int
-
-const (
-	StatusUnknown Status = iota // the run reported no outcome
-	StatusPassed
-	StatusFailed
-	StatusSkipped
-)
-
-// String returns the lowercase name of the status.
-func (s Status) String() string {
-	switch s {
-	case StatusPassed:
-		return "passed"
-	case StatusFailed:
-		return "failed"
-	case StatusSkipped:
-		return "skipped"
-	default:
-		return "unknown"
-	}
-}
-
-// TestRun is one test's output, as the test framework attributed it.
-type TestRun struct {
+// testRun is one test's output, as the test framework attributed it.
+type testRun struct {
 	Name     string
-	Status   Status
+	Status   TestStatus
 	Elapsed  float64  // seconds
 	Failures []string // messages reported through Error or Fatal
 	Output   []string // everything else the test printed
@@ -56,28 +18,62 @@ type TestRun struct {
 	indent  int // width of the indentation the testing package adds to messages
 }
 
-// Log is a run's output, attributed to the tests that produced it.
-type Log struct {
-	Tests        []*TestRun // in the order the tests started
+// testLog is a run's output, attributed to the tests that produced it.
+type testLog struct {
+	Tests        []*testRun // in the order the tests started
 	Unattributed []string   // setup, compile, and package-level output
 	Scores       []string   // score lines that belong to no test
 
-	byName map[string]*TestRun
+	byName map[string]*testRun
 }
 
 // Test returns the run of the named test, or nil if the run has no such test.
-func (l *Log) Test(name string) *TestRun {
+func (l *testLog) Test(name string) *testRun {
 	return l.byName[name]
 }
 
-// Scan attributes the output of a test run to the tests that produced it.
-// The isScoreLine predicate reports whether a line is a score line; it is a
-// parameter so that this package need not depend on the score package, and so
-// that a score line never reaches a caller as ordinary output.
-func Scan(out string, isScoreLine func(string) bool) *Log {
-	s := &scanner{
-		log:         &Log{byName: make(map[string]*TestRun)},
-		isScoreLine: isScoreLine,
+// retainOutput assigns unscored subtests to their nearest scored ancestor.
+// Tests without a scored ancestor keep their output in the build log.
+func (l *testLog) retainOutput(scored map[string]*testRun) {
+	for _, run := range l.Tests {
+		if scored[run.Name] != nil {
+			continue
+		}
+		if parent := scoredAncestor(run.Name, scored); parent != nil {
+			parent.Output = append(parent.Output, namedOutput(run.Name, run.Output)...)
+			parent.Failures = append(parent.Failures, namedOutput(run.Name, run.Failures)...)
+		} else {
+			l.Unattributed = append(l.Unattributed, namedOutput(run.Name, run.Failures)...)
+			l.Unattributed = append(l.Unattributed, namedOutput(run.Name, run.Output)...)
+		}
+	}
+}
+
+func scoredAncestor(name string, scored map[string]*testRun) *testRun {
+	for {
+		index := strings.LastIndex(name, "/")
+		if index < 0 {
+			return nil
+		}
+		name = name[:index]
+		if run := scored[name]; run != nil {
+			return run
+		}
+	}
+}
+
+func namedOutput(name string, lines []string) []string {
+	if len(lines) == 0 {
+		return nil
+	}
+	return append([]string{"--- " + name + " ---"}, lines...)
+}
+
+// scanTestLog attributes the output of a test run to the tests that produced it.
+// Score lines are kept separate from ordinary output.
+func scanTestLog(out string) *testLog {
+	s := &testLogScanner{
+		log: &testLog{byName: make(map[string]*testRun)},
 	}
 	for line := range strings.SplitSeq(out, "\n") {
 		s.line(strings.TrimSuffix(line, "\r"))
@@ -101,10 +97,9 @@ type entry struct {
 	kind entryKind
 }
 
-type scanner struct {
-	log         *Log
-	isScoreLine func(string) bool
-	current     *TestRun // the test the text framing is inside of
+type testLogScanner struct {
+	log     *testLog
+	current *testRun // the test the text framing is inside of
 	// structuredAttrs records that this run reported attributes as events. Such
 	// a run also prints each attribute as an "=== ATTR" line in an output event,
 	// which would otherwise record the same score a second time.
@@ -122,7 +117,7 @@ type event struct {
 	Value      string
 }
 
-func (s *scanner) line(line string) {
+func (s *testLogScanner) line(line string) {
 	if ev, ok := decodeEvent(line); ok {
 		s.event(ev)
 		return
@@ -132,13 +127,13 @@ func (s *scanner) line(line string) {
 
 // event records a test2json event. The event names the test it belongs to, so
 // it does not rely on the framing that the text form tracks.
-func (s *scanner) event(ev event) {
+func (s *testLogScanner) event(ev event) {
 	switch ev.Action {
 	case "attr":
 		s.structuredAttrs = true
 		// Only score attributes are kept; any other attribute is metadata about
 		// the test rather than output from it.
-		if s.isScoreLine(ev.Value) {
+		if HasPrefix(ev.Value) {
 			s.test(ev.Test).Scores = append(s.test(ev.Test).Scores, ev.Value)
 		}
 	case "run":
@@ -148,10 +143,10 @@ func (s *scanner) event(ev event) {
 			return // the package's own result, not a test's
 		}
 		run := s.test(ev.Test)
-		run.Status = statusOf(ev.Action)
+		run.Status = testStatusOf(ev.Action)
 		run.Elapsed = ev.Elapsed
 	case "output":
-		var run *TestRun
+		var run *testRun
 		if ev.Test != "" {
 			run = s.test(ev.Test)
 		}
@@ -164,7 +159,7 @@ func (s *scanner) event(ev event) {
 // output records one line of a run's output. Framing is recognized here rather
 // than by the caller, because the events of Go 1.25 and 1.26 carry the framing
 // in their Output field with no OutputType to tell it apart.
-func (s *scanner) output(line string, run *TestRun, outputType string) {
+func (s *testLogScanner) output(line string, run *testRun, outputType string) {
 	if outputType == "frame" {
 		return
 	}
@@ -174,7 +169,7 @@ func (s *scanner) output(line string, run *TestRun, outputType string) {
 	if strings.TrimSpace(line) == "" {
 		return
 	}
-	if s.isScoreLine(line) {
+	if HasPrefix(line) {
 		if run == nil {
 			s.log.Scores = append(s.log.Scores, line)
 		} else {
@@ -193,7 +188,7 @@ func (s *scanner) output(line string, run *TestRun, outputType string) {
 // finish sorts each test's entries into its failures and its output. A failing
 // test's diagnostics explain the failure, which is what a student needs first;
 // the same lines under a passing or skipped test are ordinary output.
-func (s *scanner) finish() {
+func (s *testLogScanner) finish() {
 	for _, run := range s.log.Tests {
 		tagged := false
 		for _, e := range run.entries {
@@ -206,7 +201,7 @@ func (s *scanner) finish() {
 			switch {
 			case e.kind == reported:
 				run.Failures = append(run.Failures, e.text)
-			case e.kind == diagnostic && !tagged && run.Status == StatusFailed:
+			case e.kind == diagnostic && !tagged && run.Status == TestStatus_FAILED:
 				run.Failures = append(run.Failures, e.text)
 			default:
 				run.Output = append(run.Output, e.text)
@@ -217,26 +212,26 @@ func (s *scanner) finish() {
 }
 
 // test returns the named test's run, recording it in start order if new.
-func (s *scanner) test(name string) *TestRun {
+func (s *testLogScanner) test(name string) *testRun {
 	if run, ok := s.log.byName[name]; ok {
 		return run
 	}
-	run := &TestRun{Name: name}
+	run := &testRun{Name: name}
 	s.log.byName[name] = run
 	s.log.Tests = append(s.log.Tests, run)
 	return run
 }
 
-func statusOf(action string) Status {
+func testStatusOf(action string) TestStatus {
 	switch action {
 	case "pass":
-		return StatusPassed
+		return TestStatus_PASSED
 	case "fail":
-		return StatusFailed
+		return TestStatus_FAILED
 	case "skip":
-		return StatusSkipped
+		return TestStatus_SKIPPED
 	}
-	return StatusUnknown
+	return TestStatus_NOT_RUN
 }
 
 // decodeEvent reports whether line is a test2json event, and decodes it.
