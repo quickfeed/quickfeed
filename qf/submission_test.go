@@ -476,47 +476,53 @@ func TestSetGradesIfApprovedReviewed(t *testing.T) {
 
 func TestSubmissionsClean(t *testing.T) {
 	const userID = 1
+	tested := &qf.Assignment{ID: 1}
+	reviewed := &qf.Assignment{ID: 2, Reviewers: 1}
+	assignments := []*qf.Assignment{tested, reviewed}
 	reviews := []*qf.Review{{ID: 1, Score: 70}}
 	graded := []*qf.Grade{{UserID: userID, Status: qf.Submission_APPROVED}, {UserID: 2, Status: qf.Submission_REVISION}}
 	ungraded := []*qf.Grade{{UserID: userID}, {UserID: 2, Status: qf.Submission_APPROVED}}
+	ownGrade := func(status qf.Submission_Status) []*qf.Grade {
+		return []*qf.Grade{{SubmissionID: 1, UserID: userID, Status: status}}
+	}
 	tests := []struct {
 		name       string
 		submission *qf.Submission
 		want       *qf.Submission
 	}{
 		{
-			name:       "TestedOnly",
-			submission: &qf.Submission{ID: 1, TestScore: 85, Score: 85, Grades: ungraded},
-			want:       &qf.Submission{ID: 1, TestScore: 85, Score: 85, Grades: []*qf.Grade{{SubmissionID: 1, UserID: userID}}},
+			name:       "TestedUngraded",
+			submission: &qf.Submission{ID: 1, AssignmentID: tested.GetID(), TestScore: 85, Score: 85, Grades: ungraded},
+			want:       &qf.Submission{ID: 1, AssignmentID: tested.GetID(), TestScore: 85, Score: 85, Grades: ownGrade(qf.Submission_NONE)},
 		},
 		{
-			name:       "ReviewedOnlyUngraded",
-			submission: &qf.Submission{ID: 1, ReviewScore: 70, Score: 70, Grades: ungraded, Reviews: reviews},
-			want:       &qf.Submission{ID: 1},
+			name:       "ReviewedUngradedNoReviews",
+			submission: &qf.Submission{ID: 1, AssignmentID: reviewed.GetID(), TestScore: 90, Score: 54, Grades: ungraded},
+			want:       &qf.Submission{ID: 1, AssignmentID: reviewed.GetID(), TestScore: 90, Grades: ownGrade(qf.Submission_NONE)},
 		},
 		{
-			name:       "TestedAndReviewedNoReviews",
-			submission: &qf.Submission{ID: 1, TestScore: 90, Score: 54, Grades: ungraded},
-			want:       &qf.Submission{ID: 1, TestScore: 90, Score: 90, Grades: []*qf.Grade{{SubmissionID: 1, UserID: userID}}},
+			name:       "ReviewedUngraded",
+			submission: &qf.Submission{ID: 1, AssignmentID: reviewed.GetID(), TestScore: 90, ReviewScore: 70, Score: 82, Grades: ungraded, Reviews: reviews},
+			want:       &qf.Submission{ID: 1, AssignmentID: reviewed.GetID(), TestScore: 90},
 		},
 		{
-			name:       "TestedAndReviewedUngraded",
-			submission: &qf.Submission{ID: 1, TestScore: 90, ReviewScore: 70, Score: 82, Grades: ungraded, Reviews: reviews},
-			want:       &qf.Submission{ID: 1, TestScore: 90, Score: 90},
-		},
-		{
-			name:       "TestedAndReviewedGraded",
-			submission: &qf.Submission{ID: 1, TestScore: 90, ReviewScore: 70, Score: 82, Grades: graded, Reviews: reviews},
+			name:       "ReviewedGraded",
+			submission: &qf.Submission{ID: 1, AssignmentID: reviewed.GetID(), TestScore: 90, ReviewScore: 70, Score: 82, Grades: graded, Reviews: reviews},
 			want: &qf.Submission{
-				ID: 1, TestScore: 90, ReviewScore: 70, Score: 82, Reviews: reviews,
-				Grades: []*qf.Grade{{SubmissionID: 1, UserID: userID, Status: qf.Submission_APPROVED}},
+				ID: 1, AssignmentID: reviewed.GetID(), TestScore: 90, ReviewScore: 70, Score: 82, Reviews: reviews,
+				Grades: ownGrade(qf.Submission_APPROVED),
 			},
+		},
+		{
+			name:       "UnknownAssignmentUngraded",
+			submission: &qf.Submission{ID: 1, AssignmentID: 99, TestScore: 85, Score: 85, Grades: ungraded},
+			want:       &qf.Submission{ID: 1, AssignmentID: 99, TestScore: 85, Grades: ownGrade(qf.Submission_NONE)},
 		},
 	}
 	for _, tc := range tests {
 		t.Run(tc.name, func(t *testing.T) {
 			submissions := &qf.Submissions{Submissions: []*qf.Submission{tc.submission}}
-			submissions.Clean(userID)
+			submissions.Clean(userID, assignments)
 			if diff := cmp.Diff(tc.want, submissions.GetSubmissions()[0], protocmp.Transform()); diff != "" {
 				t.Errorf("Clean() mismatch (-want +got):\n%s", diff)
 			}

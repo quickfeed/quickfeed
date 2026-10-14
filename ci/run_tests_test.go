@@ -878,8 +878,8 @@ func TestSubmissionsForOwners(t *testing.T) {
 		t.Errorf("graded owner: grades = %v, want only the owner's grade", got.GetGrades())
 	}
 	got = submissions[ungraded]
-	if got.GetScore() != 90 || got.GetReviewScore() != 0 || len(got.GetReviews()) != 0 || len(got.GetGrades()) != 0 {
-		t.Errorf("ungraded owner: (Score, ReviewScore, reviews, grades) = (%d, %d, %d, %d), want (90, 0, 0, 0)",
-			got.GetScore(), got.GetReviewScore(), len(got.GetReviews()), len(got.GetGrades()))
+	if got.GetScore() != 0 || got.GetTestScore() != 90 || got.GetReviewScore() != 0 || len(got.GetReviews()) != 0 || len(got.GetGrades()) != 0 {
+		t.Errorf("ungraded owner: (Score, TestScore, ReviewScore, reviews, grades) = (%d, %d, %d, %d, %d), want (0, 90, 0, 0, 0)",
+			got.GetScore(), got.GetTestScore(), got.GetReviewScore(), len(got.GetReviews()), len(got.GetGrades()))
 	}
 }

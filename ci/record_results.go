@@ -213,7 +213,7 @@ func (r *RunData) SubmissionsForOwners(db database.Database, submissionID uint64
 	}
 	submissions := make(map[uint64]*qf.Submission, len(owners))
 	for _, userID := range owners {
-		submissions[userID] = submission.CleanCopy(userID)
+		submissions[userID] = submission.CleanCopy(userID, r.Assignment)
 	}
 	return submissions, nil
 }

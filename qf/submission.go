@@ -132,23 +132,30 @@ func (s *Submission) ByGroup(groupID uint64) bool {
 	return s.GetUserID() == 0 && s.GetGroupID() > 0 && s.GetGroupID() == groupID
 }
 
-// Clean removes any review score or reviews from the submission to prevent
-// a student from seeing them before the submission has been graded.
-// The student still sees the test score.
-func (s *Submissions) Clean(userID uint64) {
+// Clean removes what the given user may not see of the submissions before
+// they are graded: the score and review score of submissions to the given
+// assignments that have reviewers, and the reviews. The test score remains.
+// A submission to an assignment not among the given ones is treated as reviewed.
+func (s *Submissions) Clean(userID uint64, assignments []*Assignment) {
+	byID := make(map[uint64]*Assignment, len(assignments))
+	for _, assignment := range assignments {
+		byID[assignment.GetID()] = assignment
+	}
 	for _, submission := range s.GetSubmissions() {
-		submission.clean(userID)
+		assignment, ok := byID[submission.GetAssignmentID()]
+		submission.clean(userID, !ok || assignment.GradedManually())
 	}
 }
 
-// CleanCopy returns a copy of the submission as the given user may see it; see Submissions.Clean.
-func (s *Submission) CleanCopy(userID uint64) *Submission {
+// CleanCopy returns a copy of the submission to the given assignment as the
+// given user may see it; see Submissions.Clean.
+func (s *Submission) CleanCopy(userID uint64, assignment *Assignment) *Submission {
 	submission := proto.CloneOf(s)
-	submission.clean(userID)
+	submission.clean(userID, assignment.GradedManually())
 	return submission
 }
 
-func (s *Submission) clean(userID uint64) {
+func (s *Submission) clean(userID uint64, reviewed bool) {
 	// Group submissions may have multiple grades, so we need to filter the grades by the user.
 	grade := &Grade{
 		UserID:       userID,
@@ -156,12 +163,12 @@ func (s *Submission) clean(userID uint64) {
 		Status:       s.GetStatusByUser(userID),
 	}
 	s.Grades = []*Grade{grade}
-	if grade.GetStatus() != Submission_NONE {
+	if grade.GetStatus() != Submission_NONE || !reviewed {
 		return
 	}
-	// Remove the review score if the submission has not been graded,
-	// and also the grades and reviews if it has been reviewed.
-	s.Score = s.GetTestScore()
+	// The score includes the review score, so both stay hidden until the
+	// submission is graded, as do the grades and reviews once it has reviews.
+	s.Score = 0
 	s.ReviewScore = 0
 	if len(s.GetReviews()) > 0 {
 		s.Grades = nil

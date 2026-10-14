@@ -379,7 +379,12 @@ func (s *QuickFeedService) GetSubmissions(ctx context.Context, in *qf.Submission
 	id := userID(ctx)
 	// If the user is not a teacher, remove score and reviews from submissions that are not released.
 	if !s.isTeacher(ctx, id, in.GetCourseID()) {
-		submissions.Clean(id)
+		assignments, err := s.db.GetAssignmentsByCourse(in.GetCourseID())
+		if err != nil {
+			qlog.FromContext(ctx).Error("failed to get assignments", label.Error, err)
+			return nil, connect.NewError(connect.CodeNotFound, errors.New("no submissions found"))
+		}
+		submissions.Clean(id, assignments)
 	}
 	return submissions, nil
 }
