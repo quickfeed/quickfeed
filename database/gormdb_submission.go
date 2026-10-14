@@ -49,7 +49,11 @@ func (db *GormDB) CreateSubmission(submission *qf.Submission) error {
 			return err // will rollback transaction
 		}
 		if submission.GetID() != 0 {
-			if err := tx.First(&qf.Submission{}, &qf.Submission{ID: submission.GetID()}).Error; err != nil {
+			var stored qf.Submission
+			if err := tx.First(&stored, &qf.Submission{ID: submission.GetID()}).Error; err != nil {
+				return err // will rollback transaction
+			}
+			if err := keepReviewScore(tx, &stored, submission); err != nil {
 				return err // will rollback transaction
 			}
 			if err := tx.Where("submission_id = ?", submission.GetID()).Delete(&score.Score{}).Error; err != nil {
@@ -76,6 +80,22 @@ func (db *GormDB) CreateSubmission(submission *qf.Submission) error {
 		}
 		return nil // will commit transaction
 	})
+}
+
+// keepReviewScore gives the submission the review score stored for it, if a
+// review has changed that score since the submission was computed, and
+// recomputes the submission's score from it.
+func keepReviewScore(tx *gorm.DB, stored, submission *qf.Submission) error {
+	if stored.GetReviewScore() == submission.GetReviewScore() {
+		return nil
+	}
+	var assignment qf.Assignment
+	if err := tx.First(&assignment, submission.GetAssignmentID()).Error; err != nil {
+		return err
+	}
+	submission.ReviewScore = stored.GetReviewScore()
+	submission.Score = assignment.WeightedScore(submission.GetTestScore(), submission.GetReviewScore())
+	return nil
 }
 
 // setGrades adds grades for any user or group related to the submission
