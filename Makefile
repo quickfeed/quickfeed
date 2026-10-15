@@ -11,7 +11,7 @@ protopatch	:= qf/types.proto kit/score/score.proto
 proto_ts	:= $(protopatch:%.proto=public/proto/%_pb.ts)
 
 # necessary when target is not tied to a specific file
-.PHONY: download brew version-check dev-db install ui proto test qcm webhook-setup
+.PHONY: download brew version-check dev-db install ui proto test modernize qcm webhook-setup
 
 download:
 	@echo "Download go.mod dependencies"
@@ -79,6 +79,10 @@ test:
 	@go clean -testcache
 	@go test ./...
 	@cd public && npm run test
+
+modernize:
+	@go fix ./...
+	@cd kit && go fix ./...
 
 qcm:
 	@cd cmd/qcm; go install

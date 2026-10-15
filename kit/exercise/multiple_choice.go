@@ -29,7 +29,7 @@ func ParseMarkdownAnswers(answerFile string) (map[int]string, error) {
 	// map: question# -> answer label
 	answerMap := make(map[int]string)
 	multipleAnswers := make(map[int]bool)
-	for _, line := range strings.Split(string(md), "\n") {
+	for line := range strings.SplitSeq(string(md), "\n") {
 		if qNumRegExp.MatchString(line) {
 			qNum := qNumRegExp.ReplaceAllString(line, "$1")
 			// ignore error since regular expression ensure it is already a number
@@ -89,7 +89,7 @@ func MultipleChoice(sc *score.T, answerFile string, correct map[int]string) {
 	}
 	_, incorrectAnswers := CheckMultipleChoice(answers, correct)
 	for _, incorrect := range incorrectAnswers {
-		sc.Errorf("%v: Question %d: Answer not found or incorrect.", sc.Name(), incorrect)
 		sc.Dec()
+		sc.Errorf("%v: Question %d: Answer not found or incorrect.", sc.Name(), incorrect)
 	}
 }

@@ -7,12 +7,12 @@ import (
 
 func init() {
 	// Reduce max score by 1 since the first test-case ({0, 0}) always passes, which gave free points.
-	scores.Add(TestFibonacciAG, len(fibonacciTestsAG)-1, 5)
-	scores.Add(TestFibonacciAttackAG, len(fibonacciTestsAG)-1, 5)
-	scores.Add(TestFibonacciAttack2AG, len(fibonacciTestsAG)-1, 5)
+	scores.Add(TestFibonacci, len(fibonacciTests)-1, 5)
+	scores.Add(TestFibonacciAttack, len(fibonacciTests)-1, 5)
+	scores.Add(TestFibonacciAttack2, len(fibonacciTests)-1, 5)
 }
 
-var fibonacciTestsAG = []struct {
+var fibonacciTests = []struct {
 	in, want uint
 }{
 	{0, 0},
@@ -31,28 +31,28 @@ var fibonacciTestsAG = []struct {
 	{20, 6765},
 }
 
-func TestFibonacciAG(t *testing.T) {
+func TestFibonacci(t *testing.T) {
 	sc := scores.Max(t)
 	defer sc.Recover()
 
-	for _, ft := range fibonacciTestsAG {
+	for _, ft := range fibonacciTests {
 		got := fibonacci(ft.in)
 		if got != ft.want {
-			sc.Errorf("fibonacci(%d) = %d, want %d", ft.in, got, ft.want)
 			sc.Dec()
+			sc.Errorf("fibonacci(%d) = %d, want %d", ft.in, got, ft.want)
 		}
 	}
 }
 
 // To run all these tests, to show stack trace and panic output, use:
-//   QUICKFEED_PANIC_TEST=1 go test -v -run TestFibonacciAttackAG
+//   QUICKFEED_PANIC_TEST=1 go test -v -run TestFibonacciAttack
 //
 
 const (
 	panicTestEnvName = "QUICKFEED_PANIC_TEST"
 )
 
-func TestFibonacciAttackAG(t *testing.T) {
+func TestFibonacciAttack(t *testing.T) {
 	// This test aims to emulate that student submitted code may result in a panic,
 	// and thus a test failure along with a stack trace would be expected.
 	// Hence, we do not run this as part of the CI tests. To run, see instructions below.
@@ -63,12 +63,12 @@ func TestFibonacciAttackAG(t *testing.T) {
 
 	sc := scores.Max(t)
 	defer sc.Recover()
-	for _, ft := range fibonacciTestsAG {
+	for _, ft := range fibonacciTests {
 		fibonacciAttack(ft.in)
 	}
 }
 
-func TestFibonacciAttack2AG(t *testing.T) {
+func TestFibonacciAttack2(t *testing.T) {
 	// This test aims to emulate that student submitted code may result in a panic,
 	// and thus a test failure along with a stack trace would be expected.
 	// Hence, we do not run this as part of the CI tests. To run, see instructions below.
@@ -79,7 +79,7 @@ func TestFibonacciAttack2AG(t *testing.T) {
 
 	sc := scores.Max(t)
 	defer sc.Recover()
-	for _, ft := range fibonacciTestsAG {
+	for _, ft := range fibonacciTests {
 		fibonacciAttack2(ft.in)
 	}
 }

@@ -9,12 +9,12 @@ import (
 
 func init() {
 	// Reduce max score by 1 since the first test-case ({0, 0}) always passes, which gave free points.
-	max, weight := len(triangularTestsAG)-1, 5
-	scores.Add(TestTriangularAG, max, weight)
-	scores.Add(TestTriangularRecurrenceAG, max, weight)
-	scores.Add(TestTriangularFormulaAG, max, weight)
+	max, weight := len(triangularTests)-1, 5
+	scores.Add(TestTriangular, max, weight)
+	scores.Add(TestTriangularRecurrence, max, weight)
+	scores.Add(TestTriangularFormula, max, weight)
 	// Alternative strategy using subtests that share one score.
-	scores.Add(TestTriangularSubTestAG, max*len(funcs), weight)
+	scores.Add(TestTriangularSubTest, max*len(funcs), weight)
 }
 
 var funcs = map[string]func(uint) uint{
@@ -23,7 +23,7 @@ var funcs = map[string]func(uint) uint{
 	"triangularFormula":    triangularFormula,
 }
 
-var triangularTestsAG = []struct {
+var triangularTests = []struct {
 	in, want uint
 }{
 	{0, 0},
@@ -45,11 +45,11 @@ var triangularTestsAG = []struct {
 	{90, 4095},
 }
 
-func TestTriangularAG(t *testing.T) {
+func TestTriangular(t *testing.T) {
 	sc := scores.Max(t)
 	defer sc.Recover()
 
-	for _, test := range triangularTestsAG {
+	for _, test := range triangularTests {
 		if diff := cmp.Diff(test.want, triangular(test.in)); diff != "" {
 			sc.Dec()
 			sc.Errorf("triangular(%d): (-want +got):\n%s", test.in, diff)
@@ -57,11 +57,11 @@ func TestTriangularAG(t *testing.T) {
 	}
 }
 
-func TestTriangularRecurrenceAG(t *testing.T) {
+func TestTriangularRecurrence(t *testing.T) {
 	sc := scores.Max(t)
 	defer sc.Recover()
 
-	for _, test := range triangularTestsAG {
+	for _, test := range triangularTests {
 		if diff := cmp.Diff(test.want, triangularRecurrence(test.in)); diff != "" {
 			sc.Dec()
 			sc.Errorf("triangularRecurrence(%d): (-want +got):\n%s", test.in, diff)
@@ -69,11 +69,11 @@ func TestTriangularRecurrenceAG(t *testing.T) {
 	}
 }
 
-func TestTriangularFormulaAG(t *testing.T) {
+func TestTriangularFormula(t *testing.T) {
 	sc := scores.Max(t)
 	defer sc.Recover()
 
-	for _, test := range triangularTestsAG {
+	for _, test := range triangularTests {
 		if diff := cmp.Diff(test.want, triangularFormula(test.in)); diff != "" {
 			sc.Dec()
 			sc.Errorf("triangularFormula(%d): (-want +got):\n%s", test.in, diff)
@@ -81,12 +81,12 @@ func TestTriangularFormulaAG(t *testing.T) {
 	}
 }
 
-func TestTriangularSubTestAG(t *testing.T) {
+func TestTriangularSubTest(t *testing.T) {
 	s := scores.Max(t)
 	defer s.Recover()
 	for name, fn := range funcs {
 		s.Run(name, func(sc *score.T) {
-			for _, test := range triangularTestsAG {
+			for _, test := range triangularTests {
 				if diff := cmp.Diff(test.want, fn(test.in)); diff != "" {
 					sc.Dec()
 					sc.Errorf("%s(%d): (-want +got):\n%s", name, test.in, diff)

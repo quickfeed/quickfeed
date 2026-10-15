@@ -151,6 +151,8 @@ func TestScoreIsValid(t *testing.T) {
 // clone returns a copy of the src slice pointing to different score objects.
 // This only necessary for testing purposes, when we want to run tests repeatedly
 // with the -count argument to check for non-deterministic behavior.
+// A shallow copy such as slices.Clone is not sufficient, because isValid
+// modifies the Score objects (it redacts the secret).
 func clone(src []*Score) []*Score {
 	dst := make([]*Score, len(src))
 	for i, sc := range src {
