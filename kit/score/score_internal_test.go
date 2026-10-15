@@ -7,7 +7,7 @@ import (
 	"testing"
 )
 
-// attrRecorder stands in for the *testing.T that a test passes to Print.
+// attrRecorder stands in for the *testing.T that a test passes to emit.
 type attrRecorder struct {
 	key, value string
 	calls      int

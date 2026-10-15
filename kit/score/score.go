@@ -72,23 +72,6 @@ func (s *Score) RelativeScore() string {
 	return fmt.Sprintf("%s: score = %d/%d = %.1f", s.GetTestName(), s.GetScore(), s.GetMaxScore(), float32(s.GetScore())/float32(s.GetMaxScore()))
 }
 
-// Print prints a JSON representation of the score that can be picked up by QuickFeed.
-// To ensure that panic message and stack trace is printed, this method must be called via defer.
-// If a test panics, the score will be set to zero, and a panic message will be emitted.
-// Note that, if subtests are used, each subtest must defer call the PanicHandler method
-// to ensure that panics are caught and handled appropriately.
-// The msg parameter is optional, and will be printed in case of a panic.
-//
-// Deprecated: Obtain a [T] from the registry, for example with Max(t), and defer [T.Recover].
-// The score is then reported when the test finishes. Print will be unexported.
-func (s *Score) Print(t *testing.T, msg ...string) {
-	if r := recover(); r != nil {
-		s.internalFail(t)
-		printPanicMessage(s.GetTestName(), firstMessage(msg), r)
-	}
-	s.emit(t, testing.Verbose())
-}
-
 // scoreAttrKey is the attribute key that a score is reported under.
 const scoreAttrKey = "score"
 
@@ -108,34 +91,6 @@ func (s *Score) emit(t interface{ Attr(key, value string) }, chatty bool) {
 	fmt.Println()
 	// print JSON score object: {"Secret":"my secret code","TestName": ...}
 	fmt.Println(s.json())
-}
-
-// PanicHandler recovers from a panicking test, resets the score to zero and
-// emits an error message. This is only needed when using a single score object
-// for multiple subtests each of which may panic, which would prevent the deferred
-// Print() call from executing its recovery handler.
-//
-// This must be called as a deferred function from within a subtest, that is
-// within a t.Run() function:
-//
-//	defer s.PanicHandler(t)
-//
-// The msg parameter is optional, and will be printed in case of a panic.
-//
-// Deprecated: Use [T.Run], which recovers panics in each subtest.
-func (s *Score) PanicHandler(t *testing.T, msg ...string) {
-	if r := recover(); r != nil {
-		s.internalFail(t)
-		printPanicMessage(t.Name(), firstMessage(msg), r)
-	}
-}
-
-// internalFail resets the score to zero and fails the provided test.
-func (s *Score) internalFail(t *testing.T) {
-	// reset score for panicked test functions
-	s.Score = 0
-	// fail the test
-	t.Fail()
 }
 
 // json returns a JSON string for the score object.

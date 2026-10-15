@@ -20,4 +20,5 @@ Change shared helpers to accept `*score.T`, call `t.Error` or `t.Errorf` to reco
 For an ordinary Go test, pass `score.NewUnscored(t)` to the same helper.
 Use `sc.Run` for subtests that share the parent score; it recovers subtest panics and prints the score after parallel subtests finish.
 `T.Recover` is the only way to isolate a panic in a graded test.
-`Score.Print` and `Score.PanicHandler` remain available so that existing courses keep working, but they are deprecated, and `Print` will be unexported in a later release.
+`Score.Print` and `Score.PanicHandler` are removed.
+Courses that still call them must stay on an earlier kit version in `go.mod` until they migrate.
