@@ -9,24 +9,22 @@ import TestOutputPanel from "./TestOutputPanel"
 export const hasTestRun = (score: Score): boolean =>
     score.TestDetails !== "" || score.TestOutput !== "" || score.Status !== TestStatus.NOT_RUN
 
-const badgeClass = (score: Score): string => {
-    switch (testStatusText(score)) {
-        case "Passed":
-            return "badge-success"
-        case "Skipped":
-            return "badge-outline"
-        default:
-            return "badge-error"
-    }
-}
-
-/** rowClass picks the indicator of a row. A skipped test neither passed nor
- *  failed, so it gets the neutral indicator rather than either of the two. */
-const rowClass = (score: Score): string => {
+/** indicatorClass picks the bar at the left edge of a test's rows. A skipped
+ *  test neither passed nor failed, so it gets the neutral bar rather than
+ *  either of the two. */
+const indicatorClass = (score: Score): string => {
     if (testSkipped(score)) {
         return "not-graded"
     }
     return testFailed(score) ? "failed" : "passed"
+}
+
+/** textClass colors a test's name to match its bar. */
+const textClass = (score: Score): string => {
+    if (testSkipped(score)) {
+        return ""
+    }
+    return testFailed(score) ? "text-error" : "text-success"
 }
 
 const SubmissionScore = ({
@@ -46,18 +44,21 @@ const SubmissionScore = ({
     const panelID = `test-panel-${score.ID}`
     const openable = hasTestRun(score)
 
+    const textColor = textClass(score)
     const name = (
         <span className="flex items-center gap-2 text-left">
-            {openable ? <i className={`fas fa-chevron-${expanded ? "down" : "right"} text-xs opacity-60`} /> : null}
-            <span className={`badge badge-sm ${badgeClass(score)}`}>{testStatusText(score)}</span>
-            <span>{score.TestName}</span>
+            {openable ? <i className={`fas fa-chevron-${expanded ? "down" : "right"} text-xs ${textColor}`} /> : null}
+            {testSkipped(score)
+                ? <span className="badge badge-sm badge-outline">{testStatusText(score)}</span>
+                : <span className="sr-only">{testStatusText(score)}</span>}
+            <span className={textColor}>{score.TestName}</span>
             {score.Elapsed > 0 ? <span className="opacity-50 text-xs">{score.Elapsed.toFixed(2)}s</span> : null}
         </span>
     )
 
     return (
         <>
-            <tr className={rowClass(score)}>
+            <tr className={indicatorClass(score)}>
                 <td className="pl-3! w-full">
                     {openable ? (
                         <button
@@ -94,7 +95,7 @@ const SubmissionScore = ({
                 <tr>
                     <td
                         colSpan={4}
-                        className={`bg-base-200 p-4 border-l-4 ${testFailed(score) ? "border-error" : "border-base-300"}`}
+                        className={`bg-base-200 p-4 ${indicatorClass(score)}`}
                         id={panelID}
                         role="region"
                         aria-label={score.TestName}
