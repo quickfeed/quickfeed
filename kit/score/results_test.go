@@ -601,3 +601,62 @@ FAIL
 		}
 	}
 }
+
+func TestExtractResultsAttributesToTheEmittingTest(t *testing.T) {
+	// The score's name is not always the name of the test that printed it.
+	tests := []struct {
+		name      string
+		out       string
+		testName  string
+		wantFails string
+	}{
+		{
+			// t.Run("Six jobs") runs as TestB/Six_jobs, but the course registered
+			// the name it passed to AddSub.
+			name: "go rewrites the subtest name",
+			out: `=== RUN   TestB
+=== RUN   TestB/Six_jobs
+    exp_test.go:40: six jobs failed
+=== ATTR  TestB/Six_jobs score {"Secret":"%[1]s","TestName":"TestB/Six jobs","MaxScore":1,"Weight":1}
+--- FAIL: TestB (0.00s)
+    --- FAIL: TestB/Six_jobs (0.00s)
+`,
+			testName:  "TestB/Six jobs",
+			wantFails: "exp_test.go:40: six jobs failed",
+		},
+		{
+			// The score was looked up in TestF/outer, but printed in a subtest
+			// that the course did not register.
+			name: "printed by a nested subtest",
+			out: `=== RUN   TestF
+=== RUN   TestF/outer
+=== RUN   TestF/outer/check
+    exp_test.go:61: check failed
+=== ATTR  TestF/outer/check score {"Secret":"%[1]s","TestName":"TestF/outer","MaxScore":1,"Weight":1}
+--- FAIL: TestF (0.00s)
+    --- FAIL: TestF/outer (0.00s)
+        --- FAIL: TestF/outer/check (0.00s)
+`,
+			testName:  "TestF/outer",
+			wantFails: "exp_test.go:61: check failed",
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			res, err := score.ExtractResults(fmt.Sprintf(tt.out, secret), secret, 0, []*score.Score{{TestName: tt.testName, MaxScore: 1, Weight: 1}})
+			if err != nil {
+				t.Fatal(err)
+			}
+			sc := res.Scores[0]
+			if got := sc.GetTestDetails(); got != tt.wantFails {
+				t.Errorf("%s details = %q, want %q", tt.testName, got, tt.wantFails)
+			}
+			if got, want := sc.GetStatus(), score.TestStatus_FAILED; got != want {
+				t.Errorf("%s status = %v, want %v", tt.testName, got, want)
+			}
+			if strings.Contains(res.GetBuildInfo().GetBuildLog(), tt.wantFails) {
+				t.Errorf("build log duplicates %q", tt.wantFails)
+			}
+		})
+	}
+}

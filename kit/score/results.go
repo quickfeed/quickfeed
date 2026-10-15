@@ -16,7 +16,7 @@ type Results struct {
 	ParsedScores int        // number of valid score lines parsed from the test output
 	testNames    []string   // defines the order
 	scoreMap     map[string]*Score
-	source       map[string]*testRun
+	source       map[string]*testRun // score name to the test that emitted it; see attach
 }
 
 func newResults(scores ...*Score) *Results {
@@ -129,9 +129,9 @@ func (pe parseErrors) Error() string {
 	return strings.Join(sErr, "\n")
 }
 
-// ExtractResults returns the results from a test execution extracted from the given out string.
-// The provided zeroScoreTests must contain a zero score value for all tests that are expected
-// to be present in the results.
+// ExtractResults returns the results from a test execution extracted from
+// the given out string. The provided zeroScoreTests must contain a zero
+// score value for all tests that are expected to be present in the results.
 //
 // The output is attributed to the tests that produced it, so that each score
 // carries what its own test printed, the outcome the test framework reported
@@ -177,20 +177,32 @@ func (r *Results) parseScores(lines []string, run *testRun, secret string) parse
 	return errs
 }
 
+// attach records on each score the run of the test that emitted it, and passes
+// the output of the remaining tests to retainOutput.
+//
+// The emitting test need not be the test the score is named after. Go rewrites
+// a subtest's name, so a score registered as "TestX/Six jobs" is printed by
+// "TestX/Six_jobs", and a score looked up in one test may be printed from a
+// nested subtest. A score printed outside any test, as in a run without -v,
+// has no emitting test, so the test of the same name is used if the log has one.
 func (r *Results) attach(log *testLog, secret string) {
 	r.Scores = r.toScoreSlice()
 	scoredRuns := make(map[string]*testRun)
 	for _, sc := range r.Scores {
-		run := r.source[sc.GetTestName()]
+		testName := sc.GetTestName()
+		run := r.source[testName]
 		if run == nil {
 			// Without an emitting test, match the registered test name.
-			run = log.Test(sc.GetTestName())
-			r.source[sc.GetTestName()] = run
+			run = log.Test(testName)
+			r.source[testName] = run
 		}
 		if run != nil {
+			// Mark the run as scored, by Go test name, so that retainOutput
+			// leaves its output on its own score.
 			scoredRuns[run.Name] = run
 		}
 	}
+	// Retain the output of tests that emitted no score, so that it is not lost.
 	log.retainOutput(scoredRuns)
 	for _, sc := range r.Scores {
 		sc.attach(r.source[sc.GetTestName()], secret)
