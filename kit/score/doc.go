@@ -79,17 +79,17 @@
 // rest of that test's output:
 //
 //	func TestFibonacci(t *testing.T) {
-//	    sc := score.Max()
-//	    defer sc.Print(t)
+//	    sc := scores.Max(t)
+//	    defer sc.Recover()
 //	    for _, ft := range fibonacciTests {
 //	        if out := fibonacci(ft.in); out != ft.want {
 //	            sc.Dec()
-//	            sc.Errorf(t, "fibonacci(%d) = %d, want: %d", ft.in, out, ft.want)
+//	            sc.Errorf("fibonacci(%d) = %d, want: %d", ft.in, out, ft.want)
 //	        }
 //	    }
 //	}
 //
-// Print reports the score as a test attribute, which names the test it came
+// The score is reported as a test attribute, which names the test it came
 // from even when the output of parallel tests is interleaved. The testing
 // package emits attributes only in verbose mode, so a run script should keep
 // -v (or -json) on its go test command; without it the score is printed
