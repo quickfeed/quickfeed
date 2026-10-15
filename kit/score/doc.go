@@ -74,9 +74,10 @@
 //	    checkFibonacci(score.NewUnscored(t))
 //	}
 //
-// A test that reports its failures through the score object rather than through
-// t alone tells the student why it failed, in the teacher's own words, above the
-// rest of that test's output:
+// Failures reported through a T with Error, Errorf, Fatal, or Fatalf are also
+// recorded, with their call site, in the score's TestDetails. This tells the
+// student why a test failed, in the teacher's own words, above the rest of that
+// test's output. Fatal and Fatalf also set the score to zero:
 //
 //	func TestFibonacci(t *testing.T) {
 //	    sc := scores.Max(t)

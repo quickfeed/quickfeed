@@ -60,10 +60,15 @@ func (t *T) DecBy(n int) {
 	t.st.sc.DecBy(n)
 }
 
-// Fail sets the score to zero.
+// Fail sets the score to zero and marks the test as failed.
 func (t *T) Fail() {
+	t.zero()
+	t.T.Fail()
+}
+
+func (t *T) zero() {
 	t.st.mu.Lock()
-	t.st.sc.Fail()
+	t.st.sc.fail()
 	t.st.mu.Unlock()
 }
 
@@ -81,19 +86,21 @@ func (t *T) Errorf(format string, args ...any) {
 	t.T.Errorf(format, args...)
 }
 
-// Fatal records a failure and stops the current test goroutine.
+// Fatal records a failure, sets the score to zero and stops the current test goroutine.
 // Like testing.T.Fatal, it must be called from the test goroutine.
 func (t *T) Fatal(args ...any) {
 	t.Helper()
 	t.record(fmt.Sprintln(args...))
+	t.zero()
 	t.T.Fatal(args...)
 }
 
-// Fatalf records a formatted failure and stops the current test goroutine.
+// Fatalf records a formatted failure, sets the score to zero and stops the current test goroutine.
 // Like testing.T.Fatalf, it must be called from the test goroutine.
 func (t *T) Fatalf(format string, args ...any) {
 	t.Helper()
 	t.record(fmt.Sprintf(format, args...))
+	t.zero()
 	t.T.Fatalf(format, args...)
 }
 
@@ -126,7 +133,6 @@ func (t *T) Run(name string, f func(*T)) bool {
 func (t *T) Recover(msg ...string) {
 	if r := recover(); r != nil {
 		t.Fail()
-		t.T.Fail()
 		printPanicMessage(t.Name(), firstMessage(msg), r)
 	}
 }
