@@ -46,9 +46,14 @@ const SubmissionScore = ({
     const openable = hasTestRun(score)
 
     const textColor = textClass(score)
+    const nameBox = "btn btn-ghost btn-sm w-full justify-start px-1 font-normal"
     const name = (
         <span className="flex items-center gap-2 text-left">
-            {openable ? <i className={`fas fa-chevron-${expanded ? "down" : "right"} text-xs ${textColor}`} /> : null}
+            {/* A row with nothing to open keeps the caret's room, so that the names line up. */}
+            <i
+                className={`fas fa-chevron-${expanded ? "down" : "right"} text-xs ${openable ? textColor : "invisible"}`}
+                aria-hidden="true"
+            />
             {testSkipped(score)
                 ? <span className="badge badge-sm badge-outline">{testStatusText(score)}</span>
                 : <span className="sr-only">{testStatusText(score)}</span>}
@@ -64,14 +69,14 @@ const SubmissionScore = ({
                     {openable ? (
                         <button
                             type="button"
-                            className="btn btn-ghost btn-sm w-full justify-start px-1 font-normal"
+                            className={nameBox}
                             aria-expanded={expanded}
                             aria-controls={panelID}
                             onClick={() => onToggle(score.TestName)}
                         >
                             {name}
                         </button>
-                    ) : name}
+                    ) : <div className={`${nameBox} pointer-events-none`}>{name}</div>}
                 </td>
                 <td className="whitespace-nowrap min-w-24 text-right">
                     {score.Score}/{score.MaxScore}

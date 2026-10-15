@@ -199,6 +199,15 @@ describe("SubmissionScores", () => {
         expect(screen.getByText("queue_test.go:44: Pop() = <nil>, want: x")).toBeDefined()
     })
 
+    it("keeps the names of tests with nothing to open aligned with the others", () => {
+        renderScores([scores[1], create(ScoreSchema, { ID: 9n, TestName: "TestOld", Score: 1, MaxScore: 2, Weight: 1 })])
+        // Both names sit after a caret, which is only invisible when there is
+        // nothing to open.
+        const caretOf = (testName: string) => screen.getByText(testName).parentElement?.querySelector("i")
+        expect(caretOf("TestQueue")?.className).not.toContain("invisible")
+        expect(caretOf("TestOld")?.className).toContain("invisible")
+    })
+
     it("falls back to the build log for a submission with no per-test output", () => {
         // Submissions recorded before the run output was attributed to tests
         // have no status and no output; there is nothing to expand.
