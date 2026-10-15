@@ -85,3 +85,32 @@ func capture(t *testing.T, fn func()) string {
 	}
 	return string(out)
 }
+
+func TestRegistryWrapsWithStartingScore(t *testing.T) {
+	r := NewRegistry()
+	for _, name := range []string{"Max", "Min"} {
+		r.internalAdd(t.Name()+"/"+name, 3, 1)
+	}
+	tests := []struct {
+		name string
+		wrap func(*testing.T) *T
+		step func(*T)
+		want int32
+	}{
+		{"Max", r.MaxByName, func(sc *T) { sc.Dec() }, 2},
+		{"Min", r.MinByName, func(sc *T) { sc.Inc() }, 1},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			sc := tt.wrap(t)
+			defer sc.Recover()
+			tt.step(sc)
+			if got := sc.st.sc.GetScore(); got != tt.want {
+				t.Errorf("Score = %d, want %d", got, tt.want)
+			}
+			if got := sc.st.sc.GetTestName(); got != t.Name() {
+				t.Errorf("TestName = %s, want %s", got, t.Name())
+			}
+		})
+	}
+}

@@ -133,7 +133,7 @@ func TestMultipleChoice0(t *testing.T) {
 	}
 	_, gotIncorrect := exercise.CheckMultipleChoice(answers, test.correct)
 	for _, incorrect := range gotIncorrect {
-		sc.Errorf("%v: Question %d: Answer not found or incorrect.\n", sc.Score().TestName, incorrect)
+		sc.Errorf("%v: Question %d: Answer not found or incorrect.\n", sc.Name(), incorrect)
 		sc.Dec()
 	}
 }
@@ -157,7 +157,7 @@ func TestMultipleChoice1(t *testing.T) {
 	}
 	_, gotIncorrect := exercise.CheckMultipleChoice(answers, test.correct)
 	for _, incorrect := range gotIncorrect {
-		sc.Errorf("%v: Question %d: Answer not found or incorrect.\n", sc.Score().TestName, incorrect)
+		sc.Errorf("%v: Question %d: Answer not found or incorrect.\n", sc.Name(), incorrect)
 		sc.Dec()
 	}
 }
@@ -181,7 +181,7 @@ func TestMultipleChoice2(t *testing.T) {
 	}
 	_, gotIncorrect := exercise.CheckMultipleChoice(answers, test.correct)
 	for _, incorrect := range gotIncorrect {
-		sc.Errorf("%v: Question %d: Answer not found or incorrect.\n", sc.Score().TestName, incorrect)
+		sc.Errorf("%v: Question %d: Answer not found or incorrect.\n", sc.Name(), incorrect)
 		sc.Dec()
 	}
 }
@@ -205,7 +205,7 @@ func TestMultipleChoice3(t *testing.T) {
 	}
 	_, gotIncorrect := exercise.CheckMultipleChoice(answers, test.correct)
 	for _, incorrect := range gotIncorrect {
-		sc.Errorf("%v: Question %d: Answer not found or incorrect.\n", sc.Score().TestName, incorrect)
+		sc.Errorf("%v: Question %d: Answer not found or incorrect.\n", sc.Name(), incorrect)
 		sc.Dec()
 	}
 }
@@ -230,7 +230,7 @@ func TestMultipleChoiceWithFail(t *testing.T) {
 			}
 			_, gotIncorrect := exercise.CheckMultipleChoice(answers, test.correct)
 			for _, incorrect := range gotIncorrect {
-				sc.Errorf("%v: Question %d: Answer not found or incorrect.\n", sc.Score().TestName, incorrect)
+				sc.Errorf("%v: Question %d: Answer not found or incorrect.\n", sc.Name(), incorrect)
 				sc.Dec()
 			}
 		})

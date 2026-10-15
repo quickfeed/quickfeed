@@ -26,12 +26,6 @@ func NewUnscored(t *testing.T) *T {
 	return &T{T: t, st: &state{sc: &Score{TestName: t.Name()}, noPrint: true}}
 }
 
-// Score returns the shared score. Callers must not mutate it or read it while
-// score methods are running concurrently.
-func (t *T) Score() *Score {
-	return t.st.sc
-}
-
 // Inc increments the score up to its maximum.
 func (t *T) Inc() {
 	t.st.mu.Lock()

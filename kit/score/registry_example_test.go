@@ -33,10 +33,6 @@ func init() {
 	}
 }
 
-const (
-	numCorrect = 10
-)
-
 var fibonacciTests = []struct {
 	in, want uint
 }{
@@ -65,12 +61,6 @@ func TestFibonacciMax(t *testing.T) {
 			sc.Dec()
 		}
 	}
-	if sc.Score().GetScore() != numCorrect {
-		t.Errorf("Score=%d, expected %d", sc.Score().GetScore(), numCorrect)
-	}
-	if sc.Score().GetTestName() != t.Name() {
-		t.Errorf("TestName=%s, expected %s", sc.Score().GetTestName(), t.Name())
-	}
 }
 
 var (
@@ -91,12 +81,6 @@ func TestFibonacciMin(t *testing.T) {
 			sc.Inc()
 		}
 	}
-	if sc.Score().GetScore() != numCorrect {
-		t.Errorf("Score=%d, expected %d", sc.Score().GetScore(), numCorrect)
-	}
-	if sc.Score().GetTestName() != t.Name() {
-		t.Errorf("TestName=%s, expected %s", sc.Score().GetTestName(), t.Name())
-	}
 	once.Do(func() { ran = true })
 }
 
@@ -109,16 +93,6 @@ func TestFibonacciSubTest(t *testing.T) {
 			if out != ft.want {
 				sc.Dec()
 			}
-			expectedScore := int32(0)
-			if ft.in < numCorrect {
-				expectedScore = 1
-			}
-			if sc.Score().GetScore() != expectedScore {
-				t.Errorf("Score=%d, expected %d", sc.Score().GetScore(), expectedScore)
-			}
-			if sc.Score().GetTestName() != t.Name() {
-				t.Errorf("TestName=%s, expected %s", sc.Score().GetTestName(), t.Name())
-			}
 		})
 		t.Run(subTestName("Min", ft.in), func(t *testing.T) {
 			sc := scoreRegistry.MinByName(t)
@@ -126,16 +100,6 @@ func TestFibonacciSubTest(t *testing.T) {
 			out := fibonacci(ft.in)
 			if out == ft.want {
 				sc.Inc()
-			}
-			expectedScore := int32(0)
-			if ft.in < numCorrect {
-				expectedScore = 1
-			}
-			if sc.Score().GetScore() != expectedScore {
-				t.Errorf("Score=%d, expected %d", sc.Score().GetScore(), expectedScore)
-			}
-			if sc.Score().GetTestName() != t.Name() {
-				t.Errorf("TestName=%s, expected %s", sc.Score().GetTestName(), t.Name())
 			}
 		})
 	}
