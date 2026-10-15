@@ -70,8 +70,8 @@ func TestWrapperOutputAndRecovery(t *testing.T) {
 		}
 	}
 	for name := range got {
-		if !strings.Contains(out, "\n\n{\"TestName\":\""+name+"\"") {
-			t.Errorf("score for %s was not printed after an empty line", name)
+		if !strings.Contains(out, "=== ATTR  "+name+" score {\"TestName\":\""+name+"\"") {
+			t.Errorf("score for %s was not reported as a test attribute", name)
 		}
 	}
 	parallelScore := strings.Index(out, `"TestName":"TestParallel"`)
@@ -79,6 +79,25 @@ func TestWrapperOutputAndRecovery(t *testing.T) {
 		marker := "parallel done TestParallel/" + name
 		if idx := strings.Index(out, marker); idx < 0 || idx > parallelScore {
 			t.Errorf("score was printed before %s", marker)
+		}
+	}
+}
+
+// TestWrapperOutputWithoutVerbose checks the fallback used when the framework
+// does not emit attributes: a bare JSON line that follows an empty line.
+func TestWrapperOutputWithoutVerbose(t *testing.T) {
+	out := runWrapperTests(t, "-run", "Test(Error|Arithmetic)$")
+	if strings.Contains(out, "=== ATTR") {
+		t.Errorf("non-verbose output contains attributes:\n%s", out)
+	}
+	got := parseWrapperScores(t, out)
+	if len(got) != 2 {
+		t.Fatalf("got %d scores, want 2:\n%s", len(got), out)
+	}
+	for name := range got {
+		// The first score has no output before it to be separated from.
+		if !strings.Contains("\n"+out, "\n\n{\"TestName\":\""+name+"\"") {
+			t.Errorf("score for %s was not printed after an empty line", name)
 		}
 	}
 }
@@ -113,6 +132,10 @@ func parseWrapperScores(t *testing.T, out string) map[string]*score.Score {
 	scores := make(map[string]*score.Score)
 	for line := range strings.SplitSeq(out, "\n") {
 		line = strings.TrimSpace(line)
+		// Verbose runs report a score as "=== ATTR  <test> score <json>".
+		if _, after, ok := strings.Cut(line, " score "); ok && strings.HasPrefix(line, "=== ATTR") {
+			line = after
+		}
 		if !strings.HasPrefix(line, `{"TestName"`) {
 			continue
 		}

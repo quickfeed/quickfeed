@@ -78,6 +78,9 @@ func (s *Score) RelativeScore() string {
 // Note that, if subtests are used, each subtest must defer call the PanicHandler method
 // to ensure that panics are caught and handled appropriately.
 // The msg parameter is optional, and will be printed in case of a panic.
+//
+// Deprecated: Obtain a [T] from the registry, for example with Max(t), and defer [T.Recover].
+// The score is then reported when the test finishes. Print will be unexported.
 func (s *Score) Print(t *testing.T, msg ...string) {
 	if r := recover(); r != nil {
 		s.internalFail(t)
@@ -118,6 +121,8 @@ func (s *Score) emit(t interface{ Attr(key, value string) }, chatty bool) {
 //	defer s.PanicHandler(t)
 //
 // The msg parameter is optional, and will be printed in case of a panic.
+//
+// Deprecated: Use [T.Run], which recovers panics in each subtest.
 func (s *Score) PanicHandler(t *testing.T, msg ...string) {
 	if r := recover(); r != nil {
 		s.internalFail(t)

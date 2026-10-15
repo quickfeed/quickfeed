@@ -19,4 +19,5 @@ testAcceptor(sc)
 Change shared helpers to accept `*score.T`, call `t.Error` or `t.Errorf` to record `TestDetails`, and call `t.Inc` or `t.Dec` for scoring.
 For an ordinary Go test, pass `score.NewUnscored(t)` to the same helper.
 Use `sc.Run` for subtests that share the parent score; it recovers subtest panics and prints the score after parallel subtests finish.
-Existing `*score.Score` methods remain available during migration.
+`T.Recover` is the only way to isolate a panic in a graded test.
+`Score.Print` and `Score.PanicHandler` remain available so that existing courses keep working, but they are deprecated, and `Print` will be unexported in a later release.

@@ -138,5 +138,5 @@ func (t *T) print() {
 		return
 	}
 	t.st.printed = true
-	t.st.sc.Print(t.T)
+	t.st.sc.emit(t.T, testing.Verbose())
 }
