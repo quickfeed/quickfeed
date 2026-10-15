@@ -28,8 +28,10 @@
 //	    score.Add(TestFibonacciSubTest, max, weight)
 //	}
 //
-// In addition, TestMain() should call score.PrintTestInfo() before running the tests
-// to ensure that all tests are registered and will be picked up by QuickFeed.
+// In addition, TestMain() should call score.PrintTestInfo() before running the tests.
+// When SCORE_INIT is set, it prints a JSON line for each registered test, in
+// registration order, and exits; this is how QuickFeed's tests.json can be generated.
+// Otherwise, it does nothing.
 //
 //	func TestMain(m *testing.M) {
 //	    score.PrintTestInfo()
