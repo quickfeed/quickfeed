@@ -36,28 +36,28 @@ func (t *T) Score() *Score {
 func (t *T) Inc() {
 	t.st.mu.Lock()
 	defer t.st.mu.Unlock()
-	t.st.sc.Inc()
+	t.st.sc.inc()
 }
 
 // IncBy increments the score by n, up to its maximum.
 func (t *T) IncBy(n int) {
 	t.st.mu.Lock()
 	defer t.st.mu.Unlock()
-	t.st.sc.IncBy(n)
+	t.st.sc.incBy(n)
 }
 
 // Dec decrements the score down to zero.
 func (t *T) Dec() {
 	t.st.mu.Lock()
 	defer t.st.mu.Unlock()
-	t.st.sc.Dec()
+	t.st.sc.dec()
 }
 
 // DecBy decrements the score by n, down to zero.
 func (t *T) DecBy(n int) {
 	t.st.mu.Lock()
 	defer t.st.mu.Unlock()
-	t.st.sc.DecBy(n)
+	t.st.sc.decBy(n)
 }
 
 // Fail sets the score to zero and marks the test as failed.
