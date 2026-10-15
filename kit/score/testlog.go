@@ -47,8 +47,15 @@ func (l *testLog) Test(name string) *testRun {
 	return l.byName[name]
 }
 
-// retainOutput assigns unscored subtests to their nearest scored ancestor.
-// Tests without a scored ancestor keep their output in the build log.
+// retainOutput keeps the output of tests that emitted no score from being lost.
+// The scored map holds the runs that emitted one, keyed by Go test name.
+//
+// A scored test often runs unscored subtests, such as the t.Run cases of a
+// table-driven test that decrements the parent's score. Their t.Errorf messages
+// explain why the parent lost points, so they are appended to the nearest
+// scored ancestor under a "--- name ---" header. A test with no scored
+// ancestor, such as one the course never registered, is appended to the build
+// log instead.
 func (l *testLog) retainOutput(scored map[string]*testRun) {
 	for _, run := range l.Tests {
 		if scored[run.Name] != nil {
