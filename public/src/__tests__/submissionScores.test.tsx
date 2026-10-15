@@ -62,10 +62,13 @@ describe("SubmissionScores", () => {
 
     it("marks a skipped test with neither the passed nor the failed indicator", () => {
         renderScores()
-        const row = (testName: string) => toggle(testName).closest("tr")
-        expect(row("TestHeap")?.className).toBe("not-graded")
-        expect(row("TestStack")?.className).toBe("passed")
-        expect(row("TestQueue")?.className).toBe("failed")
+        // The bar is drawn on the first cell, since not every browser paints a
+        // shadow on a table row.
+        const indicator = (testName: string) => toggle(testName).closest("td")?.className.split(" ")
+        expect(indicator("TestHeap")).toContain("not-graded")
+        expect(indicator("TestStack")).toContain("passed")
+        expect(indicator("TestQueue")).toContain("failed")
+        expect(indicator("TestQueue")).not.toContain("passed")
     })
 
     it("opens a failing test and leaves the others closed", () => {
