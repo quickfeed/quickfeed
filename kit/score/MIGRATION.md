@@ -2,7 +2,6 @@
 
 `registry.Max`, `Min`, `MaxByName`, and `MinByName` now take `*testing.T` and return `*score.T`.
 Pass `t` to the lookup instead of relying on the caller's function name.
-Use `sc.Score()` when a test needs to inspect the underlying protobuf score.
 
 ```go
 // Before
