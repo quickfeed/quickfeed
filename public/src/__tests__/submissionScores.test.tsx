@@ -115,11 +115,36 @@ describe("SubmissionScores", () => {
 
     it("reports the outcome the run recorded, not the score", () => {
         renderScores()
-        // A test can fail while holding partial credit, so the badge and the
+        // A test can fail while holding partial credit, so the outcome and the
         // score answer different questions.
         expect(toggle("TestQueue").textContent).toMatch(/Failed/)
         expect(toggle("TestHeap").textContent).toMatch(/Skipped/)
         expect(toggle("TestStack").textContent).toMatch(/Passed/)
+    })
+
+    it("colors the name of a passed or failed test like its bar", () => {
+        renderScores()
+        const nameOf = (testName: string) => screen.getByText(testName)
+        expect(nameOf("TestStack").className).toContain("text-success")
+        expect(nameOf("TestQueue").className).toContain("text-error")
+        expect(nameOf("TestHeap").className).not.toMatch(/text-(success|error)/)
+    })
+
+    it("names the outcome without a badge for a passed or failed test", () => {
+        renderScores()
+        // The color carries the outcome for the eye; screen readers get the text.
+        expect(toggle("TestQueue").querySelector(".badge")).toBeNull()
+        expect(toggle("TestStack").querySelector(".badge")).toBeNull()
+        expect(toggle("TestHeap").querySelector(".badge")).not.toBeNull()
+    })
+
+    it("draws the same bar beside an open test as beside its row", () => {
+        renderScores()
+        const panel = screen.getByRole("region", { name: "TestQueue" })
+        expect(panel.className).toContain("failed")
+        expect(panel.className).not.toContain("border-l")
+        fireEvent.click(toggle("TestStack"))
+        expect(screen.getByRole("region", { name: "TestStack" }).className).toContain("passed")
     })
 
     it("says when a test recorded no output", () => {
