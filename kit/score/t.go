@@ -2,6 +2,7 @@ package score
 
 import (
 	"fmt"
+	"path/filepath"
 	"runtime"
 	"strings"
 	"sync"
@@ -105,7 +106,7 @@ func (t *T) record(message string) {
 		message = t.Name() + ": " + message
 	}
 	if ok {
-		message = fmt.Sprintf("%s:%d: %s", file, line, message)
+		message = fmt.Sprintf("%s:%d: %s", filepath.Base(file), line, message)
 	}
 	t.st.mu.Lock()
 	t.st.sc.TestDetails += message + "\n"

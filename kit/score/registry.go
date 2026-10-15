@@ -4,11 +4,9 @@ import (
 	"errors"
 	"fmt"
 	"os"
-	"sort"
 	"testing"
 
 	"github.com/quickfeed/quickfeed/kit/internal/test"
-	"github.com/quickfeed/quickfeed/kit/sh"
 )
 
 // registry keeps a map of score objects and a slice of test names,
@@ -37,39 +35,25 @@ func (s *registry) Validate() error {
 	return nil
 }
 
-// PrintTestInfo prints a JSON representation of all registered tests
-// in the order they were registered, or if sorted is true the test names
-// will be sorted before printing.
+// PrintTestInfo prints a JSON line for each registered test, in registration
+// order, and exits, but only if the environment variable SCORE_INIT is set
+// to a non-empty value. Otherwise, it does nothing.
 //
 // This should be called after test registration has been completed,
 // but before test execution. This can be done in TestMain.
 //
-// If the environment variable SCORE_INFO is set to a non-empty value,
-// the test info will be printed and the program will exit.
-// This can be used to ensure that the test info is always printed;
-// otherwise, a test failure may prevent the test info from being printed.
-//
 // Will panic if called from a non-test function.
-func (s *registry) PrintTestInfo(sorted ...bool) {
-	if sh.RaceEnabled {
-		// Skip printing test info when running with the race detector,
-		// since we may not be able to filter the score output in this case.
+func (s *registry) PrintTestInfo() {
+	test.CallFrame()
+	if os.Getenv("SCORE_INIT") == "" {
 		return
 	}
-	test.CallFrame()
-	if len(sorted) == 1 && sorted[0] {
-		sort.Strings(s.testNames)
-	}
-	// iterate over the test names in registration or sorted order
 	for _, name := range s.testNames {
 		if sc, ok := s.scores[name]; ok {
 			fmt.Println(sc.json())
 		}
 	}
-	// force exit after printing test info if SCORE_INIT is set
-	if os.Getenv("SCORE_INIT") != "" {
-		os.Exit(0) // skipcq: RVV-A0003
-	}
+	os.Exit(0) // skipcq: RVV-A0003
 }
 
 // Add test with given max score and weight to the registry.
