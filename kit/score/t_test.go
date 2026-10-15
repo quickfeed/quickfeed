@@ -113,7 +113,7 @@ func TestUnscoredWrapperOutput(t *testing.T) {
 func TestUnregisteredWrapper(t *testing.T) {
 	for _, name := range []string{"TestUnregistered", "TestUnregisteredMin"} {
 		out := runWrapperTests(t, "-v", "-run", "^"+name+"$")
-		if !strings.Contains(out, `test "`+name+`" is not registered; call Add or AddSub`) {
+		if !strings.Contains(out, `test "`+name+`" is not registered; call Add`) {
 			t.Errorf("unregistered test output = %q", out)
 		}
 	}

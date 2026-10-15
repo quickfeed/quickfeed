@@ -4,6 +4,7 @@ import (
 	"testing"
 
 	"github.com/google/go-cmp/cmp"
+	"github.com/quickfeed/quickfeed/kit/score"
 )
 
 func init() {
@@ -12,10 +13,8 @@ func init() {
 	scores.Add(TestTriangularAG, max, weight)
 	scores.Add(TestTriangularRecurrenceAG, max, weight)
 	scores.Add(TestTriangularFormulaAG, max, weight)
-	// Here is alternative strategy using subtests
-	for name := range funcs {
-		scores.AddSub(TestTriangularSubTestAG, name, max, weight)
-	}
+	// Alternative strategy using subtests that share one score.
+	scores.Add(TestTriangularSubTestAG, max*len(funcs), weight)
 }
 
 var funcs = map[string]func(uint) uint{
@@ -83,10 +82,10 @@ func TestTriangularFormulaAG(t *testing.T) {
 }
 
 func TestTriangularSubTestAG(t *testing.T) {
+	s := scores.Max(t)
+	defer s.Recover()
 	for name, fn := range funcs {
-		t.Run(name, func(t *testing.T) {
-			sc := scores.MaxByName(t)
-			defer sc.Recover()
+		s.Run(name, func(sc *score.T) {
 			for _, test := range triangularTestsAG {
 				if diff := cmp.Diff(test.want, fn(test.in)); diff != "" {
 					sc.Dec()

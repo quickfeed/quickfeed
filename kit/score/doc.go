@@ -18,19 +18,14 @@
 //	TotalScore      = sum(TaskScore[i]*TaskWeight[i]), gives {0 < TotalScore < 1}
 //
 // QuickFeed expects that tests are initialized in the init() method before test execution.
-// This is done via the score.Add() method or the score.AddSub() method as shown below.
-// Add() is used for regular tests, and AddSub() is used for subtests with individual scores.
+// This is done via the score.Add() method as shown below.
+// Subtests are not registered; they share the score of their top-level test.
 //
 //	func init() {
 //	    max, weight := len(fibonacciTests), 20
 //	    score.Add(TestFibonacciMax, max, weight)
 //	    score.Add(TestFibonacciMin, max, weight)
-//	    for _, ft := range fibonacciTests {
-//	        score.AddSub(TestFibonacciSubTest, subTestName("Max", ft.in), 1, 1)
-//	    }
-//	    for _, ft := range fibonacciTests {
-//	        score.AddSub(TestFibonacciSubTest, subTestName("Min", ft.in), 1, 1)
-//	    }
+//	    score.Add(TestFibonacciSubTest, max, weight)
 //	}
 //
 // In addition, TestMain() should call score.PrintTestInfo() before running the tests
