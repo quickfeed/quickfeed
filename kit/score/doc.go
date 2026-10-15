@@ -18,25 +18,27 @@
 //	TotalScore      = sum(TaskScore[i]*TaskWeight[i]), gives {0 < TotalScore < 1}
 //
 // QuickFeed expects that tests are initialized in the init() method before test execution.
-// This is done via the score.Add() method as shown below.
+// This is done via the Add method of a registry created by score.NewRegistry() as shown below.
 // Subtests are not registered; they share the score of their top-level test.
+//
+//	var scores = score.NewRegistry()
 //
 //	func init() {
 //	    max, weight := len(fibonacciTests), 20
-//	    score.Add(TestFibonacciMax, max, weight)
-//	    score.Add(TestFibonacciMin, max, weight)
-//	    score.Add(TestFibonacciSubTest, max, weight)
+//	    scores.Add(TestFibonacciMax, max, weight)
+//	    scores.Add(TestFibonacciMin, max, weight)
+//	    scores.Add(TestFibonacciSubTest, max, weight)
 //	}
 //
-// In addition, TestMain() should call score.PrintTestInfo() before running the tests.
+// In addition, TestMain() should call PrintTestInfo on the registry before running the tests.
 // When SCORE_INIT is set, it prints a JSON line for each registered test, in
 // registration order, and exits; this is how QuickFeed's tests.json can be generated.
 // Otherwise, it does nothing.
 //
 //	func TestMain(m *testing.M) {
-//	    score.PrintTestInfo()
+//	    scores.PrintTestInfo()
 //	    exitCode := m.Run()
-//	    if err := score.Validate(); err != nil {
+//	    if err := scores.Validate(); err != nil {
 //	        fmt.Println(err)
 //	    }
 //	    os.Exit(exitCode)

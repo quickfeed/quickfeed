@@ -21,7 +21,7 @@ func Name(testFn any) string {
 	if typ.NumIn() != 1 || typ.NumOut() > 0 || !strings.HasPrefix(name, "Test") {
 		panic(ErrMsg(name, "not a test function"))
 	}
-	if !typ.In(0).AssignableTo(reflect.TypeOf(&testing.T{})) {
+	if !typ.In(0).AssignableTo(reflect.TypeFor[*testing.T]()) {
 		panic(ErrMsg(name, "test function missing *testing.T argument"))
 	}
 	return name
@@ -64,10 +64,10 @@ func lastElem(name string) string {
 }
 
 func firstElem(name string) string {
-	end := strings.Index(name, ".")
-	if end < 0 {
+	before, _, ok := strings.Cut(name, ".")
+	if !ok {
 		// No dots found in function name
 		return name
 	}
-	return name[:end]
+	return before
 }
