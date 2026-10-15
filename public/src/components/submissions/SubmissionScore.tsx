@@ -9,7 +9,8 @@ import TestOutputPanel from "./TestOutputPanel"
 export const hasTestRun = (score: Score): boolean =>
     score.TestDetails !== "" || score.TestOutput !== "" || score.Status !== TestStatus.NOT_RUN
 
-/** indicatorClass picks the bar at the left edge of a test's rows. A skipped
+/** indicatorClass picks the bar at the left edge of a test's rows. It is drawn
+ *  on a cell, since not every browser paints a shadow on a table row. A skipped
  *  test neither passed nor failed, so it gets the neutral bar rather than
  *  either of the two. */
 const indicatorClass = (score: Score): string => {
@@ -58,8 +59,8 @@ const SubmissionScore = ({
 
     return (
         <>
-            <tr className={indicatorClass(score)}>
-                <td className="pl-3! w-full">
+            <tr>
+                <td className={`pl-3! w-full ${indicatorClass(score)}`}>
                     {openable ? (
                         <button
                             type="button"
@@ -95,7 +96,7 @@ const SubmissionScore = ({
                 <tr>
                     <td
                         colSpan={4}
-                        className={`bg-base-200 p-4 ${indicatorClass(score)}`}
+                        className={`bg-base-200 px-6! py-4! ${indicatorClass(score)}`}
                         id={panelID}
                         role="region"
                         aria-label={score.TestName}
