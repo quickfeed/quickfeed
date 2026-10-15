@@ -13,15 +13,15 @@ func (s *Score) fail() {
 	s.Score = 0
 }
 
-// Inc increments score if score is less than MaxScore.
-func (s *Score) Inc() {
+// inc increments score if score is less than MaxScore.
+func (s *Score) inc() {
 	if s.GetScore() < s.GetMaxScore() {
 		s.Score++
 	}
 }
 
-// IncBy increments score n times or until score equals MaxScore.
-func (s *Score) IncBy(n int) {
+// incBy increments score n times or until score equals MaxScore.
+func (s *Score) incBy(n int) {
 	m := int32(n)
 	if s.GetScore()+m < s.GetMaxScore() {
 		s.Score += m
@@ -30,15 +30,15 @@ func (s *Score) IncBy(n int) {
 	}
 }
 
-// Dec decrements score if score is greater than zero.
-func (s *Score) Dec() {
+// dec decrements score if score is greater than zero.
+func (s *Score) dec() {
 	if s.GetScore() > 0 {
 		s.Score--
 	}
 }
 
-// DecBy decrements score n times or until Score equals zero.
-func (s *Score) DecBy(n int) {
+// decBy decrements score n times or until Score equals zero.
+func (s *Score) decBy(n int) {
 	m := int32(n)
 	if s.GetScore()-m > 0 {
 		s.Score -= m
