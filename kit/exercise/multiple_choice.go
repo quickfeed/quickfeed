@@ -7,7 +7,6 @@ import (
 	"sort"
 	"strconv"
 	"strings"
-	"testing"
 
 	"github.com/quickfeed/quickfeed/kit/score"
 )
@@ -82,16 +81,15 @@ func Print(questions []int, preLabel, afterLabel, sep string) string {
 
 // MultipleChoice reads the answer file in markdown format and compare answers with the correct map.
 // The result is updated via the score object.
-func MultipleChoice(t *testing.T, sc *score.Score, answerFile string, correct map[int]string) {
-	t.Helper()
+func MultipleChoice(sc *score.T, answerFile string, correct map[int]string) {
+	sc.Helper()
 	answers, err := ParseMarkdownAnswers(answerFile)
 	if err != nil {
-		sc.Fail()
-		t.Fatal(err)
+		sc.Fatal(err)
 	}
 	_, incorrectAnswers := CheckMultipleChoice(answers, correct)
 	for _, incorrect := range incorrectAnswers {
-		t.Errorf("%v: Question %d: Answer not found or incorrect.\n", sc.GetTestName(), incorrect)
+		sc.Errorf("%v: Question %d: Answer not found or incorrect.", sc.Name(), incorrect)
 		sc.Dec()
 	}
 }

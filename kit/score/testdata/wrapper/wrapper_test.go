@@ -21,6 +21,7 @@ func init() {
 	scores.Add(TestAfterPanic, 2, 1)
 	scores.Add(TestConcurrent, 40, 1)
 	scores.Add(TestArithmetic, 5, 1)
+	scores.Add(TestFail, 2, 1)
 }
 
 func TestTopError(t *testing.T) {
@@ -105,9 +106,15 @@ func TestArithmetic(t *testing.T) {
 	defer sc.Recover()
 	sc.IncBy(4)
 	sc.Dec()
-	sc.Fail()
 	sc.IncBy(2)
 	sc.DecBy(1)
+}
+
+func TestFail(t *testing.T) {
+	sc := scores.Min(t)
+	defer sc.Recover()
+	sc.Inc()
+	sc.Fail()
 }
 
 func TestUnscored(t *testing.T) {
