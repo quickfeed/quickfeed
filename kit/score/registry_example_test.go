@@ -25,12 +25,7 @@ func init() {
 	scoreRegistry.Add(TestFibonacciMax, len(fibonacciTests), 20)
 	scoreRegistry.Add(TestFibonacciMin, len(fibonacciTests), 20)
 	scoreRegistry.Add(TestFibonacciWrapper, 1, 1)
-	for _, ft := range fibonacciTests {
-		scoreRegistry.AddSub(TestFibonacciSubTest, subTestName("Max", ft.in), 1, 1)
-	}
-	for _, ft := range fibonacciTests {
-		scoreRegistry.AddSub(TestFibonacciSubTest, subTestName("Min", ft.in), 1, 1)
-	}
+	scoreRegistry.Add(TestFibonacciSubTest, len(fibonacciTests), 20)
 }
 
 var fibonacciTests = []struct {
@@ -85,24 +80,19 @@ func TestFibonacciMin(t *testing.T) {
 }
 
 func TestFibonacciSubTest(t *testing.T) {
+	s := scoreRegistry.Max(t)
+	defer s.Recover()
 	for _, ft := range fibonacciTests {
-		t.Run(subTestName("Max", ft.in), func(t *testing.T) {
-			sc := scoreRegistry.MaxByName(t)
-			defer sc.Recover()
-			out := fibonacci(ft.in)
-			if out != ft.want {
+		s.Run(subTestName("Max", ft.in), func(sc *score.T) {
+			if out := fibonacci(ft.in); out != ft.want {
 				sc.Dec()
 			}
 		})
-		t.Run(subTestName("Min", ft.in), func(t *testing.T) {
-			sc := scoreRegistry.MinByName(t)
-			defer sc.Recover()
-			out := fibonacci(ft.in)
-			if out == ft.want {
-				sc.Inc()
-			}
-		})
 	}
+}
+
+func subTestName(prefix string, i uint) string {
+	return fmt.Sprintf("%s/%d", prefix, i)
 }
 
 func checkFibonacci(t *score.T) {
@@ -122,10 +112,6 @@ func TestFibonacciWrapper(t *testing.T) {
 
 func TestFibonacciPlain(t *testing.T) {
 	checkFibonacci(score.NewUnscored(t))
-}
-
-func subTestName(prefix string, i uint) string {
-	return fmt.Sprintf("%s/%d", prefix, i)
 }
 
 func TestDuplicateAdd(t *testing.T) {

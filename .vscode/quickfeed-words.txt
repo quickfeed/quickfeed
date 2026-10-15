@@ -276,6 +276,7 @@ unittests
 unmarshalled
 unmarshalling
 unmarshalls
+Unscored
 Unsetenv
 urfave
 URL's

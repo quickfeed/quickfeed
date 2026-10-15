@@ -8,6 +8,7 @@ import (
 	"github.com/google/go-cmp/cmp"
 	"github.com/google/go-cmp/cmp/cmpopts"
 	"github.com/quickfeed/quickfeed/kit/exercise"
+	"github.com/quickfeed/quickfeed/kit/score"
 )
 
 func init() {
@@ -15,9 +16,11 @@ func init() {
 	scores.Add(TestMultipleChoice1, len(tests[1].correct), 1)
 	scores.Add(TestMultipleChoice2, len(tests[2].correct), 1)
 	scores.Add(TestMultipleChoice3, len(tests[3].correct), 1)
+	total := 0
 	for _, test := range tests {
-		scores.AddSub(TestMultipleChoiceWithFail, test.name, len(test.correct), 1)
+		total += len(test.correct)
 	}
+	scores.Add(TestMultipleChoiceWithFail, total, 1)
 }
 
 var tests = []struct {
@@ -219,10 +222,10 @@ func TestMultipleChoiceWithFail(t *testing.T) {
 		t.Skipf("Skipping; expected to fail. Run with: %s=1 go test -v -run %s", failTestEnvName, t.Name())
 	}
 
+	s := scores.Max(t)
+	defer s.Recover()
 	for _, test := range tests {
-		t.Run(test.name, func(t *testing.T) {
-			sc := scores.MaxByName(t)
-			defer sc.Recover()
+		s.Run(test.name, func(sc *score.T) {
 			answerFile := filepath.Join("..", "testdata", test.file)
 			answers, err := exercise.ParseMarkdownAnswers(answerFile)
 			if err != nil {
@@ -230,7 +233,7 @@ func TestMultipleChoiceWithFail(t *testing.T) {
 			}
 			_, gotIncorrect := exercise.CheckMultipleChoice(answers, test.correct)
 			for _, incorrect := range gotIncorrect {
-				sc.Errorf("%v: Question %d: Answer not found or incorrect.\n", sc.Name(), incorrect)
+				sc.Errorf("Question %d: Answer not found or incorrect.\n", incorrect)
 				sc.Dec()
 			}
 		})

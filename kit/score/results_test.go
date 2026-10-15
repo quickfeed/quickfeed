@@ -611,8 +611,8 @@ func TestExtractResultsAttributesToTheEmittingTest(t *testing.T) {
 		wantFails string
 	}{
 		{
-			// t.Run("Six jobs") runs as TestB/Six_jobs, but the course registered
-			// the name it passed to AddSub.
+			// t.Run("Six jobs") runs as TestB/Six_jobs, but the score was registered
+			// under the name it passed to Run.
 			name: "go rewrites the subtest name",
 			out: `=== RUN   TestB
 === RUN   TestB/Six_jobs

@@ -79,33 +79,15 @@ func (s *registry) Add(testFn any, maxScore, weight int) {
 	s.internalAdd(test.Name(testFn), maxScore, weight)
 }
 
-// AddSub test with given max score and weight to the registry.
-// This function should be used to register subtests, and should be used in
-// conjunction with MaxByName and MinByName called from within a subtest.
-//
-// Will panic if the test has already been registered or if max or weight is non-positive.
-func (s *registry) AddSub(testFn any, subTestName string, maxScore, weight int) {
-	tstName := fmt.Sprintf("%s/%s", test.Name(testFn), subTestName)
-	s.internalAdd(tstName, maxScore, weight)
-}
-
 // Max wraps a registered test with its score initially at MaxScore.
+// Subtests started with T.Run share this score.
 func (s *registry) Max(t *testing.T) *T {
 	return s.wrap(t, true)
 }
 
 // Min wraps a registered test with its score initially at zero.
+// Subtests started with T.Run share this score.
 func (s *registry) Min(t *testing.T) *T {
-	return s.wrap(t, false)
-}
-
-// MaxByName wraps a registered subtest with its score initially at MaxScore.
-func (s *registry) MaxByName(t *testing.T) *T {
-	return s.wrap(t, true)
-}
-
-// MinByName wraps a registered subtest with its score initially at zero.
-func (s *registry) MinByName(t *testing.T) *T {
 	return s.wrap(t, false)
 }
 
@@ -140,7 +122,7 @@ func (s *registry) wrap(t *testing.T, maxScore bool) *T {
 	t.Helper()
 	sc, ok := s.scores[t.Name()]
 	if !ok {
-		t.Fatalf("score: test %q is not registered; call Add or AddSub before running it", t.Name())
+		t.Fatalf("score: test %q is not registered; call Add before running it", t.Name())
 	}
 	if maxScore {
 		sc.Score = sc.GetMaxScore()
