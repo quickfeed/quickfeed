@@ -22,6 +22,9 @@ func init() {
 	scores.Add(TestConcurrent, 40, 1)
 	scores.Add(TestArithmetic, 5, 1)
 	scores.Add(TestFail, 2, 1)
+	scores.Add(TestSubFatal, 2, 1)
+	scores.Add(TestSubFail, 2, 1)
+	scores.Add(TestSubFatalMin, 2, 1)
 }
 
 func TestTopError(t *testing.T) {
@@ -80,6 +83,7 @@ func TestSubPanic(t *testing.T) {
 	sc.Run("child", func(t *score.T) {
 		panic("sub panic marker")
 	})
+	sc.Run("sibling", func(t *score.T) {})
 }
 
 func TestAfterPanic(t *testing.T) {
@@ -115,6 +119,33 @@ func TestFail(t *testing.T) {
 	defer sc.Recover()
 	sc.Inc()
 	sc.Fail()
+}
+
+func TestSubFatal(t *testing.T) {
+	sc := scores.Max(t)
+	defer sc.Recover()
+	sc.Run("child", func(t *score.T) {
+		t.Fatal("sub fatal")
+	})
+	sc.Run("sibling", func(t *score.T) {})
+}
+
+func TestSubFail(t *testing.T) {
+	sc := scores.Max(t)
+	defer sc.Recover()
+	sc.Run("child", func(t *score.T) {
+		t.Fail()
+	})
+	sc.Run("sibling", func(t *score.T) {})
+}
+
+func TestSubFatalMin(t *testing.T) {
+	sc := scores.Min(t)
+	defer sc.Recover()
+	sc.Run("child", func(t *score.T) {
+		t.Fatal("sub fatal")
+	})
+	sc.Run("sibling", func(t *score.T) { t.Inc() })
 }
 
 func TestMuted(t *testing.T) {

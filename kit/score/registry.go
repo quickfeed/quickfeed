@@ -111,7 +111,7 @@ func (s *registry) wrap(t *testing.T, maxScore bool) *T {
 	if maxScore {
 		sc.Score = sc.GetMaxScore()
 	}
-	wrapped := &T{T: t, st: &state{sc: sc}}
+	wrapped := &T{T: t, st: &state{sc: sc, max: maxScore}}
 	t.Cleanup(wrapped.print)
 	return wrapped
 }
