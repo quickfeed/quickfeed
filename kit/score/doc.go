@@ -60,7 +60,7 @@
 //	}
 //
 // A helper can take *T and use its testing and scoring methods directly.
-// NewUnscored runs the same helper without printing a QuickFeed score.
+// Muted runs the same helper without printing a QuickFeed score.
 //
 //	func checkFibonacci(t *score.T) {
 //	    if got := fibonacci(5); got != 5 {
@@ -70,7 +70,7 @@
 //	    }
 //	}
 //	func TestFibonacciPlain(t *testing.T) {
-//	    checkFibonacci(score.NewUnscored(t))
+//	    checkFibonacci(score.Muted(t))
 //	}
 //
 // Failures reported through a T with Error, Errorf, Fatal, or Fatalf are also

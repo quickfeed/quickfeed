@@ -33,7 +33,7 @@ testAcceptor(sc)
 
 - Change shared helpers to accept `*score.T`.
 - Call `t.Error` or `t.Errorf` to record `TestDetails`, and `t.Inc` or `t.Dec` for scoring.
-- For an ordinary Go test, pass `score.NewUnscored(t)` to the same helper.
+- For an ordinary Go test, pass `score.Muted(t)` to the same helper.
 - `T.Fail` zeroes the score and fails the test; `T.Fatal` and `T.Fatalf` also zero the score.
 - `T.Recover` is the only way to isolate a panic in a graded test.
 

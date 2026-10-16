@@ -22,8 +22,8 @@ type state struct {
 	noPrint bool
 }
 
-// NewUnscored wraps a plain Go test without printing a QuickFeed score.
-func NewUnscored(t *testing.T) *T {
+// Muted wraps a plain Go test without printing a QuickFeed score.
+func Muted(t *testing.T) *T {
 	return &T{T: t, st: &state{sc: &Score{TestName: t.Name()}, noPrint: true}}
 }
 

@@ -103,9 +103,9 @@ func TestWrapperOutputWithoutVerbose(t *testing.T) {
 	}
 }
 
-func TestUnscoredWrapperOutput(t *testing.T) {
-	out := runWrapperTests(t, "-v", "-run", "^TestUnscored$")
-	if !strings.Contains(out, "--- PASS: TestUnscored") || strings.Contains(out, `"TestName"`) {
+func TestMutedWrapperOutput(t *testing.T) {
+	out := runWrapperTests(t, "-v", "-run", "^TestMuted$")
+	if !strings.Contains(out, "--- PASS: TestMuted") || strings.Contains(out, `"TestName"`) {
 		t.Errorf("unscored test output = %q", out)
 	}
 }

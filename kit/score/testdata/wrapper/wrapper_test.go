@@ -117,8 +117,8 @@ func TestFail(t *testing.T) {
 	sc.Fail()
 }
 
-func TestUnscored(t *testing.T) {
-	sc := score.NewUnscored(t)
+func TestMuted(t *testing.T) {
+	sc := score.Muted(t)
 	sc.Inc()
 	sc.Dec()
 	sc.Run("child", func(t *score.T) {

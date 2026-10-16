@@ -111,7 +111,7 @@ func TestFibonacciWrapper(t *testing.T) {
 }
 
 func TestFibonacciPlain(t *testing.T) {
-	checkFibonacci(score.NewUnscored(t))
+	checkFibonacci(score.Muted(t))
 }
 
 func TestDuplicateAdd(t *testing.T) {
