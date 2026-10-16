@@ -35,7 +35,9 @@ testAcceptor(sc)
 - Call `t.Error` or `t.Errorf` to record `TestDetails`, and `t.Inc` or `t.Dec` for scoring.
 - For an ordinary Go test, pass `score.Muted(t)` to the same helper.
 - `T.Fail` zeroes the score and fails the test; `T.Fatal` and `T.Fatalf` also zero the score.
+  In a subtest started with `sc.Run`, they instead remove one point from a `Max` score and leave a `Min` score unchanged.
 - `T.Recover` is the only way to isolate a panic in a graded test.
+  A panic in an `sc.Run` subtest costs one point, as `Fail` does.
 
 ## Subtests
 

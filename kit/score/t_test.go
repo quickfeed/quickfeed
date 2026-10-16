@@ -13,27 +13,30 @@ import (
 )
 
 func TestWrapperOutputAndRecovery(t *testing.T) {
-	out := runWrapperTests(t, "-race", "-v", "-run", "Test(TopError|Error|Fatal|Fatalf|SubError|Parallel|TopPanic|SubPanic|AfterPanic|Concurrent|Arithmetic|Fail)$")
+	out := runWrapperTests(t, "-race", "-v", "-run", "Test(TopError|Error|Fatal|Fatalf|SubError|Parallel|TopPanic|SubPanic|AfterPanic|Concurrent|Arithmetic|Fail|SubFatal|SubFail|SubFatalMin)$")
 	if strings.Contains(out, "WARNING: DATA RACE") {
 		t.Fatalf("wrapper tests raced:\n%s", out)
 	}
 	got := parseWrapperScores(t, out)
-	if len(got) != 12 {
-		t.Fatalf("got %d scores, want 12:\n%s", len(got), out)
+	if len(got) != 15 {
+		t.Fatalf("got %d scores, want 15:\n%s", len(got), out)
 	}
 	for name, want := range map[string]struct{ value, max int32 }{
-		"TestTopError":   {2, 2},
-		"TestError":      {2, 2},
-		"TestFatal":      {0, 2},
-		"TestFatalf":     {0, 2},
-		"TestSubError":   {2, 2},
-		"TestParallel":   {4, 4},
-		"TestTopPanic":   {0, 2},
-		"TestSubPanic":   {0, 2},
-		"TestAfterPanic": {1, 2},
-		"TestConcurrent": {40, 40},
-		"TestArithmetic": {4, 5},
-		"TestFail":       {0, 2},
+		"TestTopError":    {2, 2},
+		"TestError":       {2, 2},
+		"TestFatal":       {0, 2},
+		"TestFatalf":      {0, 2},
+		"TestSubError":    {2, 2},
+		"TestParallel":    {4, 4},
+		"TestTopPanic":    {0, 2},
+		"TestSubPanic":    {1, 2},
+		"TestSubFatal":    {1, 2},
+		"TestSubFail":     {1, 2},
+		"TestSubFatalMin": {1, 2},
+		"TestAfterPanic":  {1, 2},
+		"TestConcurrent":  {40, 40},
+		"TestArithmetic":  {4, 5},
+		"TestFail":        {0, 2},
 	} {
 		sc, ok := got[name]
 		if !ok || sc.GetScore() != want.value || sc.GetMaxScore() != want.max {
