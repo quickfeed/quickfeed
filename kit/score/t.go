@@ -123,7 +123,8 @@ func (t *T) record(message string) {
 }
 
 // Run executes a subtest with the same score and recovers its panics.
-// A subtest that fails, calls Fatal, or panics costs one point instead of the whole score.
+// A subtest that calls Fail, Fatal, or Fatalf, or panics, removes one point from a Max score
+// and leaves a Min score unchanged, instead of zeroing the score.
 func (t *T) Run(name string, f func(*T)) bool {
 	t.Helper()
 	return t.T.Run(name, func(sub *testing.T) {
