@@ -21,7 +21,7 @@ To cut a release you will need additional tools:
 
 Below are the steps needed to prepare a new release of QuickFeed's kit module.
 
-1. Run `gorelease` to suggested new version number, e.g.:
+1. Make sure `master` is synchronized with `origin/master`, then run `gorelease` from the `kit` directory to get the suggested new version number, e.g.:
 
    ```text
    ... (list of compatibility changes) ...
@@ -29,12 +29,12 @@ Below are the steps needed to prepare a new release of QuickFeed's kit module.
    Suggested version: v0.3.0 (with tag kit/v0.3.0)
    ```
 
-2. Add and commit changes due to upgrades and recompilation:
+2. If there are uncommitted changes due to upgrades and recompilation, commit and push them.
+   Skip this step if the working tree is clean:
 
    ```shell
-   % git add
+   % git add -u
    % git commit -m "QuickFeed's kit module release v0.3.0"
-   # Synchronize master branch
    % git push
    ```
 
@@ -42,10 +42,11 @@ Below are the steps needed to prepare a new release of QuickFeed's kit module.
 
    ```shell
    # Prepare release notes in release-notes.md
+   # (base them on the gorelease output and the commits since the previous release)
    % gh release create kit/v0.3.0 --prerelease -F release-notes.md --title "Main changes in release"
    ```
 
-   Without release notes file (select `Write my own` when asked about release notes):
+   Without release notes file (select `Write my own` when asked about release notes; a non-interactive run needs `--notes` or `-F`):
 
    ```shell
    % gh release create kit/v0.3.0 --prerelease --title "Revised MultipleChoice API; rerelease"
