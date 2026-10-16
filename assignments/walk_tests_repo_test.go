@@ -399,3 +399,69 @@ func TestRepoIssueString(t *testing.T) {
 		})
 	}
 }
+
+func TestReadTestsRepositoryReviewWeight(t *testing.T) {
+	const (
+		tests         = `[{"TestName":"TestA","MaxScore":1,"Weight":1}]`
+		noReviewers   = "reviewweight has no effect without reviewers: tests count for 100 %"
+		noTests       = "reviewweight has no effect without tests: reviews count for 100 %"
+		deadlineOrder = `"deadline": "2030-01-01 12:00", "order": `
+	)
+	labs := []struct {
+		name       string
+		assignment string
+		tests      string
+		want       uint32
+		wantIssue  string
+	}{
+		{name: "lab1", assignment: `{` + deadlineOrder + `1}`, tests: tests, want: 0},
+		{name: "lab2", assignment: `{` + deadlineOrder + `2, "reviewers": 1}`, want: 100},
+		{name: "lab3", assignment: `{` + deadlineOrder + `3, "reviewers": 1}`, tests: tests, want: 50},
+		{name: "lab4", assignment: `{` + deadlineOrder + `4, "reviewers": 1, "reviewweight": 30}`, tests: tests, want: 30},
+		{name: "lab5", assignment: `{` + deadlineOrder + `5, "reviewers": 1, "reviewweight": 0}`, tests: tests, want: 0},
+		{name: "lab6", assignment: `{` + deadlineOrder + `6, "reviewers": 1, "reviewweight": 40}`, want: 100, wantIssue: noTests},
+		{name: "lab7", assignment: `{` + deadlineOrder + `7, "reviewweight": 40}`, tests: tests, want: 0, wantIssue: noReviewers},
+		{name: "lab8", assignment: `{` + deadlineOrder + `8, "reviewers": 1, "reviewweight": 100}`, want: 100},
+	}
+	testsDir := t.TempDir()
+	var wantIssues []RepoIssue
+	for _, lab := range labs {
+		writeFile(t, testsDir, lab.name, assignmentFile, lab.assignment)
+		if lab.tests != "" {
+			writeFile(t, testsDir, lab.name, testsFile, lab.tests)
+		}
+		if lab.wantIssue != "" {
+			wantIssues = append(wantIssues, RepoIssue{Assignment: lab.name, File: lab.name + "/" + assignmentFile, Problem: lab.wantIssue})
+		}
+	}
+	assignments, _, issues, err := ReadTestsRepository(testsDir, 1)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if len(assignments) != len(labs) {
+		t.Fatalf("len(assignments) = %d, want %d", len(assignments), len(labs))
+	}
+	for i, lab := range labs {
+		if got := assignments[i].GetReviewWeight(); got != lab.want {
+			t.Errorf("%s: ReviewWeight = %d, want %d", lab.name, got, lab.want)
+		}
+	}
+	if diff := cmp.Diff(wantIssues, issues); diff != "" {
+		t.Errorf("ReadTestsRepository() issues mismatch (-want +got):\n%s", diff)
+	}
+}
+
+func TestReadTestsRepositoryReviewWeightTooLarge(t *testing.T) {
+	testsDir := t.TempDir()
+	writeFile(t, testsDir, "lab1", assignmentFile, `{"deadline": "2030-01-01 12:00", "order": 1, "reviewers": 1, "reviewweight": 101}`)
+	assignments, _, issues, err := ReadTestsRepository(testsDir, 1)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if len(assignments) != 0 {
+		t.Errorf("len(assignments) = %d, want 0", len(assignments))
+	}
+	if len(issues) == 0 || !strings.Contains(issues[0].Problem, "reviewweight must be at most 100") {
+		t.Errorf("issues = %v, want reviewweight issue", issues)
+	}
+}

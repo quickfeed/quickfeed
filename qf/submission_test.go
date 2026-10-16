@@ -231,62 +231,6 @@ func TestUpdateTotalApproved(t *testing.T) {
 	}
 }
 
-func TestSetGrade(t *testing.T) {
-	approvedGrade := &qf.Grade{UserID: 1, Status: qf.Submission_APPROVED}
-	groupGrade := &qf.Grade{UserID: 0, Status: qf.Submission_APPROVED}
-	approveUser1Grade := &qf.Grade{UserID: 1, Status: qf.Submission_APPROVED}
-	rejectUser2Grade := &qf.Grade{UserID: 2, Status: qf.Submission_REJECTED}
-	tests := []struct {
-		name       string
-		submission *qf.Submission
-		newGrade   *qf.Grade
-		want       *qf.Submission
-	}{
-		{
-			name:       "UpdateSingleUserGradeApproved",
-			submission: &qf.Submission{Grades: []*qf.Grade{{UserID: 1}}},
-			newGrade:   approvedGrade,
-			want:       &qf.Submission{Grades: []*qf.Grade{approvedGrade}},
-		},
-		{
-			name:       "UpdateGroupGradeApproved",
-			submission: &qf.Submission{Grades: []*qf.Grade{{UserID: 1}, {UserID: 2}, {UserID: 3}}},
-			newGrade:   groupGrade,
-			want:       &qf.Submission{Grades: []*qf.Grade{{UserID: 1, Status: qf.Submission_APPROVED}, {UserID: 2, Status: qf.Submission_APPROVED}, {UserID: 3, Status: qf.Submission_APPROVED}}},
-		},
-		{
-			name:       "UpdateUser1GradeApproved",
-			submission: &qf.Submission{Grades: []*qf.Grade{{UserID: 1}, {UserID: 2}}},
-			newGrade:   approveUser1Grade,
-			want:       &qf.Submission{Grades: []*qf.Grade{{UserID: 1, Status: qf.Submission_APPROVED}, {UserID: 2}}},
-		},
-		{
-			name:       "UpdateUser2GradeRejected",
-			submission: &qf.Submission{Grades: []*qf.Grade{{UserID: 1}, {UserID: 2}}},
-			newGrade:   rejectUser2Grade,
-			want:       &qf.Submission{Grades: []*qf.Grade{{UserID: 1}, {UserID: 2, Status: qf.Submission_REJECTED}}},
-		},
-		{
-			name:       "UpdateUser1GradeApprovedUser2PreviouslyRejected",
-			submission: &qf.Submission{Grades: []*qf.Grade{{UserID: 1}, {UserID: 2, Status: qf.Submission_REJECTED}}},
-			newGrade:   approveUser1Grade,
-			want:       &qf.Submission{Grades: []*qf.Grade{{UserID: 1, Status: qf.Submission_APPROVED}, {UserID: 2, Status: qf.Submission_REJECTED}}},
-		},
-		{
-			name:       "UpdateUser2GradeRejectedUser1PreviouslyApproved",
-			submission: &qf.Submission{Grades: []*qf.Grade{{UserID: 1, Status: qf.Submission_APPROVED}, {UserID: 2}}},
-			newGrade:   rejectUser2Grade,
-			want:       &qf.Submission{Grades: []*qf.Grade{{UserID: 1, Status: qf.Submission_APPROVED}, {UserID: 2, Status: qf.Submission_REJECTED}}},
-		},
-	}
-	for _, test := range tests {
-		t.Run(test.name, func(t *testing.T) {
-			test.submission.SetGrade(test.newGrade)
-			qtest.Diff(t, "SetGradesAndRelease() mismatch", test.submission, test.want, protocmp.Transform())
-		})
-	}
-}
-
 func TestSetGradesIfApproved(t *testing.T) {
 	const (
 		T = true
@@ -398,6 +342,133 @@ func TestSetGradesIfApproved(t *testing.T) {
 			got := sub.GetGrades()
 			if diff := cmp.Diff(got, test.want, protocmp.Transform()); diff != "" {
 				t.Errorf("SetGradesIfApproved(%v, %v, %d) mismatch (-want +got):\n%s", test.assignment, test.submission, test.score, diff)
+			}
+		})
+	}
+}
+
+// percentReview returns a complete review whose percentage score is percent.
+func percentReview(percent uint64) *qf.Review {
+	return &qf.Review{GradingBenchmarks: []*qf.GradingBenchmark{{Criteria: []*qf.GradingCriterion{
+		{Points: percent, Grade: qf.GradingCriterion_PASSED},
+		{Points: 100 - percent, Grade: qf.GradingCriterion_FAILED},
+	}}}}
+}
+
+func TestSubmissionComputeScore(t *testing.T) {
+	tested := &qf.Assignment{}
+	reviewed := &qf.Assignment{Reviewers: 2, ReviewWeight: 100}
+	both := &qf.Assignment{Reviewers: 2, ReviewWeight: 40}
+	weightWithoutReviewers := &qf.Assignment{ReviewWeight: 40}
+	tests := []struct {
+		name            string
+		assignment      *qf.Assignment
+		testScore       uint32
+		reviews         []*qf.Review
+		wantReviewScore uint32
+		wantScore       uint32
+	}{
+		{name: "TestedOnly", assignment: tested, testScore: 85, wantScore: 85},
+		{name: "ReviewedNoReviews", assignment: reviewed, wantScore: 0},
+		{name: "ReviewedOneReview", assignment: reviewed, reviews: []*qf.Review{percentReview(70)}, wantReviewScore: 70, wantScore: 70},
+		{name: "ReviewedAverage", assignment: reviewed, reviews: []*qf.Review{percentReview(70), percentReview(90)}, wantReviewScore: 80, wantScore: 80},
+		{name: "BothNoReviews", assignment: both, testScore: 90, wantScore: 54},
+		{name: "BothWeighted", assignment: both, testScore: 90, reviews: []*qf.Review{percentReview(70)}, wantReviewScore: 70, wantScore: 82},
+		{name: "BothRounded", assignment: both, testScore: 91, reviews: []*qf.Review{percentReview(70)}, wantReviewScore: 70, wantScore: 83},
+		{name: "WeightWithoutReviewers", assignment: weightWithoutReviewers, testScore: 90, reviews: []*qf.Review{percentReview(10)}, wantReviewScore: 10, wantScore: 90},
+	}
+	for _, tc := range tests {
+		t.Run(tc.name, func(t *testing.T) {
+			sub := &qf.Submission{TestScore: tc.testScore, Reviews: tc.reviews}
+			sub.ComputeScore(tc.assignment)
+			if got := sub.GetReviewScore(); got != tc.wantReviewScore {
+				t.Errorf("ReviewScore = %d, want %d", got, tc.wantReviewScore)
+			}
+			if got := sub.GetScore(); got != tc.wantScore {
+				t.Errorf("Score = %d, want %d", got, tc.wantScore)
+			}
+		})
+	}
+}
+
+func TestSetGradesIfApprovedReviewed(t *testing.T) {
+	assignment := &qf.Assignment{AutoApprove: true, ScoreLimit: 80, Reviewers: 2}
+	incomplete := percentReview(90)
+	incomplete.GradingBenchmarks[0].Criteria[1].Grade = qf.GradingCriterion_NONE
+	tests := []struct {
+		name    string
+		reviews []*qf.Review
+		score   uint32
+		want    qf.Submission_Status
+	}{
+		{name: "NoReviews", score: 90, want: qf.Submission_NONE},
+		{name: "TooFewReviews", reviews: []*qf.Review{percentReview(90)}, score: 90, want: qf.Submission_NONE},
+		{name: "IncompleteReview", reviews: []*qf.Review{percentReview(90), incomplete}, score: 90, want: qf.Submission_NONE},
+		{name: "BelowScoreLimit", reviews: []*qf.Review{percentReview(90), percentReview(90)}, score: 79, want: qf.Submission_NONE},
+		{name: "Approved", reviews: []*qf.Review{percentReview(90), percentReview(90)}, score: 80, want: qf.Submission_APPROVED},
+	}
+	for _, tc := range tests {
+		t.Run(tc.name, func(t *testing.T) {
+			sub := &qf.Submission{Grades: []*qf.Grade{{UserID: 1}}, Reviews: tc.reviews}
+			sub.SetGradesIfApproved(assignment, tc.score)
+			if got := sub.GetStatusByUser(1); got != tc.want {
+				t.Errorf("status = %v, want %v", got, tc.want)
+			}
+		})
+	}
+}
+
+func TestSubmissionsClean(t *testing.T) {
+	const userID = 1
+	tested := &qf.Assignment{ID: 1}
+	reviewed := &qf.Assignment{ID: 2, Reviewers: 1}
+	assignments := []*qf.Assignment{tested, reviewed}
+	reviews := []*qf.Review{{ID: 1, Score: 70}}
+	graded := []*qf.Grade{{UserID: userID, Status: qf.Submission_APPROVED}, {UserID: 2, Status: qf.Submission_REVISION}}
+	ungraded := []*qf.Grade{{UserID: userID}, {UserID: 2, Status: qf.Submission_APPROVED}}
+	ownGrade := func(status qf.Submission_Status) []*qf.Grade {
+		return []*qf.Grade{{SubmissionID: 1, UserID: userID, Status: status}}
+	}
+	tests := []struct {
+		name       string
+		submission *qf.Submission
+		want       *qf.Submission
+	}{
+		{
+			name:       "TestedUngraded",
+			submission: &qf.Submission{ID: 1, AssignmentID: tested.GetID(), TestScore: 85, Score: 85, Grades: ungraded},
+			want:       &qf.Submission{ID: 1, AssignmentID: tested.GetID(), TestScore: 85, Score: 85, Grades: ownGrade(qf.Submission_NONE)},
+		},
+		{
+			name:       "ReviewedUngradedNoReviews",
+			submission: &qf.Submission{ID: 1, AssignmentID: reviewed.GetID(), TestScore: 90, Score: 54, Grades: ungraded},
+			want:       &qf.Submission{ID: 1, AssignmentID: reviewed.GetID(), TestScore: 90, Grades: ownGrade(qf.Submission_NONE)},
+		},
+		{
+			name:       "ReviewedUngraded",
+			submission: &qf.Submission{ID: 1, AssignmentID: reviewed.GetID(), TestScore: 90, ReviewScore: 70, Score: 82, Grades: ungraded, Reviews: reviews},
+			want:       &qf.Submission{ID: 1, AssignmentID: reviewed.GetID(), TestScore: 90},
+		},
+		{
+			name:       "ReviewedGraded",
+			submission: &qf.Submission{ID: 1, AssignmentID: reviewed.GetID(), TestScore: 90, ReviewScore: 70, Score: 82, Grades: graded, Reviews: reviews},
+			want: &qf.Submission{
+				ID: 1, AssignmentID: reviewed.GetID(), TestScore: 90, ReviewScore: 70, Score: 82, Reviews: reviews,
+				Grades: ownGrade(qf.Submission_APPROVED),
+			},
+		},
+		{
+			name:       "UnknownAssignmentUngraded",
+			submission: &qf.Submission{ID: 1, AssignmentID: 99, TestScore: 85, Score: 85, Grades: ungraded},
+			want:       &qf.Submission{ID: 1, AssignmentID: 99, TestScore: 85, Grades: ownGrade(qf.Submission_NONE)},
+		},
+	}
+	for _, tc := range tests {
+		t.Run(tc.name, func(t *testing.T) {
+			submissions := &qf.Submissions{Submissions: []*qf.Submission{tc.submission}}
+			submissions.Clean(userID, assignments)
+			if diff := cmp.Diff(tc.want, submissions.GetSubmissions()[0], protocmp.Transform()); diff != "" {
+				t.Errorf("Clean() mismatch (-want +got):\n%s", diff)
 			}
 		})
 	}

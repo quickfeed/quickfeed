@@ -823,3 +823,60 @@ func TestSubmissionGradesAfterGroupUpdate(t *testing.T) {
 		})
 	}
 }
+
+func TestUpdateGrade(t *testing.T) {
+	const (
+		none     = qf.Submission_NONE
+		approved = qf.Submission_APPROVED
+		rejected = qf.Submission_REJECTED
+	)
+	tests := []struct {
+		name  string
+		start [2]qf.Submission_Status
+		user  int // index of the user whose grade is set, or -1 for all users
+		set   qf.Submission_Status
+		want  [2]qf.Submission_Status
+	}{
+		{name: "ApproveAll", start: [2]qf.Submission_Status{none, rejected}, user: -1, set: approved, want: [2]qf.Submission_Status{approved, approved}},
+		{name: "ApproveFirst", start: [2]qf.Submission_Status{none, none}, user: 0, set: approved, want: [2]qf.Submission_Status{approved, none}},
+		{name: "RejectSecondKeepsFirstApproved", start: [2]qf.Submission_Status{approved, none}, user: 1, set: rejected, want: [2]qf.Submission_Status{approved, rejected}},
+	}
+	for _, tc := range tests {
+		t.Run(tc.name, func(t *testing.T) {
+			db, cleanup := qtest.TestDB(t)
+			defer cleanup()
+			first, _, assignment := qtest.SetupCourseAssignment(t, db)
+			users := []*qf.User{first, qtest.CreateFakeUser(t, db)}
+			submission := &qf.Submission{
+				AssignmentID: assignment.GetID(),
+				UserID:       first.GetID(),
+				TestScore:    80,
+				Score:        80,
+				Scores:       []*score.Score{{TestName: "TestA", Score: 8, MaxScore: 10, Weight: 1}},
+				Grades: []*qf.Grade{
+					{UserID: users[0].GetID(), Status: tc.start[0]},
+					{UserID: users[1].GetID(), Status: tc.start[1]},
+				},
+			}
+			qtest.CreateSubmission(t, db, submission)
+
+			grade := &qf.Grade{SubmissionID: submission.GetID(), Status: tc.set}
+			if tc.user >= 0 {
+				grade.UserID = users[tc.user].GetID()
+			}
+			if err := db.UpdateGrade(grade); err != nil {
+				t.Fatal(err)
+			}
+
+			got := qtest.GetSubmission(t, db, &qf.Submission{ID: submission.GetID()})
+			for i, user := range users {
+				if status := got.GetStatusByUser(user.GetID()); status != tc.want[i] {
+					t.Errorf("user %d: status = %v, want %v", i, status, tc.want[i])
+				}
+			}
+			if got.GetTestScore() != 80 || got.GetScore() != 80 || len(got.GetScores()) != 1 {
+				t.Errorf("(TestScore, Score, len(Scores)) = (%d, %d, %d), want (80, 80, 1)", got.GetTestScore(), got.GetScore(), len(got.GetScores()))
+			}
+		})
+	}
+}

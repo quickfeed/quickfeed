@@ -109,6 +109,8 @@ func TestRebuildSubmissions(t *testing.T) {
 		ContainerTimeout: 1,
 	}
 	qtest.CreateAssignment(t, db, assignment)
+	reviewed := &qf.Assignment{CourseID: course.GetID(), Name: "lab2", Order: 2, Reviewers: 1}
+	qtest.CreateAssignment(t, db, reviewed)
 	qtest.CreateSubmission(t, db, &qf.Submission{
 		AssignmentID: 1,
 		UserID:       student1.GetID(),
@@ -150,6 +152,13 @@ func TestRebuildSubmissions(t *testing.T) {
 				AssignmentID: 111,
 			},
 			wantErr: connect.NewError(connect.CodeInvalidArgument, errors.New("failed to rebuild submissions")),
+		},
+		{
+			name: "Rebuild reviewed assignment without tests",
+			request: &qf.RebuildRequest{
+				AssignmentID: reviewed.GetID(),
+			},
+			wantErr: connect.NewError(connect.CodeFailedPrecondition, errors.New("assignment has no tests to run")),
 		},
 		{
 			name: "Rebuild existing submission",

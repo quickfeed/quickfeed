@@ -83,6 +83,8 @@ func (r *RunData) newManualReviewSubmission(previous *qf.Submission) *qf.Submiss
 		GroupID:      r.Repo.GetGroupID(),
 		CommitHash:   r.CommitID,
 		Score:        previous.GetScore(),
+		TestScore:    previous.GetTestScore(),
+		ReviewScore:  previous.GetReviewScore(),
 		Grades:       previous.GetGrades(),
 		BuildInfo: &score.BuildInfo{
 			SubmissionDate: timestamppb.Now(),
@@ -101,7 +103,8 @@ func (r *RunData) newTestRunSubmission(previous *qf.Submission, results *score.R
 	if !results.ScoresValid() {
 		return r.newFailedRunSubmission(previous, results)
 	}
-	score := results.Sum()
+	testScore := results.Sum()
+	score := r.Assignment.WeightedScore(testScore, previous.GetReviewScore())
 	previous.SetGradesIfApproved(r.Assignment, score)
 	return &qf.Submission{
 		ID:           previous.GetID(),
@@ -110,6 +113,8 @@ func (r *RunData) newTestRunSubmission(previous *qf.Submission, results *score.R
 		GroupID:      r.Repo.GetGroupID(),
 		CommitHash:   r.CommitID,
 		Score:        score,
+		TestScore:    testScore,
+		ReviewScore:  previous.GetReviewScore(),
 		Grades:       previous.GetGrades(),
 		BuildInfo:    results.GetBuildInfo(),
 		Scores:       results.Scores,
@@ -132,6 +137,8 @@ func (r *RunData) newFailedRunSubmission(previous *qf.Submission, results *score
 		GroupID:      r.Repo.GetGroupID(),
 		CommitHash:   r.CommitID,
 		Score:        previous.GetScore(),
+		TestScore:    previous.GetTestScore(),
+		ReviewScore:  previous.GetReviewScore(),
 		Grades:       previous.GetGrades(),
 		BuildInfo:    results.GetBuildInfo(),
 		Scores:       previous.GetScores(),
@@ -191,4 +198,22 @@ func (r *RunData) GetOwners(db database.Database) ([]uint64, error) {
 		return nil, fmt.Errorf("no owners for %s", r)
 	}
 	return owners, nil
+}
+
+// SubmissionsForOwners returns the given submission, with its reviews, as each
+// owner of the run's repository may see it, keyed by the owner's user ID.
+func (r *RunData) SubmissionsForOwners(db database.Database, submissionID uint64) (map[uint64]*qf.Submission, error) {
+	owners, err := r.GetOwners(db)
+	if err != nil {
+		return nil, err
+	}
+	submission, err := db.GetSubmission(&qf.Submission{ID: submissionID})
+	if err != nil {
+		return nil, fmt.Errorf("getting submission %d for %s: %w", submissionID, r, err)
+	}
+	submissions := make(map[uint64]*qf.Submission, len(owners))
+	for _, userID := range owners {
+		submissions[userID] = submission.CleanCopy(userID, r.Assignment)
+	}
+	return submissions, nil
 }

@@ -1212,6 +1212,7 @@ type Assignment struct {
 	Submissions       []*Submission          `protobuf:"bytes,11,rep,name=submissions,proto3" json:"submissions,omitempty"`             // submissions produced for this assignment
 	GradingBenchmarks []*GradingBenchmark    `protobuf:"bytes,12,rep,name=gradingBenchmarks,proto3" json:"gradingBenchmarks,omitempty"` // grading benchmarks for this assignment
 	ExpectedTests     []*TestInfo            `protobuf:"bytes,13,rep,name=ExpectedTests,proto3" json:"ExpectedTests,omitempty"`         // list of expected tests for this assignment
+	ReviewWeight      uint32                 `protobuf:"varint,14,opt,name=reviewWeight,proto3" json:"reviewWeight,omitempty"`          // percentage of the submission score given by reviews
 	unknownFields     protoimpl.UnknownFields
 	sizeCache         protoimpl.SizeCache
 }
@@ -1335,6 +1336,13 @@ func (x *Assignment) GetExpectedTests() []*TestInfo {
 		return x.ExpectedTests
 	}
 	return nil
+}
+
+func (x *Assignment) GetReviewWeight() uint32 {
+	if x != nil {
+		return x.ReviewWeight
+	}
+	return 0
 }
 
 type TestInfo struct {
@@ -1471,13 +1479,15 @@ type Submission struct {
 	AssignmentID  uint64                 `protobuf:"varint,2,opt,name=AssignmentID,proto3" json:"AssignmentID,omitempty"` // foreign key
 	UserID        uint64                 `protobuf:"varint,3,opt,name=userID,proto3" json:"userID,omitempty"`
 	GroupID       uint64                 `protobuf:"varint,4,opt,name=groupID,proto3" json:"groupID,omitempty"`
-	Score         uint32                 `protobuf:"varint,5,opt,name=score,proto3" json:"score,omitempty"`
+	Score         uint32                 `protobuf:"varint,5,opt,name=score,proto3" json:"score,omitempty"` // combined test and review score; see testScore and reviewScore
 	CommitHash    string                 `protobuf:"bytes,6,opt,name=commitHash,proto3" json:"commitHash,omitempty"`
 	Grades        []*Grade               `protobuf:"bytes,7,rep,name=Grades,proto3" json:"Grades,omitempty"`
 	ApprovedDate  *timestamppb.Timestamp `protobuf:"bytes,8,opt,name=approvedDate,proto3" json:"approvedDate,omitempty" gorm:"serializer:timestamp;type:datetime"`
-	Reviews       []*Review              `protobuf:"bytes,9,rep,name=reviews,proto3" json:"reviews,omitempty"`      // reviews produced for this submission
-	BuildInfo     *score.BuildInfo       `protobuf:"bytes,10,opt,name=BuildInfo,proto3" json:"BuildInfo,omitempty"` // build info for tests
-	Scores        []*score.Score         `protobuf:"bytes,11,rep,name=Scores,proto3" json:"Scores,omitempty"`       // list of scores for different tests
+	Reviews       []*Review              `protobuf:"bytes,9,rep,name=reviews,proto3" json:"reviews,omitempty"`           // reviews produced for this submission
+	BuildInfo     *score.BuildInfo       `protobuf:"bytes,10,opt,name=BuildInfo,proto3" json:"BuildInfo,omitempty"`      // build info for tests
+	Scores        []*score.Score         `protobuf:"bytes,11,rep,name=Scores,proto3" json:"Scores,omitempty"`            // list of scores for different tests
+	TestScore     uint32                 `protobuf:"varint,12,opt,name=testScore,proto3" json:"testScore,omitempty"`     // score from the latest test run
+	ReviewScore   uint32                 `protobuf:"varint,13,opt,name=reviewScore,proto3" json:"reviewScore,omitempty"` // average percentage score of the reviews
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
 }
@@ -1587,6 +1597,20 @@ func (x *Submission) GetScores() []*score.Score {
 		return x.Scores
 	}
 	return nil
+}
+
+func (x *Submission) GetTestScore() uint32 {
+	if x != nil {
+		return x.TestScore
+	}
+	return 0
+}
+
+func (x *Submission) GetReviewScore() uint32 {
+	if x != nil {
+		return x.ReviewScore
+	}
+	return 0
 }
 
 type Submissions struct {
@@ -2465,7 +2489,7 @@ const file_qf_types_proto_rawDesc = "" +
 	"\busedDays\x18\x04 \x01(\rR\busedDays\x12\x18\n" +
 	"\agroupID\x18\x05 \x01(\x04R\agroupID\"?\n" +
 	"\vEnrollments\x120\n" +
-	"\venrollments\x18\x01 \x03(\v2\x0e.qf.EnrollmentR\venrollments\"\xa2\x04\n" +
+	"\venrollments\x18\x01 \x03(\v2\x0e.qf.EnrollmentR\venrollments\"\xc6\x04\n" +
 	"\n" +
 	"Assignment\x12\x0e\n" +
 	"\x02ID\x18\x01 \x01(\x04R\x02ID\x12\x1a\n" +
@@ -2485,7 +2509,8 @@ const file_qf_types_proto_rawDesc = "" +
 	" \x01(\rR\x10containerTimeout\x120\n" +
 	"\vsubmissions\x18\v \x03(\v2\x0e.qf.SubmissionR\vsubmissions\x12B\n" +
 	"\x11gradingBenchmarks\x18\f \x03(\v2\x14.qf.GradingBenchmarkR\x11gradingBenchmarks\x122\n" +
-	"\rExpectedTests\x18\r \x03(\v2\f.qf.TestInfoR\rExpectedTests\"\xf0\x01\n" +
+	"\rExpectedTests\x18\r \x03(\v2\f.qf.TestInfoR\rExpectedTests\x12\"\n" +
+	"\freviewWeight\x18\x0e \x01(\rR\freviewWeight\"\xf0\x01\n" +
 	"\bTestInfo\x12\x0e\n" +
 	"\x02ID\x18\x01 \x01(\x04R\x02ID\x12F\n" +
 	"\fAssignmentID\x18\x02 \x01(\x04B\"ʵ\x03\x1e\xa2\x01\x1bgorm:\"uniqueIndex:testinfo\"R\fAssignmentID\x12>\n" +
@@ -2494,7 +2519,7 @@ const file_qf_types_proto_rawDesc = "" +
 	"\x06Weight\x18\x05 \x01(\x05R\x06Weight\x12\x18\n" +
 	"\aDetails\x18\x06 \x01(\tR\aDetails\"?\n" +
 	"\vAssignments\x120\n" +
-	"\vassignments\x18\x01 \x03(\v2\x0e.qf.AssignmentR\vassignments\"\xf7\x03\n" +
+	"\vassignments\x18\x01 \x03(\v2\x0e.qf.AssignmentR\vassignments\"\xb7\x04\n" +
 	"\n" +
 	"Submission\x12\x0e\n" +
 	"\x02ID\x18\x01 \x01(\x04R\x02ID\x12\"\n" +
@@ -2511,7 +2536,9 @@ const file_qf_types_proto_rawDesc = "" +
 	".qf.ReviewR\areviews\x12.\n" +
 	"\tBuildInfo\x18\n" +
 	" \x01(\v2\x10.score.BuildInfoR\tBuildInfo\x12$\n" +
-	"\x06Scores\x18\v \x03(\v2\f.score.ScoreR\x06Scores\"<\n" +
+	"\x06Scores\x18\v \x03(\v2\f.score.ScoreR\x06Scores\x12\x1c\n" +
+	"\ttestScore\x18\f \x01(\rR\ttestScore\x12 \n" +
+	"\vreviewScore\x18\r \x01(\rR\vreviewScore\"<\n" +
 	"\x06Status\x12\b\n" +
 	"\x04NONE\x10\x00\x12\f\n" +
 	"\bAPPROVED\x10\x01\x12\f\n" +

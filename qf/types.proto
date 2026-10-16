@@ -167,6 +167,7 @@ message Assignment {
     repeated Submission submissions             = 11;  // submissions produced for this assignment
     repeated GradingBenchmark gradingBenchmarks = 12;  // grading benchmarks for this assignment
     repeated TestInfo ExpectedTests             = 13;  // list of expected tests for this assignment
+    uint32 reviewWeight                         = 14;  // percentage of the submission score given by reviews
 }
 
 message TestInfo {
@@ -193,13 +194,15 @@ message Submission {
     uint64 AssignmentID                    = 2;  // foreign key
     uint64 userID                          = 3;
     uint64 groupID                         = 4;
-    uint32 score                           = 5;
+    uint32 score                           = 5;   // combined test and review score; see testScore and reviewScore
     string commitHash                      = 6;
     repeated Grade Grades                  = 7;
     google.protobuf.Timestamp approvedDate = 8 [(go.field) = { tags: 'gorm:"serializer:timestamp;type:datetime"' }];
     repeated Review reviews                = 9;   // reviews produced for this submission
     score.BuildInfo BuildInfo              = 10;  // build info for tests
     repeated score.Score Scores            = 11;  // list of scores for different tests
+    uint32 testScore                       = 12;  // score from the latest test run
+    uint32 reviewScore                     = 13;  // average percentage score of the reviews
 }
 
 message Submissions {

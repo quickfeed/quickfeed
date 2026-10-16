@@ -42,6 +42,7 @@ func (db *GormDB) CreateAssignment(assignment *qf.Assignment) error {
 			"score_limit":       assignment.GetScoreLimit(),
 			"is_group_lab":      assignment.GetIsGroupLab(),
 			"reviewers":         assignment.GetReviewers(),
+			"review_weight":     assignment.GetReviewWeight(),
 			"container_timeout": assignment.GetContainerTimeout(),
 		}).FirstOrCreate(assignment).Error
 }
@@ -119,12 +120,16 @@ func (db *GormDB) UpdateAssignments(assignments []*qf.Assignment) error {
 				IsGroupLab:       v.GetIsGroupLab(),
 				ScoreLimit:       v.GetScoreLimit(),
 				Reviewers:        v.GetReviewers(),
+				ReviewWeight:     v.GetReviewWeight(),
 				ContainerTimeout: v.GetContainerTimeout(),
 				// Submissions:       v.GetSubmissions(),
 				GradingBenchmarks: v.GetGradingBenchmarks(),
 				ExpectedTests:     v.GetExpectedTests(),
 			}).Error; err != nil {
 				return err
+			}
+			if assignment.EffectiveReviewWeight() != v.EffectiveReviewWeight() {
+				return rescoreSubmissions(tx, v)
 			}
 			return nil
 		})
@@ -133,6 +138,27 @@ func (db *GormDB) UpdateAssignments(assignments []*qf.Assignment) error {
 		}
 	}
 	return errs
+}
+
+// rescoreSubmissions recomputes the score of the assignment's submissions from
+// their test and review scores. Their grades remain as they are.
+func rescoreSubmissions(tx *gorm.DB, assignment *qf.Assignment) error {
+	var submissions []*qf.Submission
+	if err := tx.Select("id", "score", "test_score", "review_score").
+		Where(&qf.Submission{AssignmentID: assignment.GetID()}).
+		Find(&submissions).Error; err != nil {
+		return err
+	}
+	for _, submission := range submissions {
+		score := assignment.WeightedScore(submission.GetTestScore(), submission.GetReviewScore())
+		if score == submission.GetScore() {
+			continue
+		}
+		if err := tx.Model(&qf.Submission{ID: submission.GetID()}).Update("score", score).Error; err != nil {
+			return err
+		}
+	}
+	return nil
 }
 
 func check(tx *gorm.DB, assignment *qf.Assignment) error {
