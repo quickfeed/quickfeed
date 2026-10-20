@@ -1,3 +1,31 @@
+# Version control and editor files
 .git
 .github
 .vscode
+.idea
+.claude
+
+# Secrets and local configuration: never send these to the build
+.env
+.env.*
+**/*.pem
+**/*.key
+.config
+
+# Databases: the image must contain no database
+**/*.db
+**/*.db-journal
+**/*.db-wal
+**/*.db-shm
+
+# Rebuilt inside the image
+**/node_modules
+public/dist
+public/assets/index.html
+/quickfeed
+
+# Logs, backups and test data
+logs
+**/*.log
+backups
+**/testdata
