@@ -19,4 +19,4 @@ images:
   #   cd deploy/k8s/base && kustomize edit set image quickfeed=ghcr.io/mahdavizeinab/quickfeed:<sha>
   - name: quickfeed
     newName: ghcr.io/mahdavizeinab/quickfeed
-    newTag: CHANGE-ME-TO-COMMIT-SHA
+    newTag: dba3210ac9c47bbb925e4b3e6fc8e9ad9f06f695
