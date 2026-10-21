@@ -1,0 +1,63 @@
+# Nightly backup of the QuickFeed database with pg_dump.
+#
+# Each run writes one file, /backups/quickfeed-<date>-<time>.dump, and deletes
+# dumps older than 14 days. Restore and test instructions: deploy/k8s/README.md.
+# Run a backup right now with:
+#   kubectl -n quickfeed create job --from=cronjob/postgres-backup backup-now
+apiVersion: batch/v1
+kind: CronJob
+metadata:
+  name: postgres-backup
+  labels:
+    app.kubernetes.io/name: postgres-backup
+spec:
+  schedule: "15 3 * * *" # every night at 03:15
+  timeZone: Europe/Oslo
+  concurrencyPolicy: Forbid
+  successfulJobsHistoryLimit: 3
+  failedJobsHistoryLimit: 3
+  jobTemplate:
+    spec:
+      backoffLimit: 2
+      template:
+        metadata:
+          labels:
+            app.kubernetes.io/name: postgres-backup
+        spec:
+          restartPolicy: OnFailure
+          securityContext:
+            runAsUser: 999
+            runAsGroup: 999
+            runAsNonRoot: true
+            fsGroup: 999
+          containers:
+            - name: pg-dump
+              image: postgres:17.6
+              env:
+                - name: PGHOST
+                  value: postgres
+                - name: PGUSER
+                  valueFrom:
+                    secretKeyRef: { name: postgres, key: POSTGRES_USER }
+                - name: PGPASSWORD
+                  valueFrom:
+                    secretKeyRef: { name: postgres, key: POSTGRES_PASSWORD }
+                - name: PGDATABASE
+                  valueFrom:
+                    secretKeyRef: { name: postgres, key: POSTGRES_DB }
+              command:
+                - sh
+                - -ec
+                - |
+                  file=/backups/quickfeed-$(date +%Y%m%d-%H%M%S).dump
+                  pg_dump --format=custom --file="$file.tmp"
+                  mv "$file.tmp" "$file"
+                  echo "wrote $file ($(du -h "$file" | cut -f1))"
+                  find /backups -name 'quickfeed-*.dump' -mtime +14 -print -delete
+              volumeMounts:
+                - name: backups
+                  mountPath: /backups
+          volumes:
+            - name: backups
+              persistentVolumeClaim:
+                claimName: postgres-backups

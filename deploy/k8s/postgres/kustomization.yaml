@@ -1,0 +1,32 @@
+# Step 2: QuickFeed with a PostgreSQL database server in the cluster.
+#
+#   cp postgres.env.example postgres.env    # then set a password
+#   kubectl apply -k deploy/k8s/postgres
+#
+# This builds on step 1 (../base) and adds PostgreSQL. See deploy/k8s/README.md.
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+
+namespace: quickfeed
+
+resources:
+  - ../base
+  - postgres-statefulset.yaml
+  - postgres-service.yaml
+  - backup-pvc.yaml
+  - backup-cronjob.yaml
+
+patches:
+  - path: quickfeed-use-postgres.yaml
+
+secretGenerator:
+  # Database name, user and password. postgres.env is not committed to git
+  # (see .gitignore); copy postgres.env.example and choose a password.
+  - name: postgres
+    envs:
+      - postgres.env
+
+generatorOptions:
+  # Keep the plain name "postgres", so the one-time migration Job in
+  # deploy/k8s/jobs can refer to it.
+  disableNameSuffixHash: true

@@ -43,6 +43,10 @@ RUN touch .env \
 RUN CGO_ENABLED=1 go build -trimpath -o /out/quickfeed . \
  && setcap cap_net_bind_service=+ep /out/quickfeed
 
+# qf-dbcopy: one-time copy of the SQLite database into PostgreSQL
+# (used by deploy/k8s/jobs/migrate-sqlite-to-postgres.yaml)
+RUN CGO_ENABLED=1 go build -trimpath -o /out/qf-dbcopy ./cmd/dbcopy
+
 
 # ---------- Stage 2: runtime (only what QuickFeed needs to run) ----------
 FROM debian:trixie-20261005-slim AS runtime
@@ -66,6 +70,7 @@ ENV QUICKFEED=/app \
     HOME=/data
 
 COPY --from=build /out/quickfeed     /usr/local/bin/quickfeed
+COPY --from=build /out/qf-dbcopy     /usr/local/bin/qf-dbcopy
 COPY --from=build /src/public/assets /app/public/assets
 COPY --from=build /src/public/dist   /app/public/dist
 

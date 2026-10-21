@@ -3,9 +3,13 @@ package qtest
 import (
 	"crypto/rand"
 	"crypto/sha256"
+	"database/sql"
 	"fmt"
+	"net/url"
 	"os"
 	"path/filepath"
+	"strings"
+	"sync"
 	"testing"
 	"time"
 
@@ -13,6 +17,7 @@ import (
 	"github.com/go-git/go-git/v5"
 	"github.com/go-git/go-git/v5/plumbing/object"
 	"github.com/google/go-cmp/cmp"
+	_ "github.com/jackc/pgx/v5/stdlib" // registers the "pgx" driver for database/sql
 	"github.com/quickfeed/quickfeed/database"
 	"github.com/quickfeed/quickfeed/internal/fileop"
 	"github.com/quickfeed/quickfeed/qf"
@@ -21,8 +26,16 @@ import (
 
 // TestDB returns a test database and close function.
 // This function should only be used as a test helper.
+//
+// By default the test database is a temporary SQLite file.
+// If $QUICKFEED_TEST_DATABASE_URL is set to a PostgreSQL URL, each test
+// instead gets its own new, empty PostgreSQL database on that server,
+// which is dropped again by the close function.
 func TestDB(t *testing.T) (database.Database, func()) {
 	t.Helper()
+	if url := os.Getenv("QUICKFEED_TEST_DATABASE_URL"); url != "" {
+		return testPostgresDB(t, url)
+	}
 
 	f, err := os.CreateTemp(t.TempDir(), "test.db")
 	if err != nil {
@@ -47,6 +60,49 @@ func TestDB(t *testing.T) (database.Database, func()) {
 			t.Error(err)
 		}
 	}
+}
+
+// testPostgresDB creates a uniquely named database on the PostgreSQL server
+// given by adminURL, and returns a QuickFeed database connected to it.
+func testPostgresDB(t *testing.T, adminURL string) (database.Database, func()) {
+	t.Helper()
+	admin, err := sql.Open("pgx", adminURL)
+	if err != nil {
+		t.Fatal(err)
+	}
+	name := "qftest_" + strings.ToLower(rand.Text())
+	if _, err := admin.Exec("CREATE DATABASE " + name); err != nil {
+		_ = admin.Close()
+		t.Fatalf("creating test database: %v", err)
+	}
+	u, err := url.Parse(adminURL)
+	if err != nil {
+		_ = admin.Close()
+		t.Fatal(err)
+	}
+	u.Path = "/" + name
+
+	db, err := database.NewGormDB(u.String(), Logger(t))
+	if err != nil {
+		_, _ = admin.Exec("DROP DATABASE " + name + " WITH (FORCE)")
+		_ = admin.Close()
+		t.Fatal(err)
+	}
+	// Not all tests call the returned close function, so it also runs at
+	// the end of the test. sync.OnceFunc makes sure it runs only once.
+	closeFn := sync.OnceFunc(func() {
+		if err := db.Close(); err != nil {
+			t.Error(err)
+		}
+		if _, err := admin.Exec("DROP DATABASE " + name + " WITH (FORCE)"); err != nil {
+			t.Error(err)
+		}
+		if err := admin.Close(); err != nil {
+			t.Error(err)
+		}
+	})
+	t.Cleanup(closeFn)
+	return db, closeFn
 }
 
 func SetupCourseAssignment(t *testing.T, db database.Database) (*qf.User, *qf.Course, *qf.Assignment) {

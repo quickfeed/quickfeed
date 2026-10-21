@@ -102,6 +102,12 @@ func DatabasePath() string {
 	return Root("qf.db")
 }
 
+// DatabaseURL returns the PostgreSQL connection URL from $QUICKFEED_DATABASE_URL.
+// If it is empty, QuickFeed uses the SQLite database file instead.
+func DatabaseURL() string {
+	return os.Getenv("QUICKFEED_DATABASE_URL")
+}
+
 // TestdataPath returns the path to the testdata/courses directory.
 func TestdataPath() string {
 	return Root("testdata", "courses")

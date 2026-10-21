@@ -6,7 +6,6 @@ import (
 
 	"github.com/quickfeed/quickfeed/kit/score"
 	"github.com/quickfeed/quickfeed/qf"
-	"google.golang.org/protobuf/types/known/timestamppb"
 	"gorm.io/gorm"
 )
 
@@ -255,7 +254,7 @@ func (db *GormDB) CreateReview(query *qf.Review) error {
 	if len(submission.GetReviews()) >= int(assignment.GetReviewers()) {
 		return ErrAllReviewsCreated(submission.GetID(), assignment.GetName(), assignment.GetReviewers())
 	}
-	query.Edited = timestamppb.Now()
+	query.Edited = Now()
 	query.ComputeScore()
 	benchmarks, err := db.GetBenchmarks(&qf.Assignment{ID: submission.GetAssignmentID()})
 	if err != nil {
@@ -283,7 +282,7 @@ func (db *GormDB) UpdateReview(query *qf.Review) error {
 		return err
 	}
 
-	query.Edited = timestamppb.Now()
+	query.Edited = Now()
 	query.ComputeScore()
 	for id, review := range submission.GetReviews() {
 		if review.GetID() == query.GetID() {

@@ -45,3 +45,6 @@ dat320-original.xlsx
 dat320-approve-list.xlsx
 patch/go.pb.go
 go.work.sum
+
+# Kubernetes database password (copy postgres.env.example)
+deploy/k8s/postgres/postgres.env

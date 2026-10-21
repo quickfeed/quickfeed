@@ -4,7 +4,6 @@ import (
 	"errors"
 
 	"github.com/quickfeed/quickfeed/qf"
-	"google.golang.org/protobuf/types/known/timestamppb"
 )
 
 // ErrEmptyNoteID is returned when a note operation's query has an empty ID.
@@ -92,7 +91,7 @@ func (db *GormDB) relatedTargets(courseID, submissionID uint64) (groupIDs, enrol
 
 // CreateNote adds a new internal note, stamping its creation time.
 func (db *GormDB) CreateNote(note *qf.Note) error {
-	note.CreatedAt = timestamppb.Now()
+	note.CreatedAt = Now()
 	note.EditedAt = note.GetCreatedAt()
 	return db.conn.Create(note).Error
 }
@@ -104,7 +103,7 @@ func (db *GormDB) UpdateNote(note *qf.Note) error {
 	if note.GetID() == 0 {
 		return ErrEmptyNoteID
 	}
-	note.EditedAt = timestamppb.Now()
+	note.EditedAt = Now()
 	return db.conn.Model(&qf.Note{ID: note.GetID()}).
 		Select("Body", "EditedAt").
 		Updates(&qf.Note{Body: note.GetBody(), EditedAt: note.GetEditedAt()}).Error

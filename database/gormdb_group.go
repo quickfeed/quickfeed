@@ -3,7 +3,6 @@ package database
 import (
 	"errors"
 	"fmt"
-	"strings"
 
 	"github.com/quickfeed/quickfeed/qf"
 	"gorm.io/gorm"
@@ -40,7 +39,7 @@ func (db *GormDB) CreateGroup(group *qf.Group) error {
 	tx := db.conn.Begin()
 	if err := tx.Model(&qf.Group{}).Create(group).Error; err != nil {
 		tx.Rollback()
-		if strings.HasPrefix(err.Error(), "UNIQUE constraint failed") {
+		if isUniqueViolation(err) {
 			return ErrDuplicateGroup
 		}
 		return err
@@ -295,7 +294,12 @@ func syncGroupGrades(tx *gorm.DB, groupID uint64, userIDs []uint64) error {
 		}).Association("Grades").Clear(); err != nil {
 			return err
 		}
-		if err := tx.Model(submission).Association("Grades").Append(submission.Grades); err != nil {
+		// Append adds the grades to submission.Grades before saving them, so we must
+		// pass them separately; otherwise each grade is inserted twice in the same
+		// statement, which PostgreSQL rejects ("cannot affect row a second time").
+		grades := submission.Grades
+		submission.Grades = nil
+		if err := tx.Model(submission).Association("Grades").Append(grades); err != nil {
 			return err
 		}
 	}

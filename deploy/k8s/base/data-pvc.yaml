@@ -1,0 +1,24 @@
+# Persistent volume for everything QuickFeed must keep across restarts and upgrades:
+#   /data/qf.db                     the SQLite database (step 1 only)
+#   /data/.config/quickfeed/certs   Let's Encrypt certificates (avoids rate limits on restart)
+#   /data/logs                      course logs
+#
+# On the UiS cluster (Talos on OpenStack) the volume is an OpenStack Cinder
+# volume, created automatically by the Cinder CSI driver. It lives outside the
+# pod and the node, so it survives pod restarts, image upgrades and node failures.
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: quickfeed-data
+  labels:
+    app.kubernetes.io/name: quickfeed
+spec:
+  accessModes:
+    - ReadWriteOnce # one node at a time; this is why QuickFeed runs as 1 replica
+  resources:
+    requests:
+      storage: 5Gi
+  # No storageClassName: the cluster's default StorageClass is used.
+  # Check it with: kubectl get storageclass
+  # If there is no default, set it here, e.g.:
+  # storageClassName: csi-cinder-sc-delete

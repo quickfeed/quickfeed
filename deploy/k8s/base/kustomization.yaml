@@ -1,0 +1,22 @@
+# Step 1: QuickFeed with its SQLite database on a persistent volume.
+#
+#   kubectl apply -k deploy/k8s/base
+#
+# See deploy/k8s/README.md.
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+
+namespace: quickfeed
+
+resources:
+  - namespace.yaml
+  - data-pvc.yaml
+  - deployment.yaml
+  - service.yaml
+
+images:
+  # Set the tag to the commit SHA of the image built by .github/workflows/image.yml:
+  #   cd deploy/k8s/base && kustomize edit set image quickfeed=ghcr.io/mahdavizeinab/quickfeed:<sha>
+  - name: quickfeed
+    newName: ghcr.io/mahdavizeinab/quickfeed
+    newTag: CHANGE-ME-TO-COMMIT-SHA

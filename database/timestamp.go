@@ -48,3 +48,11 @@ func (TimestampSerializer) Scan(ctx context.Context, field *schema.Field, dst re
 	}
 	return
 }
+
+// Now returns the current time, rounded down to whole microseconds.
+// PostgreSQL stores timestamps with microsecond precision, while Go uses
+// nanoseconds. Rounding first keeps the value we return to the caller
+// equal to the value stored in the database, for both SQLite and PostgreSQL.
+func Now() *timestamppb.Timestamp {
+	return timestamppb.New(time.Now().Truncate(time.Microsecond))
+}
