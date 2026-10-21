@@ -72,7 +72,16 @@ func main() {
 
 	log.Printf("Starting QuickFeed on %s", env.DomainWithPort())
 
-	handler, cleanup, err := initWebServer(*dbFile, *public)
+	// A PostgreSQL URL in $QUICKFEED_DATABASE_URL takes precedence over the SQLite file.
+	dbSource := *dbFile
+	if dbURL := env.DatabaseURL(); dbURL != "" {
+		dbSource = dbURL
+		log.Print("Using PostgreSQL database from QUICKFEED_DATABASE_URL")
+	} else {
+		log.Printf("Using SQLite database file %s", dbSource)
+	}
+
+	handler, cleanup, err := initWebServer(dbSource, *public)
 	if err != nil {
 		log.Fatal(err)
 	}
@@ -123,7 +132,7 @@ func gracefulShutdown(ctx context.Context, srv *web.Server) {
 }
 
 // initWebServer initializes the QuickFeed web server components.
-func initWebServer(dbFile, public string) (http.Handler, func(), error) {
+func initWebServer(dbSource, public string) (http.Handler, func(), error) {
 	q := &quickfeed{}
 	var err error
 
@@ -135,7 +144,7 @@ func initWebServer(dbFile, public string) (http.Handler, func(), error) {
 	q.logger = qlog.WithSink(operator, courselog.NewHandler(q.courseLogs))
 	qlog.SetDefault(q.logger)
 
-	q.db, err = database.NewGormDB(dbFile, q.logger)
+	q.db, err = database.NewGormDB(dbSource, q.logger)
 	if err != nil {
 		return nil, q.cleanup, fmt.Errorf("connecting to database: %w", err)
 	}

@@ -5,6 +5,7 @@ import (
 
 	"github.com/quickfeed/quickfeed/qf"
 	"gorm.io/gorm"
+	"gorm.io/gorm/clause"
 )
 
 // GetCourseSubmissions returns all individual lab submissions by students enrolled in the specified course.
@@ -19,8 +20,10 @@ func (db *GormDB) GetCourseSubmissions(request *qf.SubmissionRequest) (*qf.Cours
 		a.Where(&qf.Assignment{IsGroupLab: true})
 	default: // all
 	}
-	// the 'order' field of qf.Assignment must be in 'quotes' since otherwise it will be interpreted as SQL
-	if err := a.Order("'order'").Pluck("id", &assignmentIDs).Error; err != nil {
+	// "order" is an SQL keyword, so the column name must be quoted.
+	// clause.Column quotes it correctly for both SQLite and PostgreSQL.
+	// (The string "'order'" is a constant, which SQLite ignores and PostgreSQL rejects.)
+	if err := a.Order(clause.OrderByColumn{Column: clause.Column{Name: "order"}}).Pluck("id", &assignmentIDs).Error; err != nil {
 		return nil, err
 	}
 	var submissions []*qf.Submission

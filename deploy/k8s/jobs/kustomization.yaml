@@ -1,0 +1,17 @@
+# One-time copy of the SQLite database (step 1) into PostgreSQL (step 2).
+# Read deploy/k8s/README.md ("Moving from SQLite to PostgreSQL") before running:
+#
+#   kubectl apply -k deploy/k8s/jobs
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+
+namespace: quickfeed
+
+resources:
+  - migrate-sqlite-to-postgres.yaml
+
+images:
+  # Use the same image tag as in ../base/kustomization.yaml
+  - name: quickfeed
+    newName: ghcr.io/mahdavizeinab/quickfeed
+    newTag: CHANGE-ME-TO-COMMIT-SHA

@@ -1,0 +1,16 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: quickfeed
+  labels:
+    app.kubernetes.io/name: quickfeed
+spec:
+  selector:
+    app.kubernetes.io/name: quickfeed
+  ports:
+    - name: https
+      port: 443
+      targetPort: https
+    - name: http
+      port: 80
+      targetPort: http

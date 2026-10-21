@@ -1,0 +1,45 @@
+# Copies all data from /data/qf.db (SQLite, on the quickfeed-data volume)
+# into the PostgreSQL database, using cmd/dbcopy from the QuickFeed image.
+# The SQLite file is mounted read-only and is not changed.
+# QuickFeed must be stopped first (kubectl -n quickfeed scale deploy/quickfeed --replicas=0).
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: migrate-sqlite-to-postgres
+  labels:
+    app.kubernetes.io/name: migrate-sqlite-to-postgres
+spec:
+  backoffLimit: 0 # do not retry automatically; read the log and fix the cause
+  ttlSecondsAfterFinished: 86400
+  template:
+    spec:
+      restartPolicy: Never
+      securityContext:
+        runAsUser: 10001
+        runAsGroup: 10001
+        runAsNonRoot: true
+      containers:
+        - name: dbcopy
+          image: quickfeed
+          command: ["/usr/local/bin/qf-dbcopy", "-from=/data/qf.db"]
+          env:
+            - name: POSTGRES_USER
+              valueFrom:
+                secretKeyRef: { name: postgres, key: POSTGRES_USER }
+            - name: POSTGRES_PASSWORD
+              valueFrom:
+                secretKeyRef: { name: postgres, key: POSTGRES_PASSWORD }
+            - name: POSTGRES_DB
+              valueFrom:
+                secretKeyRef: { name: postgres, key: POSTGRES_DB }
+            - name: QUICKFEED_DATABASE_URL
+              value: postgres://$(POSTGRES_USER):$(POSTGRES_PASSWORD)@postgres:5432/$(POSTGRES_DB)?sslmode=disable
+          volumeMounts:
+            - name: data
+              mountPath: /data
+              readOnly: true
+      volumes:
+        - name: data
+          persistentVolumeClaim:
+            claimName: quickfeed-data
+            readOnly: true

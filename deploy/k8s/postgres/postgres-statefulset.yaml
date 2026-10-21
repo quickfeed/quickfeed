@@ -1,0 +1,77 @@
+# PostgreSQL database server for QuickFeed.
+#
+# A StatefulSet gives the database pod a stable name and its own persistent
+# volume (an OpenStack Cinder volume on the UiS cluster). The data lives on
+# that volume, not in the pod: it survives restarts, upgrades of QuickFeed
+# and PostgreSQL, and node failures (the volume is re-attached to the node
+# where the pod is rescheduled).
+apiVersion: apps/v1
+kind: StatefulSet
+metadata:
+  name: postgres
+  labels:
+    app.kubernetes.io/name: postgres
+spec:
+  serviceName: postgres
+  # One database server. Replication is not needed for QuickFeed and adds
+  # a lot of complexity; backups are made by backup-cronjob.yaml instead.
+  replicas: 1
+  selector:
+    matchLabels:
+      app.kubernetes.io/name: postgres
+  template:
+    metadata:
+      labels:
+        app.kubernetes.io/name: postgres
+    spec:
+      securityContext:
+        # User "postgres" in the official image
+        runAsUser: 999
+        runAsGroup: 999
+        runAsNonRoot: true
+        fsGroup: 999
+        fsGroupChangePolicy: OnRootMismatch
+      terminationGracePeriodSeconds: 60 # let PostgreSQL shut down cleanly
+      containers:
+        - name: postgres
+          # Keep the major version (17) fixed: a new major version needs a
+          # dump and restore (see README). Minor updates (17.x) are safe.
+          image: postgres:17.6
+          envFrom:
+            - secretRef:
+                name: postgres # POSTGRES_DB, POSTGRES_USER, POSTGRES_PASSWORD
+          env:
+            # Use a subdirectory: the root of a new Cinder volume contains
+            # "lost+found", and PostgreSQL requires an empty directory.
+            - name: PGDATA
+              value: /var/lib/postgresql/data/pgdata
+          ports:
+            - name: postgres
+              containerPort: 5432
+          volumeMounts:
+            - name: data
+              mountPath: /var/lib/postgresql/data
+          readinessProbe:
+            exec:
+              command: ["sh", "-c", "pg_isready -U \"$POSTGRES_USER\" -d \"$POSTGRES_DB\""]
+            periodSeconds: 10
+          livenessProbe:
+            exec:
+              command: ["sh", "-c", "pg_isready -U \"$POSTGRES_USER\" -d \"$POSTGRES_DB\""]
+            initialDelaySeconds: 30
+            periodSeconds: 20
+          resources:
+            requests:
+              cpu: 100m
+              memory: 256Mi
+            limits:
+              memory: 1Gi
+  volumeClaimTemplates:
+    - metadata:
+        name: data
+      spec:
+        accessModes: ["ReadWriteOnce"]
+        resources:
+          requests:
+            storage: 10Gi
+        # storageClassName: as in ../base/data-pvc.yaml

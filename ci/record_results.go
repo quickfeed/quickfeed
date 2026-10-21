@@ -11,7 +11,6 @@ import (
 	"github.com/quickfeed/quickfeed/internal/qlog/label"
 	"github.com/quickfeed/quickfeed/kit/score"
 	"github.com/quickfeed/quickfeed/qf"
-	"google.golang.org/protobuf/types/known/timestamppb"
 	"gorm.io/gorm"
 )
 
@@ -85,8 +84,8 @@ func (r *RunData) newManualReviewSubmission(previous *qf.Submission) *qf.Submiss
 		Score:        previous.GetScore(),
 		Grades:       previous.GetGrades(),
 		BuildInfo: &score.BuildInfo{
-			SubmissionDate: timestamppb.Now(),
-			BuildDate:      timestamppb.Now(),
+			SubmissionDate: database.Now(),
+			BuildDate:      database.Now(),
 			BuildLog:       "",
 			ExecTime:       1,
 		},

@@ -1,0 +1,81 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: quickfeed
+  labels:
+    app.kubernetes.io/name: quickfeed
+spec:
+  # Exactly one QuickFeed pod: the SQLite file and the ReadWriteOnce volume
+  # can only be used by one pod at a time.
+  replicas: 1
+  strategy:
+    # Stop the old pod before starting the new one. With RollingUpdate the new
+    # pod would wait forever for the volume, which the old pod still holds.
+    type: Recreate
+  selector:
+    matchLabels:
+      app.kubernetes.io/name: quickfeed
+  template:
+    metadata:
+      labels:
+        app.kubernetes.io/name: quickfeed
+    spec:
+      securityContext:
+        # The image runs as user 10001 (see Dockerfile). fsGroup makes the
+        # volume writable for that user.
+        runAsUser: 10001
+        runAsGroup: 10001
+        runAsNonRoot: true
+        fsGroup: 10001
+        fsGroupChangePolicy: OnRootMismatch
+      initContainers:
+        # Create the log directory on the volume before QuickFeed starts.
+        - name: prepare-data
+          image: quickfeed
+          command: ["sh", "-c", "mkdir -p /data/logs/courses"]
+          volumeMounts:
+            - name: data
+              mountPath: /data
+      containers:
+        - name: quickfeed
+          image: quickfeed
+          args:
+            # The SQLite database file lives on the persistent volume.
+            # (Ignored when QUICKFEED_DATABASE_URL is set; see deploy/k8s/postgres.)
+            - -database.file=/data/qf.db
+          envFrom:
+            # QuickFeed configuration (DOMAIN, QUICKFEED_APP_ID, secrets, ...),
+            # see .env-template. Create it with:
+            #   kubectl -n quickfeed create secret generic quickfeed-env --from-env-file=.env
+            - secretRef:
+                name: quickfeed-env
+          ports:
+            - name: https
+              containerPort: 443
+            - name: http
+              containerPort: 80
+          volumeMounts:
+            - name: data
+              mountPath: /data
+            - name: data
+              mountPath: /app/logs
+              subPath: logs
+          readinessProbe:
+            tcpSocket:
+              port: https
+            periodSeconds: 10
+          livenessProbe:
+            tcpSocket:
+              port: https
+            initialDelaySeconds: 30
+            periodSeconds: 20
+          resources:
+            requests:
+              cpu: 100m
+              memory: 256Mi
+            limits:
+              memory: 1Gi
+      volumes:
+        - name: data
+          persistentVolumeClaim:
+            claimName: quickfeed-data

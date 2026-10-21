@@ -1,0 +1,15 @@
+# Gives the database the address postgres:5432 inside the namespace.
+# ClusterIP only: the database is not reachable from outside the cluster.
+apiVersion: v1
+kind: Service
+metadata:
+  name: postgres
+  labels:
+    app.kubernetes.io/name: postgres
+spec:
+  selector:
+    app.kubernetes.io/name: postgres
+  ports:
+    - name: postgres
+      port: 5432
+      targetPort: postgres

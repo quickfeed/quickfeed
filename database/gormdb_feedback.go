@@ -4,7 +4,6 @@ import (
 	"fmt"
 
 	"github.com/quickfeed/quickfeed/qf"
-	"google.golang.org/protobuf/types/known/timestamppb"
 	"gorm.io/gorm"
 )
 
@@ -12,7 +11,7 @@ import (
 func (db *GormDB) CreateAssignmentFeedback(feedback *qf.AssignmentFeedback, userID uint64) error {
 	err := db.conn.Transaction(func(tx *gorm.DB) error {
 		// Set the creation timestamp
-		feedback.CreatedAt = timestamppb.Now()
+		feedback.CreatedAt = Now()
 		if err := tx.Create(feedback).Error; err != nil {
 			return fmt.Errorf("creating assignment feedback: %w", err)
 		}
