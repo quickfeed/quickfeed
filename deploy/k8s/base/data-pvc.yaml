@@ -18,7 +18,6 @@ spec:
   resources:
     requests:
       storage: 5Gi
-  # No storageClassName: the cluster's default StorageClass is used.
-  # Check it with: kubectl get storageclass
-  # If there is no default, set it here, e.g.:
-  # storageClassName: csi-cinder-sc-delete
+  # The UiS cluster has no default StorageClass, so we name it here.
+  # Retain: the Cinder volume is kept even if this PVC is deleted.
+  storageClassName: csi-cinder-sc-retain
