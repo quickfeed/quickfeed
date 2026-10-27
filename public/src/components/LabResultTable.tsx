@@ -1,4 +1,5 @@
 import type { Assignment, Submission } from "../../proto/qf/types_pb"
+import { runsTests } from "../Helpers"
 import ProgressBar from "./ProgressBar"
 import SubmissionInfo from "./submissions/SubmissionInfo"
 import SubmissionScores from "./submissions/SubmissionScores"
@@ -16,7 +17,7 @@ const LabResultTable = ({ submission, assignment }: LabProps) => {
                     <ProgressBar key="progress-bar" courseID={assignment.CourseID.toString()} submission={submission} />
                 </div>
                 <SubmissionInfo submission={submission} assignment={assignment} />
-                <SubmissionScores submission={submission} />
+                {runsTests(assignment) && <SubmissionScores submission={submission} />}
             </div>
         )
     }

@@ -1,7 +1,7 @@
 import React, { useEffect } from 'react'
 import { useLocation, useParams } from 'react-router'
 import type { Assignment, Submission } from '../../proto/qf/types_pb'
-import { convertToBigInt, hasReviews, isManuallyGraded } from '../Helpers'
+import { convertToBigInt, hasReviews, isManuallyGraded, runsTests } from '../Helpers'
 import { useActions, useAppState } from '../overmind'
 import { CenteredMessage, KnownMessage } from './CenteredMessage'
 import LabResultTable from "./LabResultTable"
@@ -90,7 +90,9 @@ const Lab = () => {
                         when no test recorded anything, which is the case for a
                         run that failed to build and for submissions recorded
                         before the output was attributed per test. */}
-                    <LogOutput defaultOpen={!submission.Scores.some(hasTestRun)}>{buildLog}</LogOutput>
+                    {runsTests(assignment) && (
+                        <LogOutput defaultOpen={!submission.Scores.some(hasTestRun)}>{buildLog}</LogOutput>
+                    )}
                 </div>
             )
         }
