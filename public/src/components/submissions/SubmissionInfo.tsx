@@ -1,6 +1,6 @@
 import { RunStatus } from "../../../proto/kit/score/score_pb"
 import type { Assignment, Submission, UsedSlipDays } from "../../../proto/qf/types_pb"
-import { assignmentStatusText, getFormattedTime, getPassedTestsCount, getStatusByUser, isAllApproved, isManuallyGraded, runFailureScoreText, runFailureText } from "../../Helpers"
+import { assignmentStatusText, getFormattedTime, getStatusByUser, isAllApproved, isTestedAndReviewed, reviewVisible, runFailureScoreText, runFailureText } from "../../Helpers"
 import { useAppState } from "../../overmind"
 
 type SubmissionInfoProps = {
@@ -68,10 +68,10 @@ const SubmissionInfo = ({ submission, assignment }: SubmissionInfoProps) => {
                     <td>{getFormattedTime(assignment.deadline, true)}</td>
                 </tr>
 
-                {!isManuallyGraded(assignment.reviewers) ? (
+                {isTestedAndReviewed(assignment) ? (
                     <tr>
-                        <td colSpan={2}>Tests Passed</td>
-                        <td>{getPassedTestsCount(submission.Scores)}</td>
+                        <td colSpan={2}>Score</td>
+                        <td>{scoreText(submission, assignment, reviewVisible(state.isTeacher, status))}</td>
                     </tr>
                 ) : null}
                 <tr>
@@ -93,6 +93,16 @@ const SubmissionInfo = ({ submission, assignment }: SubmissionInfoProps) => {
             </tbody>
         </table>
     )
+}
+
+/** scoreText explains how the tests and reviews of a tested and reviewed
+ *  assignment make up the submission's score. */
+const scoreText = (submission: Submission, assignment: Assignment, showReview: boolean): string => {
+    const reviewWeight = assignment.reviewWeight
+    if (!showReview) {
+        return `${submission.testScore} % from tests (weight ${100 - reviewWeight} %); review not graded yet`
+    }
+    return `${submission.score} % = tests ${submission.testScore} % × ${100 - reviewWeight} % + review ${submission.reviewScore} % × ${reviewWeight} %`
 }
 
 function usedSlipdaysRows(assignment: Assignment, usedSlipDays: UsedSlipDays[]): React.ReactNode {

@@ -123,14 +123,6 @@ export const testStatusText = (score: Score): string => {
     }
 }
 
-/** getPassedTestCount returns a string with the number of passed tests and the total number of tests */
-export const getPassedTestsCount = (score: Score[]): string => {
-    if (score.length === 0) {
-        return ""
-    }
-    return `${score.filter(testPassed).length}/${score.length}`
-}
-
 /** hasEnrollment returns true if any of the provided has been approved */
 export const hasEnrollment = (enrollments: Enrollment[]): boolean => {
     return enrollments.some(enrollment => enrollment.status > Enrollment_UserStatus.PENDING)
@@ -174,6 +166,42 @@ export const isGroupSubmission = (submission: Submission): boolean => { return s
 
 export const isManuallyGraded = (reviewers: number): boolean => {
     return reviewers > 0
+}
+
+/** runsTests returns true if submissions to the assignment are tested: those to
+ *  an assignment without reviewers are, even if it has no expected tests. */
+export const runsTests = (assignment: Assignment): boolean => {
+    return !isManuallyGraded(assignment.reviewers) || assignment.ExpectedTests.length > 0
+}
+
+/** isTestedAndReviewed returns true if the assignment's score combines its tests and reviews. */
+export const isTestedAndReviewed = (assignment: Assignment): boolean => {
+    return isManuallyGraded(assignment.reviewers) && runsTests(assignment)
+}
+
+/** reviewVisible returns true if the viewer sees the review score of a submission
+ *  with the given status: teachers always, students once it is graded. */
+export const reviewVisible = (isTeacher: boolean, status: Submission_Status): boolean => {
+    return isTeacher || status !== Submission_Status.NONE
+}
+
+/** isScoreHidden returns true if the viewer does not see the score of a
+ *  submission to the assignment with the given status, as it includes an
+ *  unreleased review score; the server sends such a score as 0. */
+export const isScoreHidden = (assignment: Assignment, isTeacher: boolean, status: Submission_Status): boolean => {
+    return isManuallyGraded(assignment.reviewers) && !reviewVisible(isTeacher, status)
+}
+
+/** testPart returns the part of the submission's score given by its tests. */
+export const testPart = (submission: Submission, assignment: Assignment): number => {
+    return Math.round(submission.testScore * (100 - assignment.reviewWeight) / 100)
+}
+
+/** scoreParts returns the parts of the submission's score given by its tests
+ *  and by its reviews; the parts sum to the score. */
+export const scoreParts = (submission: Submission, assignment: Assignment): { tests: number, review: number } => {
+    const review = Math.min(submission.score, Math.round(submission.reviewScore * assignment.reviewWeight / 100))
+    return { tests: submission.score - review, review }
 }
 
 export const isAllApproved = (submission: Submission): boolean => { return submission.Grades.every(grade => grade.Status === Submission_Status.APPROVED) }
@@ -285,6 +313,10 @@ export const submissionStatusConfig: Record<Submission_Status, { color: string; 
 export const assignmentStatusText = (assignment: Assignment, submission: Submission, status: Submission_Status): string => {
     // If the submission is not graded, return a descriptive text
     if (status === Submission_Status.NONE) {
+        // A reviewed submission's score is not final until a teacher grades it
+        if (isManuallyGraded(assignment.reviewers)) {
+            return "Awaiting review"
+        }
         // If the assignment requires manual approval, and the score is above the threshold, return Await Approval
         if (!assignment.autoApprove && submission.score >= assignment.scoreLimit) {
             return "Awaiting approval"

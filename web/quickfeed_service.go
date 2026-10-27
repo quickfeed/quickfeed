@@ -379,7 +379,12 @@ func (s *QuickFeedService) GetSubmissions(ctx context.Context, in *qf.Submission
 	id := userID(ctx)
 	// If the user is not a teacher, remove score and reviews from submissions that are not released.
 	if !s.isTeacher(ctx, id, in.GetCourseID()) {
-		submissions.Clean(id)
+		assignments, err := s.db.GetAssignmentsByCourse(in.GetCourseID())
+		if err != nil {
+			qlog.FromContext(ctx).Error("failed to get assignments", label.Error, err)
+			return nil, connect.NewError(connect.CodeNotFound, errors.New("no submissions found"))
+		}
+		submissions.Clean(id, assignments)
 	}
 	return submissions, nil
 }
@@ -402,14 +407,12 @@ func (s *QuickFeedService) GetSubmissionsByCourse(ctx context.Context, in *qf.Su
 // UpdateSubmission is called to approve the given submission or to undo approval.
 func (s *QuickFeedService) UpdateSubmission(ctx context.Context, in *qf.Grade) (*qf.Void, error) {
 	logger := qlog.FromContext(ctx).With(label.SubmissionID, in.GetSubmissionID())
-	submission, err := s.db.GetSubmission(&qf.Submission{ID: in.GetSubmissionID()})
-	if err != nil {
+	if _, err := s.db.GetSubmission(&qf.Submission{ID: in.GetSubmissionID()}); err != nil {
 		logger.Error("failed to get submission", label.Error, err)
 		return nil, connect.NewError(connect.CodeNotFound, errors.New("failed to update submission"))
 	}
-	submission.SetGrade(in)
-	err = s.db.UpdateSubmission(submission)
-	if err != nil {
+	// Only the grade is written, so a test run or review saved meanwhile is kept.
+	if err := s.db.UpdateGrade(in); err != nil {
 		logger.Error("failed to update submission grade", label.Error, err)
 		return nil, connect.NewError(connect.CodeInvalidArgument, errors.New("failed to approve submission"))
 	}
@@ -420,6 +423,10 @@ func (s *QuickFeedService) UpdateSubmission(ctx context.Context, in *qf.Grade) (
 // A single submission is executed again if the request specifies a submission ID
 // or all submissions if no submission ID is specified.
 func (s *QuickFeedService) RebuildSubmissions(ctx context.Context, in *qf.RebuildRequest) (*qf.Void, error) {
+	// An assignment that does not exist is reported by the rebuild itself.
+	if assignment, err := s.db.GetAssignment(&qf.Assignment{ID: in.GetAssignmentID()}); err == nil && !assignment.RunsTests() {
+		return nil, connect.NewError(connect.CodeFailedPrecondition, errors.New("assignment has no tests to run"))
+	}
 	if in.GetSubmissionID() > 0 {
 		// Submission ID > 0 ==> rebuild single submission for given CourseID and AssignmentID
 		if err := s.internalRebuildSubmission(ctx, in); err != nil {

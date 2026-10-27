@@ -2,7 +2,7 @@
 import { useState } from "react"
 import { useNavigate } from "react-router"
 import type { Assignment } from "../../../proto/qf/types_pb"
-import { Color, getFormattedTime, hasBenchmarks, isManuallyGraded } from "../../Helpers"
+import { Color, getFormattedTime, hasBenchmarks, isManuallyGraded, runsTests } from "../../Helpers"
 import { useCourseID } from "../../hooks/useCourseID"
 import { useActions, useAppState } from "../../overmind"
 import Button, { ButtonType } from "../admin/Button"
@@ -21,6 +21,7 @@ const Assignments = () => {
         const [isRebuilding, setIsRebuilding] = useState<boolean>(false)
 
         const manually = isManuallyGraded(assignment.reviewers)
+        const tested = runsTests(assignment)
 
         const rebuild = async () => {
             if (
@@ -85,8 +86,8 @@ const Assignments = () => {
                 </div>
 
                 {open && (
-                    <div className="p-4 border-t border-base-content/10">
-                        {!manually ? (
+                    <div className="p-4 border-t border-base-content/10 flex flex-col gap-4">
+                        {tested && (
                             <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-3">
                                 <div className="flex items-center gap-3">
                                     <Button
@@ -109,9 +110,10 @@ const Assignments = () => {
                                     />
                                 </div>
                             </div>
-                        ) : (
+                        )}
+                        {manually && (
                             <div className="text-sm text-base-content/70">
-                                This assignment is manually graded. Manage criteria and benchmarks in the assignment <code className="px-1 rounded bg-base-100 text-error">criteria.json</code> file.
+                                This assignment is manually graded{tested && `; reviews count for ${assignment.reviewWeight}% of the score and tests for the rest`}. Manage criteria and benchmarks in the assignment <code className="px-1 rounded bg-base-100 text-error">criteria.json</code> file.
                                 {hasBenchmarks(assignment) &&
                                     <div className="mt-3">
                                         {assignment.gradingBenchmarks.map((bm) => (

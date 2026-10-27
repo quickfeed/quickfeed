@@ -2,7 +2,7 @@ import { create } from "@bufbuild/protobuf"
 import { render, screen } from "@testing-library/react"
 import { Provider } from "overmind-react"
 import { BuildInfoSchema, RunStatus } from "../../proto/kit/score/score_pb"
-import { AssignmentSchema, EnrollmentSchema, SubmissionSchema } from "../../proto/qf/types_pb"
+import { AssignmentSchema, Enrollment_UserStatus, EnrollmentSchema, GradeSchema, Submission_Status, SubmissionSchema, TestInfoSchema } from "../../proto/qf/types_pb"
 import SubmissionInfo from "../components/submissions/SubmissionInfo"
 import { initializeOvermind } from "./TestHelpers"
 
@@ -39,5 +39,79 @@ describe("SubmissionInfo", () => {
 
         expect(screen.getByText(new RegExp(scoreText))).toBeDefined()
         expect(screen.queryByText(/last successful run/)).toBeNull()
+    })
+
+    // The test results table below the lab information shows the tests passed
+    // and the test score, so the lab information repeats neither.
+    it("shows neither tests passed nor a score row for an assignment with tests only", () => {
+        const courseID = 1n
+        const userID = 2n
+        const overmind = initializeOvermind({
+            enrollments: [create(EnrollmentSchema, { courseID, userID })],
+        })
+        const assignment = create(AssignmentSchema, {
+            ID: 3n,
+            CourseID: courseID,
+            name: "lab1",
+            ExpectedTests: [create(TestInfoSchema, { TestName: "TestA", MaxScore: 1, Weight: 1 })],
+        })
+        const submission = create(SubmissionSchema, { AssignmentID: assignment.ID, userID, testScore: 85, score: 85 })
+
+        render(
+            <Provider value={overmind}>
+                <SubmissionInfo submission={submission} assignment={assignment} />
+            </Provider>
+        )
+
+        expect(screen.queryByText("Tests Passed")).toBeNull()
+        expect(screen.queryByText("Score")).toBeNull()
+    })
+
+    describe("for an assignment with tests and reviews", () => {
+        const courseID = 1n
+        const userID = 2n
+        const assignment = create(AssignmentSchema, {
+            ID: 3n,
+            CourseID: courseID,
+            name: "lab1",
+            reviewers: 1,
+            reviewWeight: 40,
+            ExpectedTests: [create(TestInfoSchema, { TestName: "TestA", MaxScore: 1, Weight: 1 })],
+        })
+        const renderInfo = (status: Enrollment_UserStatus, grade: Submission_Status) => {
+            const overmind = initializeOvermind({
+                activeCourse: courseID,
+                enrollments: [create(EnrollmentSchema, { courseID, userID, status })],
+            })
+            const submission = create(SubmissionSchema, {
+                AssignmentID: assignment.ID,
+                userID,
+                testScore: 90,
+                reviewScore: 70,
+                score: 82,
+                Grades: [create(GradeSchema, { UserID: userID, Status: grade })],
+            })
+            render(
+                <Provider value={overmind}>
+                    <SubmissionInfo submission={submission} assignment={assignment} />
+                </Provider>
+            )
+        }
+
+        it("explains the score from its tests and review to a teacher", () => {
+            renderInfo(Enrollment_UserStatus.TEACHER, Submission_Status.NONE)
+            expect(screen.getByText("82 % = tests 90 % × 60 % + review 70 % × 40 %")).toBeDefined()
+            expect(screen.queryByText("Tests Passed")).toBeNull()
+        })
+
+        it("hides the review score from a student until the submission is graded", () => {
+            renderInfo(Enrollment_UserStatus.STUDENT, Submission_Status.NONE)
+            expect(screen.getByText("90 % from tests (weight 60 %); review not graded yet")).toBeDefined()
+        })
+
+        it("explains the score to a student once the submission is graded", () => {
+            renderInfo(Enrollment_UserStatus.STUDENT, Submission_Status.APPROVED)
+            expect(screen.getByText("82 % = tests 90 % × 60 % + review 70 % × 40 %")).toBeDefined()
+        })
     })
 })

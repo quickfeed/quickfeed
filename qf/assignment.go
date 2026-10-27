@@ -42,6 +42,48 @@ func (a *Assignment) GradedManually() bool {
 	return a.GetReviewers() > 0
 }
 
+// HasTests returns true if submissions to the assignment are tested.
+func (a *Assignment) HasTests() bool {
+	return len(a.GetExpectedTests()) > 0
+}
+
+// RunsTests returns true if submissions to the assignment are tested: those
+// to an assignment without reviewers are, even if it has no expected tests.
+func (a *Assignment) RunsTests() bool {
+	return !a.GradedManually() || a.HasTests()
+}
+
+// DefaultReviewWeight returns the review weight for an assignment that does not
+// specify one: 0 without reviewers, 100 without tests, and 50 with both.
+func (a *Assignment) DefaultReviewWeight() uint32 {
+	switch {
+	case !a.GradedManually():
+		return 0
+	case !a.HasTests():
+		return 100
+	default:
+		return 50
+	}
+}
+
+// EffectiveReviewWeight returns the percentage of a submission's score given by
+// its review score: the review weight if the assignment has reviewers, and 0 otherwise.
+func (a *Assignment) EffectiveReviewWeight() uint32 {
+	if !a.GradedManually() {
+		return 0
+	}
+	return min(a.GetReviewWeight(), 100)
+}
+
+// WeightedScore returns the submission score for the given test and review
+// scores, weighted by the assignment's review weight. Reviews count only if
+// the assignment has reviewers.
+func (a *Assignment) WeightedScore(testScore, reviewScore uint32) uint32 {
+	weight := uint64(a.EffectiveReviewWeight())
+	// Adding 50 rounds the weighted score to the nearest integer.
+	return uint32((uint64(testScore)*(100-weight) + uint64(reviewScore)*weight + 50) / 100)
+}
+
 // ZeroScoreTests returns a slice of score.Score objects with zero scores
 // for all expected tests in this assignment.
 func (a *Assignment) ZeroScoreTests() []*score.Score {

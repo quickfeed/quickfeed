@@ -28,6 +28,7 @@ func NewGormDB(path string, logger *slog.Logger) (*GormDB, error) {
 
 	schema.RegisterSerializer("timestamp", &TimestampSerializer{})
 
+	backfill := needsScoreBackfill(conn)
 	if err := conn.AutoMigrate(
 		&qf.User{},
 		&qf.Course{},
@@ -53,6 +54,11 @@ func NewGormDB(path string, logger *slog.Logger) (*GormDB, error) {
 
 	if err := dropRetired(conn); err != nil {
 		return nil, err
+	}
+	if backfill {
+		if err := backfillScores(conn); err != nil {
+			return nil, err
+		}
 	}
 
 	return &GormDB{conn}, nil

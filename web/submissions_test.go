@@ -787,8 +787,8 @@ func TestUpdateSubmissionRejectApproveFlow(t *testing.T) {
 	qtest.EnrollStudent(t, db, student3, course)
 
 	assignments := []*qf.Assignment{
-		{CourseID: course.GetID(), Name: "lab 1", Deadline: qtest.Timestamp(t, "2020-02-23T18:00:00"), Order: 1, Reviewers: 1},
-		{CourseID: course.GetID(), Name: "lab 2", Deadline: qtest.Timestamp(t, "2020-03-23T18:00:00"), Order: 2, Reviewers: 1},
+		{CourseID: course.GetID(), Name: "lab 1", Deadline: qtest.Timestamp(t, "2020-02-23T18:00:00"), Order: 1, Reviewers: 1, ReviewWeight: 100},
+		{CourseID: course.GetID(), Name: "lab 2", Deadline: qtest.Timestamp(t, "2020-03-23T18:00:00"), Order: 2, Reviewers: 1, ReviewWeight: 100},
 	}
 	for _, assignment := range assignments {
 		if err := db.CreateAssignment(assignment); err != nil {
@@ -858,9 +858,9 @@ func TestUpdateSubmissionRejectApproveFlow(t *testing.T) {
 		t.Fatal(err)
 	}
 	for _, submission := range gotSubmissions1 {
-		// All lab 1 submissions should have a score of 20
-		if submission.GetScore() != 20 {
-			t.Errorf("Expected score 20, got %d", submission.GetScore())
+		// All lab 1 submissions passed all 20 points, a score of 100
+		if submission.GetScore() != 100 {
+			t.Errorf("Expected score 100, got %d", submission.GetScore())
 		}
 	}
 
@@ -979,4 +979,48 @@ func isApproved(requirements int, approved []bool) bool {
 		}
 	}
 	return requirements <= 0
+}
+
+// TestGetSubmissionsHidesUngradedReviewedScore checks that a student sees the
+// score of an ungraded submission to an assignment without reviewers, but only
+// the test score of one to an assignment with reviewers.
+func TestGetSubmissionsHidesUngradedReviewedScore(t *testing.T) {
+	db, cleanup := qtest.TestDB(t)
+	defer cleanup()
+	client := web.NewMockClient(t, db, scm.WithMockOrgs(), web.WithInterceptors())
+
+	admin := qtest.CreateFakeUser(t, db)
+	course := qtest.MockCourses[0]
+	qtest.CreateCourse(t, db, admin, course)
+	student := qtest.CreateFakeCustomUser(t, db, &qf.User{Name: "Ada Lovelace", Login: "ada"})
+	qtest.EnrollStudent(t, db, student, course)
+
+	tested := &qf.Assignment{CourseID: course.GetID(), Name: "lab1", Order: 1}
+	reviewed := &qf.Assignment{CourseID: course.GetID(), Name: "lab2", Order: 2, Reviewers: 1, ReviewWeight: 40}
+	qtest.CreateAssignment(t, db, tested)
+	qtest.CreateAssignment(t, db, reviewed)
+	qtest.CreateSubmission(t, db, &qf.Submission{AssignmentID: tested.GetID(), UserID: student.GetID(), TestScore: 85, Score: 85})
+	qtest.CreateSubmission(t, db, &qf.Submission{AssignmentID: reviewed.GetID(), UserID: student.GetID(), TestScore: 90, Score: 54})
+
+	got, err := client.GetSubmissions(client.Context(t, student), &qf.SubmissionRequest{
+		CourseID:  course.GetID(),
+		FetchMode: &qf.SubmissionRequest_UserID{UserID: student.GetID()},
+	})
+	if err != nil {
+		t.Fatal(err)
+	}
+	want := map[uint64][2]uint32{ // assignment ID -> (Score, TestScore)
+		tested.GetID():   {85, 85},
+		reviewed.GetID(): {0, 90},
+	}
+	if len(got.GetSubmissions()) != len(want) {
+		t.Fatalf("got %d submissions, want %d", len(got.GetSubmissions()), len(want))
+	}
+	for _, submission := range got.GetSubmissions() {
+		scores := want[submission.GetAssignmentID()]
+		if submission.GetScore() != scores[0] || submission.GetTestScore() != scores[1] {
+			t.Errorf("assignment %d: (Score, TestScore) = (%d, %d), want (%d, %d)", submission.GetAssignmentID(),
+				submission.GetScore(), submission.GetTestScore(), scores[0], scores[1])
+		}
+	}
 }

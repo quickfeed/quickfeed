@@ -13,7 +13,7 @@ const LabResultTable = ({ submission, assignment }: LabProps) => {
         return (
             <div className="pb-2">
                 <div className="pb-2">
-                    <ProgressBar key="progress-bar" courseID={assignment.CourseID.toString()} submission={submission} />
+                    <ProgressBar key="progress-bar" courseID={assignment.CourseID.toString()} submission={submission} split />
                 </div>
                 <SubmissionInfo submission={submission} assignment={assignment} />
                 <SubmissionScores submission={submission} />

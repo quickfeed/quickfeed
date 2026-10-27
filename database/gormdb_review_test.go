@@ -220,3 +220,139 @@ func TestCreateUpdateReview(t *testing.T) {
 		t.Errorf("Expected same review, but got (-got +want):\n%s", diff)
 	}
 }
+
+func TestReviewScoreCombinesWithTestScore(t *testing.T) {
+	db, cleanup := qtest.TestDB(t)
+	defer cleanup()
+
+	user, course, _ := qtest.SetupCourseAssignment(t, db)
+	assignment := &qf.Assignment{CourseID: course.GetID(), Order: 2, Reviewers: 2, ReviewWeight: 40, AutoApprove: true, ScoreLimit: 80}
+	qtest.CreateAssignment(t, db, assignment)
+	qtest.CreateBenchmark(t, db, &qf.GradingBenchmark{
+		AssignmentID: assignment.GetID(),
+		Heading:      "Design",
+		Criteria:     []*qf.GradingCriterion{{Description: "Structure", Points: 50}, {Description: "Naming", Points: 50}},
+	})
+	submission := &qf.Submission{AssignmentID: assignment.GetID(), UserID: user.GetID(), TestScore: 90, Score: 90}
+	qtest.CreateSubmission(t, db, submission)
+
+	// grade sets the grades of the review's two criteria and saves the review.
+	grade := func(review *qf.Review, structure, naming qf.GradingCriterion_Grade) {
+		t.Helper()
+		criteria := review.GetGradingBenchmarks()[0].GetCriteria()
+		criteria[0].Grade, criteria[1].Grade = structure, naming
+		if err := db.UpdateReview(review); err != nil {
+			t.Fatal(err)
+		}
+	}
+	// check verifies the submission's scores and its student's grade.
+	check := func(step string, wantReviewScore, wantScore uint32, wantStatus qf.Submission_Status) {
+		t.Helper()
+		got := qtest.GetSubmission(t, db, &qf.Submission{ID: submission.GetID()})
+		if got.GetTestScore() != 90 || got.GetReviewScore() != wantReviewScore || got.GetScore() != wantScore {
+			t.Errorf("%s: (TestScore, ReviewScore, Score) = (%d, %d, %d), want (90, %d, %d)",
+				step, got.GetTestScore(), got.GetReviewScore(), got.GetScore(), wantReviewScore, wantScore)
+		}
+		if status := got.GetStatusByUser(user.GetID()); status != wantStatus {
+			t.Errorf("%s: status = %v, want %v", step, status, wantStatus)
+		}
+	}
+
+	first := &qf.Review{SubmissionID: submission.GetID(), ReviewerID: 1}
+	if err := db.CreateReview(first); err != nil {
+		t.Fatal(err)
+	}
+	check("first review created", 0, 54, qf.Submission_NONE)
+
+	grade(first, qf.GradingCriterion_PASSED, qf.GradingCriterion_PASSED)
+	check("first review graded", 100, 94, qf.Submission_NONE)
+
+	second := &qf.Review{SubmissionID: submission.GetID(), ReviewerID: 2}
+	if err := db.CreateReview(second); err != nil {
+		t.Fatal(err)
+	}
+	check("second review created", 50, 74, qf.Submission_NONE)
+
+	grade(second, qf.GradingCriterion_PASSED, qf.GradingCriterion_NONE)
+	check("second review incomplete", 75, 84, qf.Submission_NONE)
+
+	grade(second, qf.GradingCriterion_PASSED, qf.GradingCriterion_FAILED)
+	check("second review graded", 75, 84, qf.Submission_APPROVED)
+}
+
+func TestUpdateReviewOwnership(t *testing.T) {
+	db, cleanup := qtest.TestDB(t)
+	defer cleanup()
+
+	user, course, _ := qtest.SetupCourseAssignment(t, db)
+	assignment := &qf.Assignment{CourseID: course.GetID(), Order: 2, Reviewers: 1, ReviewWeight: 100}
+	qtest.CreateAssignment(t, db, assignment)
+	reviewed := &qf.Submission{AssignmentID: assignment.GetID(), UserID: user.GetID()}
+	qtest.CreateSubmission(t, db, reviewed)
+	other := qtest.CreateFakeUser(t, db)
+	otherSubmission := &qf.Submission{AssignmentID: assignment.GetID(), UserID: other.GetID()}
+	qtest.CreateSubmission(t, db, otherSubmission)
+	review := &qf.Review{SubmissionID: reviewed.GetID(), ReviewerID: user.GetID()}
+	qtest.CreateReview(t, db, review)
+
+	// A review saved under another submission is not that submission's review.
+	moved := &qf.Review{ID: review.GetID(), SubmissionID: otherSubmission.GetID(), ReviewerID: user.GetID()}
+	qtest.CheckError(t, db.UpdateReview(moved), gorm.ErrRecordNotFound)
+
+	// The reviewer is kept, whoever the request names.
+	renamed := &qf.Review{ID: review.GetID(), SubmissionID: reviewed.GetID(), ReviewerID: other.GetID(), Feedback: "updated"}
+	if err := db.UpdateReview(renamed); err != nil {
+		t.Fatal(err)
+	}
+	got := qtest.GetReview(t, db, review.GetID())
+	if got.GetReviewerID() != user.GetID() || got.GetFeedback() != "updated" {
+		t.Errorf("(ReviewerID, Feedback) = (%d, %q), want (%d, %q)", got.GetReviewerID(), got.GetFeedback(), user.GetID(), "updated")
+	}
+}
+
+// TestCreateSubmissionKeepsConcurrentReview checks that a test run, computed
+// from the submission as it was before a review was saved, keeps the review's
+// score when it is recorded.
+func TestCreateSubmissionKeepsConcurrentReview(t *testing.T) {
+	db, cleanup := qtest.TestDB(t)
+	defer cleanup()
+
+	user, course, _ := qtest.SetupCourseAssignment(t, db)
+	assignment := &qf.Assignment{CourseID: course.GetID(), Order: 2, Reviewers: 1, ReviewWeight: 40}
+	qtest.CreateAssignment(t, db, assignment)
+	qtest.CreateBenchmark(t, db, &qf.GradingBenchmark{
+		AssignmentID: assignment.GetID(),
+		Heading:      "Design",
+		Criteria:     []*qf.GradingCriterion{{Description: "Structure", Points: 10}},
+	})
+	submission := &qf.Submission{AssignmentID: assignment.GetID(), UserID: user.GetID(), TestScore: 50, Score: 30}
+	qtest.CreateSubmission(t, db, submission)
+	review := &qf.Review{SubmissionID: submission.GetID(), ReviewerID: user.GetID()}
+	qtest.CreateReview(t, db, review)
+
+	// A test run reads the submission, as RecordResults does ...
+	previous := qtest.GetSubmission(t, db, &qf.Submission{ID: submission.GetID()})
+	// ... a review is saved ...
+	review = qtest.GetReview(t, db, review.GetID())
+	review.GetGradingBenchmarks()[0].GetCriteria()[0].Grade = qf.GradingCriterion_PASSED
+	if err := db.UpdateReview(review); err != nil {
+		t.Fatal(err)
+	}
+	// ... and the test run is recorded with the review score it read.
+	if err := db.CreateSubmission(&qf.Submission{
+		ID:           previous.GetID(),
+		AssignmentID: assignment.GetID(),
+		UserID:       user.GetID(),
+		TestScore:    80,
+		ReviewScore:  previous.GetReviewScore(),
+		Score:        assignment.WeightedScore(80, previous.GetReviewScore()),
+		Grades:       previous.GetGrades(),
+	}); err != nil {
+		t.Fatal(err)
+	}
+
+	got := qtest.GetSubmission(t, db, &qf.Submission{ID: submission.GetID()})
+	if want := assignment.WeightedScore(80, 100); got.GetTestScore() != 80 || got.GetReviewScore() != 100 || got.GetScore() != want {
+		t.Errorf("(TestScore, ReviewScore, Score) = (%d, %d, %d), want (80, 100, %d)", got.GetTestScore(), got.GetReviewScore(), got.GetScore(), want)
+	}
+}
