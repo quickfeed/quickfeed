@@ -99,7 +99,9 @@ func walk(dir string) (map[string][]byte, error) {
 			// Walk unable to read path; stop walking the tree
 			return err
 		}
-		if !info.IsDir() {
+		// Only regular files are read; symbolic links are skipped, since
+		// reading a link to a directory fails and the walk does not follow links.
+		if info.Type().IsRegular() {
 			if files[path], err = os.ReadFile(path); err != nil {
 				return err
 			}
