@@ -3,10 +3,14 @@ package ci
 import (
 	"os"
 	"path/filepath"
+	"runtime"
 	"testing"
 )
 
 func TestWalkSkipsSymlinks(t *testing.T) {
+	if runtime.GOOS == "windows" {
+		t.Skip("creating a symbolic link on Windows requires elevated privileges")
+	}
 	dir := t.TempDir()
 	if err := os.MkdirAll(filepath.Join(dir, "real"), 0o755); err != nil {
 		t.Fatal(err)
