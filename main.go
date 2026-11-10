@@ -140,9 +140,21 @@ func initWebServer(dbFile, public string) (http.Handler, func(), error) {
 		return nil, q.cleanup, fmt.Errorf("connecting to database: %w", err)
 	}
 
-	q.runner, err = ci.NewDockerCI()
-	if err != nil {
-		return nil, q.cleanup, fmt.Errorf("setting up docker client: %w", err)
+	if url := env.DispatcherURL(); url != "" {
+		// Run tests on remote workers via the qf-test-dispatcher instead of local Docker.
+		token, err := env.DispatcherToken()
+		if err != nil {
+			return nil, q.cleanup, err
+		}
+		q.runner = ci.NewDispatcher(url, token)
+		q.logger.Info("Using test dispatcher", "url", url)
+	} else {
+		// Assign only on success so q.runner stays a nil interface for cleanup.
+		docker, err := ci.NewDockerCI()
+		if err != nil {
+			return nil, q.cleanup, fmt.Errorf("setting up docker client: %w", err)
+		}
+		q.runner = docker
 	}
 
 	tm, err := auth.NewTokenManager(q.db)
@@ -163,9 +175,12 @@ func initWebServer(dbFile, public string) (http.Handler, func(), error) {
 }
 
 type quickfeed struct {
-	logger     *slog.Logger
-	db         *database.GormDB
-	runner     *ci.Docker
+	logger *slog.Logger
+	db     *database.GormDB
+	runner interface {
+		ci.Runner
+		Close() error
+	}
 	courseLogs *courselog.Store
 }
 
