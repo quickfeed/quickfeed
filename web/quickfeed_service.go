@@ -80,6 +80,12 @@ func (s *QuickFeedService) UpdateUser(ctx context.Context, in *qf.User) (*qf.Voi
 		return nil, connect.NewError(connect.CodeNotFound, errors.New("unknown user"))
 	}
 	if err = s.editUserProfile(ctx, usr, in); err != nil {
+		// Return errors that editUserProfile deliberately produced, such as a duplicate
+		// student ID or email, so that the user sees why the update was rejected.
+		var connectErr *connect.Error
+		if errors.As(err, &connectErr) {
+			return nil, connectErr
+		}
 		qlog.FromContext(ctx).Error("failed to update user profile", label.TargetUserID, in.GetID(), label.Error, err)
 		return nil, connect.NewError(connect.CodeInvalidArgument, errors.New("failed to update user"))
 	}

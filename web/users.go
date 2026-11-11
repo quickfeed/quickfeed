@@ -2,11 +2,19 @@ package web
 
 import (
 	"context"
+	"errors"
+	"strings"
 
+	"connectrpc.com/connect"
 	"github.com/quickfeed/quickfeed/internal/qlog"
 	"github.com/quickfeed/quickfeed/internal/qlog/label"
 	"github.com/quickfeed/quickfeed/qf"
 	"github.com/quickfeed/quickfeed/scm"
+)
+
+var (
+	errDuplicateStudentID = connect.NewError(connect.CodeAlreadyExists, errors.New("a QuickFeed account with this student ID already exists"))
+	errDuplicateEmail     = connect.NewError(connect.CodeAlreadyExists, errors.New("a QuickFeed account with this email already exists"))
 )
 
 // editUserProfile updates the user profile according to the user data in
@@ -18,17 +26,30 @@ func (s *QuickFeedService) editUserProfile(ctx context.Context, curUser, request
 		return err
 	}
 
-	if request.GetName() != "" {
-		targetUser.Name = request.GetName()
+	prevStudentID, prevEmail := targetUser.GetStudentID(), targetUser.GetEmail()
+	if name := strings.TrimSpace(request.GetName()); name != "" {
+		targetUser.Name = name
 	}
-	if request.GetStudentID() != "" {
-		targetUser.StudentID = request.GetStudentID()
+	if studentID := strings.TrimSpace(request.GetStudentID()); studentID != "" {
+		targetUser.StudentID = studentID
 	}
-	if request.GetEmail() != "" {
-		targetUser.Email = request.GetEmail()
+	if email := strings.TrimSpace(request.GetEmail()); email != "" {
+		targetUser.Email = email
 	}
 	if request.GetAvatarURL() != "" {
 		targetUser.AvatarURL = request.GetAvatarURL()
+	}
+	// Only the changed fields are checked for duplicates; an unrelated update, such as
+	// a name change, must not be rejected because of accounts that already collided.
+	studentID, email := targetUser.GetStudentID(), targetUser.GetEmail()
+	if studentID == prevStudentID {
+		studentID = ""
+	}
+	if strings.EqualFold(email, prevEmail) {
+		email = ""
+	}
+	if err := s.checkDuplicateProfile(ctx, targetUser, studentID, email); err != nil {
+		return err
 	}
 
 	// log every change to admin state
@@ -41,6 +62,30 @@ func (s *QuickFeedService) editUserProfile(ctx context.Context, curUser, request
 		targetUser.IsAdmin = request.GetIsAdmin()
 	}
 	return s.db.UpdateUser(targetUser)
+}
+
+// checkDuplicateProfile returns an error if a user other than the given user already
+// has the given student ID or email. Without this check a student that signs in with
+// two different SCM accounts ends up with two QuickFeed accounts for the same person,
+// which breaks enrollment and grading for the course.
+func (s *QuickFeedService) checkDuplicateProfile(ctx context.Context, user *qf.User, studentID, email string) error {
+	users, err := s.db.GetUsersByStudentIDOrEmail(studentID, email)
+	if err != nil {
+		return err
+	}
+	for _, other := range users {
+		if other.GetID() == user.GetID() {
+			continue
+		}
+		duplicateErr := errDuplicateEmail
+		if studentID != "" && strings.TrimSpace(other.GetStudentID()) == studentID {
+			duplicateErr = errDuplicateStudentID
+		}
+		qlog.FromContext(ctx).Info("rejecting duplicate user profile",
+			label.TargetUser, user.GetLogin(), "duplicate_user", other.GetLogin(), label.Error, duplicateErr)
+		return duplicateErr
+	}
+	return nil
 }
 
 // updateUserFromSCM fetches the latest user info from the SCM and updates the local user

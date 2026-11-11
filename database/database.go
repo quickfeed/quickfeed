@@ -14,6 +14,11 @@ type Database interface {
 	GetUserWithEnrollments(userID uint64) (*qf.User, error)
 	// GetUserByCourse returns the given user with enrollments matching the given course query.
 	GetUserByCourse(query *qf.Course, login string) (*qf.User, error)
+	// GetUsersByStudentIDOrEmail returns the users whose student ID matches studentID
+	// or whose email matches email; the email comparison ignores letter case and both
+	// arguments are compared without surrounding whitespace.
+	// An empty studentID or email matches no users.
+	GetUsersByStudentIDOrEmail(studentID, email string) ([]*qf.User, error)
 	// GetUsers returns the users for the given set of user IDs.
 	GetUsers(...uint64) ([]*qf.User, error)
 	// UpdateUser updates the user's details.

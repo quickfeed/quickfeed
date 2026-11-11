@@ -252,3 +252,98 @@ func TestUpdateUserFailures(t *testing.T) {
 		})
 	}
 }
+
+func TestUpdateUserDuplicateProfile(t *testing.T) {
+	db, cleanup := qtest.TestDB(t)
+	defer cleanup()
+	client := web.NewMockClient(t, db, scm.WithMockOrgs(), web.WithInterceptors())
+
+	admin := qtest.CreateFakeCustomUser(t, db, &qf.User{Name: "Admin", Login: "admin", StudentID: "1001", Email: "Admin@Example.com"})
+	student := qtest.CreateFakeCustomUser(t, db, &qf.User{Name: "Student", Login: "student", StudentID: "1002", Email: "student@example.com"})
+	// Two users that have yet to complete their profile; neither has a student ID or email.
+	incomplete := &qf.User{Name: "Incomplete", Login: "incomplete"}
+	alsoIncomplete := &qf.User{Name: "Also Incomplete", Login: "also-incomplete"}
+	for _, user := range []*qf.User{incomplete, alsoIncomplete} {
+		if err := db.CreateUser(user); err != nil {
+			t.Fatal(err)
+		}
+	}
+
+	duplicateStudentID := connect.NewError(connect.CodeAlreadyExists, errors.New("a QuickFeed account with this student ID already exists"))
+	duplicateEmail := connect.NewError(connect.CodeAlreadyExists, errors.New("a QuickFeed account with this email already exists"))
+
+	tests := []struct {
+		name     string
+		user     *qf.User // the user making the request
+		req      *qf.User
+		wantErr  error
+		wantUser *qf.User // the name, student ID and email expected in the database afterwards
+	}{
+		{
+			name:     "another user's student ID, must fail",
+			user:     student,
+			req:      &qf.User{ID: student.GetID(), Name: "Student", StudentID: admin.GetStudentID(), Email: student.GetEmail()},
+			wantErr:  duplicateStudentID,
+			wantUser: &qf.User{Name: "Student", StudentID: "1002", Email: "student@example.com"},
+		},
+		{
+			name:     "another user's email in a different case, must fail",
+			user:     student,
+			req:      &qf.User{ID: student.GetID(), Name: "Student", StudentID: student.GetStudentID(), Email: "ADMIN@EXAMPLE.COM"},
+			wantErr:  duplicateEmail,
+			wantUser: &qf.User{Name: "Student", StudentID: "1002", Email: "student@example.com"},
+		},
+		{
+			name:     "another user's email with surrounding whitespace, must fail",
+			user:     student,
+			req:      &qf.User{ID: student.GetID(), Name: "Student", StudentID: student.GetStudentID(), Email: "  Admin@Example.com  "},
+			wantErr:  duplicateEmail,
+			wantUser: &qf.User{Name: "Student", StudentID: "1002", Email: "student@example.com"},
+		},
+		{
+			name:     "own student ID and email, must pass",
+			user:     student,
+			req:      &qf.User{ID: student.GetID(), Name: "Student Name", StudentID: student.GetStudentID(), Email: student.GetEmail()},
+			wantUser: &qf.User{Name: "Student Name", StudentID: "1002", Email: "student@example.com"},
+		},
+		{
+			name:     "own email in a different case, must pass",
+			user:     student,
+			req:      &qf.User{ID: student.GetID(), Name: "Student Name", StudentID: student.GetStudentID(), Email: "Student@Example.com"},
+			wantUser: &qf.User{Name: "Student Name", StudentID: "1002", Email: "Student@Example.com"},
+		},
+		{
+			name:     "incomplete profile does not conflict with another incomplete profile, must pass",
+			user:     incomplete,
+			req:      &qf.User{ID: incomplete.GetID(), Name: "Incomplete Profile"},
+			wantUser: &qf.User{Name: "Incomplete Profile"},
+		},
+		{
+			name:     "unused student ID and email, must pass",
+			user:     incomplete,
+			req:      &qf.User{ID: incomplete.GetID(), Name: "Complete Profile", StudentID: "1003", Email: "complete@example.com"},
+			wantUser: &qf.User{Name: "Complete Profile", StudentID: "1003", Email: "complete@example.com"},
+		},
+		{
+			name:     "surrounding whitespace is trimmed before storing, must pass",
+			user:     alsoIncomplete,
+			req:      &qf.User{ID: alsoIncomplete.GetID(), Name: "  Trimmed Profile  ", StudentID: " 1004 ", Email: " trimmed@example.com "},
+			wantUser: &qf.User{Name: "Trimmed Profile", StudentID: "1004", Email: "trimmed@example.com"},
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			_, err := client.UpdateUser(client.Context(t, tt.user), tt.req)
+			qtest.CheckCode(t, err, tt.wantErr)
+
+			gotUser, err := db.GetUser(tt.req.GetID())
+			if err != nil {
+				t.Fatal(err)
+			}
+			got := &qf.User{Name: gotUser.GetName(), StudentID: gotUser.GetStudentID(), Email: gotUser.GetEmail()}
+			if diff := cmp.Diff(tt.wantUser, got, protocmp.Transform()); diff != "" {
+				t.Errorf("UpdateUser() mismatch (-wantUser +gotUser):\n%s", diff)
+			}
+		})
+	}
+}
