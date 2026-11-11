@@ -51,13 +51,9 @@ const MemberRow = memo(({ member, assignments, onSubmissionClick, review, search
             return group ? { group } : {}
         }
         if (isEnrollment) {
-            // Find submission for this assignment
-            const userSubmission = submissions.ForUser(member)?.find(s => s.AssignmentID === assignment.ID)
-
-            // An individual submission has groupID === 0
-            // A group submission has groupID > 0
-            const isIndividualSubmission = userSubmission && userSubmission.groupID === 0n
-            const individual = isIndividualSubmission ? userSubmission : undefined
+            // The user's submissions may include a group submission for the same assignment,
+            // in either order; an individual submission has groupID === 0.
+            const individual = submissions.ForUser(member)?.find(s => s.AssignmentID === assignment.ID && s.groupID === 0n)
 
             // For group labs, also check for group submission using ForGroup with enrollment
             if (assignment.isGroupLab && member.groupID > 0n) {

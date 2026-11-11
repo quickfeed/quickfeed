@@ -3,8 +3,9 @@ import { act, fireEvent, render, screen, within } from "@testing-library/react"
 import { Provider } from "overmind-react"
 import { MemoryRouter, Route, Routes } from "react-router"
 import { vi } from "vitest"
-import { Enrollment_UserStatus, EnrollmentSchema, GroupSchema, UserSchema } from "../../proto/qf/types_pb"
+import { AssignmentSchema, Enrollment_UserStatus, EnrollmentSchema, GroupSchema, SubmissionSchema, SubmissionsSchema, UserSchema } from "../../proto/qf/types_pb"
 import SubmissionsTable from "../components/submissions-table/SubmissionsTable"
+import { SubmissionsForCourse } from "../Helpers"
 import { ApiClient } from "../overmind/namespaces/global/effects"
 import type { State } from "../overmind/state"
 import { MockData } from "./mock_data/mockData"
@@ -152,5 +153,25 @@ describe("SubmissionsTable group details", () => {
         expect(screen.getByText("Ola Nordmann")).toBeDefined()
         await act(async () => { await overmind.actions.global.setQuery("old group") })
         expect(screen.queryByText("Ola Nordmann")).toBeNull()
+    })
+})
+
+describe("SubmissionsTable group lab with both individual and group submissions", () => {
+    const individual = create(SubmissionSchema, { ID: 10n, AssignmentID: 9n, userID: 6n, score: 52 })
+    const group = create(SubmissionSchema, { ID: 11n, AssignmentID: 9n, groupID: 2n, score: 72 })
+
+    test.each([
+        ["individual first", [individual, group]],
+        ["group first", [group, individual]],
+    ])("offers the toggle when the user's submissions list the %s", (_, userSubmissions) => {
+        const submissionsForCourse = new SubmissionsForCourse()
+        submissionsForCourse.userSubmissions.set(7n, create(SubmissionsSchema, { submissions: userSubmissions }))
+        submissionsForCourse.groupSubmissions.set(2n, create(SubmissionsSchema, { submissions: [group] }))
+        renderTable(false, {
+            courseEnrollments: { "1": [enrollmentWithGroup()] },
+            assignments: { "1": [create(AssignmentSchema, { ID: 9n, CourseID: 1n, name: "lab9", order: 1, isGroupLab: true })] },
+            submissionsForCourse,
+        })
+        expect(rowFor("Ola Nordmann").getByTitle(/click for (individual|group)/)).toBeDefined()
     })
 })
