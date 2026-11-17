@@ -498,7 +498,6 @@ export enum EnrollmentSort {
 }
 
 export enum SubmissionSort {
-    ID,
     Name,
     Status,
     Score,

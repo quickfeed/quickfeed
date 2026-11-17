@@ -85,11 +85,6 @@ const MemberRow = memo(({ member, assignments, onSubmissionClick, review, search
                 </div>
                 <MemberDetails user={user} group={group} course={course} />
             </th>
-            {state.isCourseManuallyGraded && (
-                <td className="text-base-content/70">
-                    {isEnrollment ? member.userID.toString() : member.ID.toString()}
-                </td>
-            )}
             {assignments.map(assignment => {
                 const pair = getSubmissionPair(assignment)
                 const hasNoSubmission = !pair.individual && !pair.group
