@@ -59,6 +59,17 @@ const rowFor = (name: string) => {
 }
 
 describe("SubmissionsTable shows the GitHub login and group name", () => {
+    test.each([false, true])("omits the ID column for manually graded courses (group view: %s)", groupView => {
+        renderTable(groupView, {
+            assignments: { "1": [create(AssignmentSchema, { ID: 9n, CourseID: 1n, name: "Reviewed lab", reviewers: 1, isGroupLab: true })] },
+        })
+        const table = screen.getByRole("table") as HTMLTableElement
+        expect(Array.from(table.tHead!.rows[0].cells, cell => cell.textContent)).toEqual(["Name", "Reviewed lab"])
+        for (const row of Array.from(table.tBodies[0].rows)) {
+            expect(row.cells).toHaveLength(2)
+        }
+    })
+
     test("student in a group shows both the login and the group name", () => {
         renderTable()
         const row = rowFor("Bob Bobsen")

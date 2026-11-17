@@ -13,7 +13,7 @@ const SubmissionsTable = memo(function SubmissionsTable({ onSubmissionClick, rev
     const state = useAppState()
     const actions = useActions()
 
-    const { courseMembers, activeCourse, groupView, query, review: reviewState, isCourseManuallyGraded } = state
+    const { courseMembers, activeCourse, groupView, query, review: reviewState } = state
 
     const assignments = state.assignments[activeCourse.toString()]?.filter(
         a => reviewState.assignmentID <= 0 || a.ID === reviewState.assignmentID
@@ -50,14 +50,6 @@ const SubmissionsTable = memo(function SubmissionsTable({ onSubmissionClick, rev
                     >
                         Name
                     </th>
-                    {isCourseManuallyGraded && (
-                        <th
-                            className="cursor-pointer hover:bg-base-200"
-                            onClick={handleSort(SubmissionSort.ID)}
-                        >
-                            ID
-                        </th>
-                    )}
                     {filteredAssignments.map(a => (
                         <th
                             key={a.ID.toString()}

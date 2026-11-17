@@ -4,7 +4,7 @@ import type { Context } from "."
 import type { Assignment, Course, Enrollment, Group, Submission, User } from "../../proto/qf/types_pb"
 import { Enrollment_UserStatus, UserSchema } from "../../proto/qf/types_pb"
 import type { Color, GroupsByID } from "../Helpers"
-import { ConnStatus, filterByApproval, getApprovalSortValue, getScoreSortValue, getSubmissionData, isManuallyGraded, isPending, isPendingGroup, isTeacher, SubmissionsForCourse, SubmissionsForUser, SubmissionSort } from "../Helpers"
+import { ConnStatus, filterByApproval, getApprovalSortValue, getScoreSortValue, getSubmissionData, isPending, isPendingGroup, isTeacher, SubmissionsForCourse, SubmissionsForUser, SubmissionSort } from "../Helpers"
 
 export interface CourseGroup {
     courseID: bigint
@@ -142,10 +142,6 @@ export type State = {
 
     /* Contains all users with admins sorted first */
     allUsers: User[],
-
-    /* Indicates if the course has any assignment that is manually graded */
-    isCourseManuallyGraded: boolean
-
 
     /***************************************************************************
      *                             Frontend Activity State
@@ -315,8 +311,6 @@ export const state: State = {
             const dataB = getSubmissionData(submissions, b.ID, assignmentID)
 
             switch (sortSubmissionsBy) {
-                case SubmissionSort.ID:
-                    return sortOrder * (Number(a.userID) - Number(b.userID))
                 case SubmissionSort.Score:
                     return sortOrder * (getScoreSortValue(dataB) - getScoreSortValue(dataA))
                 case SubmissionSort.Approved:
@@ -368,8 +362,6 @@ export const state: State = {
             const dataB = getSubmissionData(submissions, b.ID, assignmentID)
 
             switch (sortSubmissionsBy) {
-                case SubmissionSort.ID:
-                    return sortOrder * (Number(a.ID) - Number(b.ID))
                 case SubmissionSort.Score:
                     return sortOrder * (getScoreSortValue(dataB) - getScoreSortValue(dataA))
                 case SubmissionSort.Approved:
@@ -433,12 +425,6 @@ export const state: State = {
             return courseEnrollments[activeCourse.toString()]?.filter(enrollment => !isPending(enrollment)).length
         }
         return 0
-    }),
-    isCourseManuallyGraded: derived(({ activeCourse, assignments }: State) => {
-        if (activeCourse > 0 && assignments[activeCourse.toString()]) {
-            return assignments[activeCourse.toString()].some(a => isManuallyGraded(a.reviewers))
-        }
-        return false
     }),
     query: "",
     sortSubmissionsBy: SubmissionSort.Approved,
