@@ -2,65 +2,51 @@ import { useEffect, useRef } from "react"
 import { useActions } from "../../overmind"
 import type { Alert as AlertType } from "../../overmind/state"
 
-/** Alert is a component that displays a single alert.
- *
- *  If the alert has a delay property, the alert will be removed after the delay.
- *  In this case, an animated circle will be displayed to indicate the time remaining before the alert is removed.
- *
- *  The alert is removed if the alert is clicked, or if the delay has passed.
- *
- *  @param alert - The alert to be displayed
- */
+/** Alert displays a countdown and dismisses the notification after its delay or when clicked. */
 const Alert = ({ alert }: { alert: AlertType }) => {
     const circleRef = useRef<SVGCircleElement>(null)
     const actions = useActions().global
+    const { id: alertID, delay } = alert
 
     useEffect(() => {
-        let id: ReturnType<typeof setTimeout>
-        if (alert.delay) {
-            const circle = circleRef.current
+        let frame: number | undefined
+        const circle = circleRef.current
 
-            // Remove the alert after the delay
-            id = setTimeout(() => {
-                actions.popAlert(alert)
-            }, alert.delay)
+        const id = setTimeout(() => {
+            actions.popAlert({ id: alertID })
+        }, delay)
 
-            if (circle) {
-                const delay: number = alert.delay
-                const circumference = circle.getTotalLength()
+        if (circle) {
+            const circumference = circle.getTotalLength()
 
-                circle.style.strokeDasharray = `${circumference}px`
-                circle.style.strokeDashoffset = `${circumference}px`
+            circle.style.strokeDasharray = `${circumference}px`
+            circle.style.strokeDashoffset = `${circumference}px`
 
-                const start = Date.now()
-                const animate = () => {
-                    const elapsed = Date.now() - start
-                    const strokeDashoffset = (elapsed / delay) * circumference
-                    circle.style.strokeDashoffset = `${strokeDashoffset}px`
-                    if (elapsed < delay) {
-                        requestAnimationFrame(animate)
-                    }
+            const start = Date.now()
+            const animate = () => {
+                const elapsed = Date.now() - start
+                const strokeDashoffset = (elapsed / delay) * circumference
+                circle.style.strokeDashoffset = `${strokeDashoffset}px`
+                if (elapsed < delay) {
+                    frame = requestAnimationFrame(animate)
                 }
-                requestAnimationFrame(animate)
             }
+            frame = requestAnimationFrame(animate)
         }
 
         return () => {
-            if (id) {
-                // If the alert is removed (by clicking the alert) before
-                // the delay has passed, the timeout will be cleared.
-                clearTimeout(id)
+            clearTimeout(id)
+            if (frame !== undefined) {
+                cancelAnimationFrame(frame)
             }
         }
-    }, [actions, alert])
+    }, [actions, alertID, delay])
 
     return (
         <div className={`alert alert-${alert.color}`} role="button" aria-hidden="true" style={{ marginTop: "20px", whiteSpace: "pre-wrap" }} onClick={() => actions.popAlert(alert)}>
-            {alert.delay && (
-                <svg viewBox="0 0 50 50" style={{ width: 20, height: 20, marginRight: 20 }}>
-                    <circle ref={circleRef} cx={25} cy={25} r={20} strokeWidth={5} fill="none" stroke="#000" />
-                </svg>
-            )}
+            <svg viewBox="0 0 50 50" style={{ width: 20, height: 20, marginRight: 20 }}>
+                <circle ref={circleRef} cx={25} cy={25} r={20} strokeWidth={5} fill="none" stroke="#000" />
+            </svg>
             {alert.text}
         </div>
     )

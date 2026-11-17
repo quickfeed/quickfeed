@@ -18,7 +18,7 @@ export interface Alert {
     text: string
     color: Color
     // The delay in milliseconds before the alert is removed
-    delay?: number
+    delay: number
 }
 
 type EnrollmentsByCourse = { [CourseID: string]: Enrollment }
