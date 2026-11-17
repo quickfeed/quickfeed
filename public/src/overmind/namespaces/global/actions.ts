@@ -778,11 +778,12 @@ export const errorHandler = (context: Context, { method, error }: { method: stri
     }
 }
 
-export const alert = ({ state }: Context, a: Pick<Alert, "text" | "color" | "delay">): void => {
-    state.alerts.push({ id: newID(), ...a })
+export const alert = ({ state }: Context, a: Pick<Alert, "text" | "color"> & Partial<Pick<Alert, "delay">>): void => {
+    const delay = a.delay !== undefined && Number.isFinite(a.delay) && a.delay > 0 ? a.delay : 5000
+    state.alerts.push({ ...a, id: newID(), delay })
 }
 
-export const popAlert = ({ state }: Context, alert: Alert): void => {
+export const popAlert = ({ state }: Context, alert: Pick<Alert, "id">): void => {
     state.alerts = state.alerts.filter(a => a.id !== alert.id)
 }
 
