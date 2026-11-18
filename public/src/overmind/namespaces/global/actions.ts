@@ -115,13 +115,16 @@ export const getUsers = async ({ state, effects }: Context): Promise<void> => {
     })
 }
 
-/** Changes user information server-side */
-export const updateUser = async ({ actions, effects }: Context, user: User): Promise<void> => {
+/** Changes user information server-side; returns true if the user was updated.
+ *  The server rejects an update whose student ID or email belongs to another
+ *  user; the error handler alerts the user with the server's message. */
+export const updateUser = async ({ actions, effects }: Context, user: User): Promise<boolean> => {
     const response = await effects.global.api.client.updateUser(user)
     if (response.error) {
-        return
+        return false
     }
     await actions.global.getSelf()
+    return true
 }
 
 /**

@@ -2,6 +2,7 @@ package database
 
 import (
 	"errors"
+	"strings"
 
 	"github.com/quickfeed/quickfeed/qf"
 )
@@ -43,6 +44,32 @@ func (db *GormDB) GetUserByRemoteIdentity(scmRemoteID uint64) (*qf.User, error) 
 		return nil, err
 	}
 	return &user, nil
+}
+
+// GetUsersByStudentIDOrEmail returns the users whose student ID matches studentID
+// or whose email matches email; the email comparison ignores letter case and both
+// arguments are compared without surrounding whitespace.
+// An empty studentID or email matches no users, since many users may legitimately
+// have an incomplete profile. The result is empty if no user matches.
+func (db *GormDB) GetUsersByStudentIDOrEmail(studentID, email string) ([]*qf.User, error) {
+	studentID = strings.TrimSpace(studentID)
+	email = strings.TrimSpace(email)
+	conn := db.conn
+	switch {
+	case studentID != "" && email != "":
+		conn = conn.Where("student_id = ?", studentID).Or("LOWER(email) = LOWER(?)", email)
+	case studentID != "":
+		conn = conn.Where("student_id = ?", studentID)
+	case email != "":
+		conn = conn.Where("LOWER(email) = LOWER(?)", email)
+	default:
+		return nil, nil
+	}
+	var users []*qf.User
+	if err := conn.Find(&users).Error; err != nil {
+		return nil, err
+	}
+	return users, nil
 }
 
 // GetUserByCourse returns the given user with enrollments matching the given course query.
